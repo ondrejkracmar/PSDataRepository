@@ -2,9 +2,9 @@
 document type: cmdlet
 external help file: PSDataRepository.dll-Help.xml
 HelpUri: ''
-Locale: en-US
+Locale: cs-CZ
 Module Name: PSDataRepository
-ms.date: 04/08/2026
+ms.date: 04.08.2026
 PlatyPS schema version: 2024-05-01
 title: ConvertFrom-PSDataRepositoryMessage
 ---
@@ -42,15 +42,21 @@ Use `-IncludeMetadata` to attach the envelope metadata as note properties on the
 
 ### Azure Function Queue trigger
 
+ConvertFrom-PSDataRepositoryMessage -InputObject $QueueItem
 
+Deserializes a message received from an Azure Function Queue trigger.
 
 ### Explicit format from pipeline
 
+$TriggerMetadata.MessageText | ConvertFrom-PSDataRepositoryMessage -Format Json
 
+Explicitly deserializes a JSON message from pipeline input.
 
 ### With envelope metadata
 
+ConvertFrom-PSDataRepositoryMessage -InputObject $QueueItem -IncludeMetadata
 
+Deserializes a message and includes envelope metadata (TypeName, Timestamp, etc.) as note properties.
 
 ## PARAMETERS
 
@@ -61,7 +67,7 @@ If not specified, attempts auto-detection based on content.
 
 ```yaml
 Type: System.Nullable`1[PSDataRepository.Serialization.FormatType]
-DefaultValue: ''
+DefaultValue: None (auto-detect)
 SupportsWildcards: false
 Aliases: []
 ParameterSets:
@@ -83,7 +89,7 @@ Only applies when the message contains a metadata envelope (sent with `-IncludeM
 
 ```yaml
 Type: System.Management.Automation.SwitchParameter
-DefaultValue: ''
+DefaultValue: False
 SupportsWildcards: false
 Aliases: []
 ParameterSets:
@@ -105,7 +111,7 @@ Accepts pipeline input.
 
 ```yaml
 Type: System.String
-DefaultValue: ''
+DefaultValue: None
 SupportsWildcards: false
 Aliases: []
 ParameterSets:
@@ -148,6 +154,5 @@ It is designed for use in Azure Functions, Logic Apps, or any scenario where raw
 
 ## RELATED LINKS
 
-- [Online Version]()
 - [Send-PSDataRepositoryMessage]()
 - [Receive-PSDataRepositoryMessage]()

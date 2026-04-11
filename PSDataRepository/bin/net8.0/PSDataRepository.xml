@@ -83,6 +83,7 @@
             <summary>
             Gets or sets the legacy connection string (for classic authentication).
             Should be null for modern Azure authentication.
+            Stored as SecureString to minimize plain-text exposure; converted only at the point of use.
             </summary>
         </member>
         <member name="P:PSDataRepository.Authentication.AuthenticationOption.SasToken">
@@ -92,6 +93,7 @@
             Can be either:
             - Full SAS URI: "https://account.blob.core.windows.net/container?sv=...&amp;sig=..."
             - SAS token only: "?sv=2021-06-08&amp;ss=b&amp;srt=sco&amp;sp=rwdlac&amp;sig=..."
+            Stored as SecureString to minimize plain-text exposure; converted only at the point of use.
             </summary>
         </member>
         <member name="P:PSDataRepository.Authentication.AuthenticationOption.Token">
@@ -187,6 +189,24 @@
             <summary>
             Connection timeout in seconds.
             Default: 30 seconds. Range: 5-300 seconds.
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Authentication.AuthenticationOption.Port">
+            <summary>
+            Server port number. Used by SCP (default 22) and FTP (default 21) providers.
+            When null, the provider uses its default port.
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Authentication.AuthenticationOption.UseSsl">
+            <summary>
+            Whether to use TLS/SSL for the connection.
+            Used by FTP provider to enable FTPS (FTP over TLS).
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Authentication.AuthenticationOption.SkipCertificateCheck">
+            <summary>
+            When true, skips TLS certificate validation.
+            NOT recommended for production — use only for self-signed certificates in dev/test environments.
             </summary>
         </member>
         <member name="T:PSDataRepository.Authentication.ResolvedAuth">
@@ -491,91 +511,64 @@
             <summary>
             <para type="synopsis">Connects to a data repository (Azure Blob, Queue, Service Bus, Key Vault, Disk, or InMemory).</para>
             <para type="description">
-            Establishes a session to a data repository provider. The provider type is automatically detected
-            from the supplied parameters (connection string, account name, vault name, etc.).
-            Supports 12 authentication methods including connection strings, SAS tokens, Managed Identity,
+            Establishes a session to a data repository provider. The first mandatory parameter is Provider,
+            which determines the type of repository. Once the provider is selected, only the relevant
+            parameters for that provider are available (dynamic parameters).
+            Supports 10 authentication methods including connection strings, SAS tokens, Managed Identity,
             client secrets/certificates, interactive browser, device code, and DefaultAzureCredential.
-            For local development, use -Disk or -InMemory switches which require no authentication.
+            For local development, use Provider 'Disk' or 'InMemory' which require no authentication.
             </para>
             <example>
-              <code>Connect-PSDataRepository -Disk -Path "C:\Data\MyRepo"</code>
+              <code>Connect-PSDataRepository -Provider Disk -Path "C:\Data\MyRepo"</code>
               <para>Connects to a local disk-based repository at the specified path.</para>
             </example>
             <example>
-              <code>Connect-PSDataRepository -InMemory</code>
+              <code>Connect-PSDataRepository -Provider InMemory</code>
               <para>Connects to a volatile in-memory repository (useful for testing).</para>
             </example>
             <example>
-              <code>Connect-PSDataRepository -ConnectionString $connStr -ContainerName "mydata"</code>
+              <code>Connect-PSDataRepository -Provider AzureBlob -ConnectionString $connStr -ContainerName "mydata"</code>
               <para>Connects to Azure Blob Storage using a connection string.</para>
             </example>
             <example>
-              <code>Connect-PSDataRepository -DefaultAzureCredential -AccountName "mystorageaccount" -QueueName "tasks"</code>
+              <code>Connect-PSDataRepository -Provider AzureQueue -DefaultAzureCredential -AccountName "mystorageaccount" -QueueName "tasks"</code>
               <para>Connects to Azure Queue Storage using DefaultAzureCredential.</para>
             </example>
             <example>
-              <code>Connect-PSDataRepository -ManagedIdentity -VaultName "mykeyvault"</code>
+              <code>Connect-PSDataRepository -Provider AzureKeyVault -ManagedIdentity -VaultName "mykeyvault"</code>
               <para>Connects to Azure Key Vault using Managed Identity.</para>
             </example>
             <example>
-              <code>Connect-PSDataRepository -ConnectionString $sbConnStr -TopicName "events" -SubscriptionName "processor"</code>
+              <code>Connect-PSDataRepository -Provider AzureServiceBus -ConnectionString $sbConnStr -TopicName "events" -SubscriptionName "processor"</code>
               <para>Connects to an Azure Service Bus topic with a subscription.</para>
             </example>
             </summary>
         </member>
-        <member name="M:PSDataRepository.Commands.ConnectPSDataRepositoryCommand.DetermineProvider">
+        <member name="P:PSDataRepository.Commands.ConnectPSDataRepositoryCommand.Provider">
             <summary>
-            Determines the effective provider from cmdlet parameters.
-            Delegates complex detection logic to ProviderDetector class.
-            Passes WriteWarning callback for connection string validation warnings.
+            <para type="description">
+            The data repository provider type to connect to.
+            Choose from: AzureBlob, AzureQueue, AzureServiceBus, AzureKeyVault, Disk, InMemory.
+            Once selected, only parameters relevant to the chosen provider will be available.
+            </para>
             </summary>
         </member>
-        <member name="M:PSDataRepository.Commands.ConnectPSDataRepositoryCommand.ValidateAuthMethodForProvider">
+        <member name="M:PSDataRepository.Commands.ConnectPSDataRepositoryCommand.GetDynamicParameters">
             <summary>
-            Validates that the current authentication method is supported by the detected provider.
-            Delegates validation logic to ProviderDetector class.
+            Returns dynamic parameters based on the selected Provider value.
+            Each provider exposes only its relevant parameters (resource identifiers, auth methods, enterprise options).
             </summary>
         </member>
-        <member name="M:PSDataRepository.Commands.ConnectPSDataRepositoryCommand.ConfigureAzureBlobStorage(PSDataRepository.Storage.StorageOption)">
+        <member name="M:PSDataRepository.Commands.ConnectPSDataRepositoryCommand.DetectAuthMode">
             <summary>
-            Configures StorageOption for Azure Blob Storage.
+            Detects which authentication mode the user selected based on the dynamic parameters provided.
+            For local providers (Disk/InMemory), returns None.
+            For Azure providers, exactly one auth method must be specified.
             </summary>
         </member>
-        <member name="M:PSDataRepository.Commands.ConnectPSDataRepositoryCommand.ConfigureAzureQueueStorage(PSDataRepository.Storage.StorageOption)">
-            <summary>
-            Configures StorageOption for Azure Queue Storage.
-            </summary>
-        </member>
-        <member name="M:PSDataRepository.Commands.ConnectPSDataRepositoryCommand.ConfigureAzureServiceBus(PSDataRepository.Storage.StorageOption)">
-            <summary>
-            Configures StorageOption for Azure Service Bus.
-            </summary>
-        </member>
-        <member name="M:PSDataRepository.Commands.ConnectPSDataRepositoryCommand.ConfigureAzureKeyVault(PSDataRepository.Storage.StorageOption)">
-            <summary>
-            Configures StorageOption for Azure Key Vault.
-            </summary>
-        </member>
-        <member name="M:PSDataRepository.Commands.ConnectPSDataRepositoryCommand.ConfigureInMemoryProvider(PSDataRepository.Storage.StorageOption)">
-            <summary>
-            Configures StorageOption for InMemory provider.
-            </summary>
-        </member>
-        <member name="M:PSDataRepository.Commands.ConnectPSDataRepositoryCommand.ConfigureDiskProvider(PSDataRepository.Storage.StorageOption)">
-            <summary>
-            Configures StorageOption for Disk provider.
-            </summary>
-        </member>
-        <member name="M:PSDataRepository.Commands.ConnectPSDataRepositoryCommand.ValidateRequired(System.String,System.String)">
-            <summary>
-            Validates that a required parameter is not null or empty.
-            </summary>
-        </member>
-        <member name="M:PSDataRepository.Commands.ConnectPSDataRepositoryCommand.TestRepositoryConnection">
+        <member name="M:PSDataRepository.Commands.ConnectPSDataRepositoryCommand.TestRepositoryConnection(System.Int32)">
             <summary>
             Tests the repository connection by performing a simple operation.
-            For Storage: checks if container exists or can be accessed.
-            For Messaging: verifies session is valid.
             </summary>
         </member>
         <member name="T:PSDataRepository.Commands.ConvertFromPSDataRepositoryMessageCommand">
@@ -624,6 +617,148 @@
         <member name="M:PSDataRepository.Commands.ConvertFromPSDataRepositoryMessageCommand.TryUnwrapEnvelope(System.String,System.String@,System.Nullable{System.Text.Json.JsonElement}@,System.Nullable{PSDataRepository.Serialization.FormatType}@)">
             <summary>
             Attempts to detect and unwrap a metadata envelope created by Send-PSDataRepositoryMessage -IncludeMetadata.
+            </summary>
+        </member>
+        <member name="T:PSDataRepository.Commands.CopyPSDataRepositoryItemCommand">
+            <summary>
+            <para type="synopsis">Copies local files or repository items to the connected repository.</para>
+            <para type="description">
+            Uploads local files (from disk) to the connected repository (Azure Blob Storage, Disk).
+            Supports pipeline input from <c>Get-ChildItem</c> (binds via <c>FullName</c> property)
+            and from <c>Get-PSDataRepositoryChildItem</c> (intra-repository copy).
+            When copying from the local filesystem, the cmdlet reads each file as binary and stores it
+            under the original file name (or a custom <c>-Destination</c> prefix).
+            Supports <c>-Recurse</c> for directory traversal, <c>-Filter</c> for wildcard matching,
+            and <c>-Flatten</c> to discard folder structure.
+            </para>
+            <example>
+              <code>Copy-PSDataRepositoryItem -Path "C:\Data\config.json"</code>
+              <para>Copies a single file to the repository root.</para>
+            </example>
+            <example>
+              <code>Copy-PSDataRepositoryItem -Path "C:\Data\" -Recurse</code>
+              <para>Recursively copies all files from the directory to the repository.</para>
+            </example>
+            <example>
+              <code>Get-ChildItem C:\Data -Recurse -File | Copy-PSDataRepositoryItem</code>
+              <para>Pipes local files into the repository (binds FullName automatically).</para>
+            </example>
+            <example>
+              <code>Get-ChildItem C:\Logs -Filter "*.log" | Copy-PSDataRepositoryItem -Destination "logs/"</code>
+              <para>Copies filtered files to a subfolder in the repository.</para>
+            </example>
+            <example>
+              <code>Get-PSDataRepositoryChildItem -Path "source/" | Copy-PSDataRepositoryItem -Destination "archive/"</code>
+              <para>Copies items within the repository from one prefix to another.</para>
+            </example>
+            <example>
+              <code>Get-ChildItem C:\Export -Recurse -File | Copy-PSDataRepositoryItem -Destination "backup/" -Flatten</code>
+              <para>Copies all files without preserving directory structure.</para>
+            </example>
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Commands.CopyPSDataRepositoryItemCommand.Path">
+            <summary>
+            Local file or directory path(s) to copy to the repository.
+            Accepts pipeline input from <c>Get-ChildItem</c> via the <c>FullName</c> property.
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Commands.CopyPSDataRepositoryItemCommand.LiteralPath">
+            <summary>
+            Literal local path(s) without wildcard expansion.
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Commands.CopyPSDataRepositoryItemCommand.InputObject">
+            <summary>
+            Repository item received from <c>Get-PSDataRepositoryChildItem</c>.
+            Performs intra-repository copy to the specified <c>-Destination</c>.
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Commands.CopyPSDataRepositoryItemCommand.Destination">
+            <summary>
+            Destination prefix or folder in the repository.
+            If omitted, items are copied to the repository root preserving their relative names.
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Commands.CopyPSDataRepositoryItemCommand.Recurse">
+            <summary>
+            Recursively copy files from directories.
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Commands.CopyPSDataRepositoryItemCommand.Filter">
+            <summary>
+            Wildcard filter pattern applied to file names (e.g. "*.json").
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Commands.CopyPSDataRepositoryItemCommand.Force">
+            <summary>
+            Overwrite existing items in the repository without confirmation.
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Commands.CopyPSDataRepositoryItemCommand.PassThru">
+            <summary>
+            Return information about each copied item.
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Commands.CopyPSDataRepositoryItemCommand.Flatten">
+            <summary>
+            Discard directory structure and use only leaf file names as destination names.
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Commands.CopyPSDataRepositoryItemCommand.ContinueOnError">
+            <summary>
+            Continue processing when individual copy operations fail.
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Commands.CopyPSDataRepositoryItemCommand.BeginProcessing">
+            <inheritdoc />
+        </member>
+        <member name="M:PSDataRepository.Commands.CopyPSDataRepositoryItemCommand.ProcessRecord">
+            <inheritdoc />
+        </member>
+        <member name="M:PSDataRepository.Commands.CopyPSDataRepositoryItemCommand.EndProcessing">
+            <inheritdoc />
+        </member>
+        <member name="M:PSDataRepository.Commands.CopyPSDataRepositoryItemCommand.CopyLocalPath(System.String)">
+            <summary>
+            Resolves a local path and copies the file(s) to the repository.
+            Handles single files, directories, and wildcard patterns.
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Commands.CopyPSDataRepositoryItemCommand.CopyDirectory(System.String,System.String,System.IO.SearchOption)">
+            <summary>
+            Enumerates files in a directory and copies each to the repository.
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Commands.CopyPSDataRepositoryItemCommand.CopyLocalFile(System.String,System.String)">
+            <summary>
+            Copies a single local file to the repository.
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Commands.CopyPSDataRepositoryItemCommand.CopyRepositoryItem(PSDataRepository.Storage.RepositoryItemInfo)">
+            <summary>
+            Copies a repository item to a new destination within the same repository.
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Commands.CopyPSDataRepositoryItemCommand.DetermineDestinationName(System.String,System.String)">
+            <summary>
+            Determines the destination name in the repository for a local file.
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Commands.CopyPSDataRepositoryItemCommand.DetermineRepositoryDestinationName(PSDataRepository.Storage.RepositoryItemInfo)">
+            <summary>
+            Determines the destination name for an intra-repository copy.
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Commands.CopyPSDataRepositoryItemCommand.GetLeafName(System.String)">
+            <summary>
+            Returns the leaf (file) name from a path. For "data/config.json" returns "config.json".
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Commands.CopyPSDataRepositoryItemCommand.ApplyFilter(System.String)">
+            <summary>
+            Applies the <c>-Filter</c> wildcard pattern to a file path.
+            Returns <c>true</c> when the file should be included.
             </summary>
         </member>
         <member name="T:PSDataRepository.Commands.DisconnectPSDataRepositoryCommand">
@@ -713,6 +848,89 @@
             If specified, returns information about the decompressed item.
             </summary>
         </member>
+        <member name="T:PSDataRepository.Commands.GetPSDataRepositoryChildItemCommand">
+            <summary>
+            <para type="synopsis">Lists child items (metadata only) from the connected repository.</para>
+            <para type="description">
+            Returns strongly-typed <see cref="T:PSDataRepository.Storage.RepositoryItemInfo"/> objects describing files,
+            blobs, or virtual directories in the connected repository. Unlike
+            <c>Get-PSDataRepositoryItem</c>, this cmdlet does NOT download or deserialize content —
+            it returns metadata such as Name, Size, LastModified, ContentType, and Extension.
+            Supports <c>-Recurse</c> for recursive listing and <c>-Filter</c> for wildcard matching.
+            </para>
+            <example>
+              <code>Get-PSDataRepositoryChildItem</code>
+              <para>Lists all items at the root of the connected repository.</para>
+            </example>
+            <example>
+              <code>Get-PSDataRepositoryChildItem -Path "data/"</code>
+              <para>Lists items in the 'data' subfolder.</para>
+            </example>
+            <example>
+              <code>Get-PSDataRepositoryChildItem -Recurse</code>
+              <para>Lists all items recursively from the root.</para>
+            </example>
+            <example>
+              <code>Get-PSDataRepositoryChildItem -Filter "*.json"</code>
+              <para>Lists only items matching the wildcard pattern.</para>
+            </example>
+            <example>
+              <code>Get-PSDataRepositoryChildItem -Directory</code>
+              <para>Lists only directories/virtual folders.</para>
+            </example>
+            <example>
+              <code>Get-PSDataRepositoryChildItem -File -Recurse</code>
+              <para>Lists only files recursively.</para>
+            </example>
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Commands.GetPSDataRepositoryChildItemCommand.Path">
+            <summary>
+            Subfolder or prefix to scope the listing. Defaults to the repository root.
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Commands.GetPSDataRepositoryChildItemCommand.Filter">
+            <summary>
+            Wildcard filter applied to item names (e.g. "*.json").
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Commands.GetPSDataRepositoryChildItemCommand.Recurse">
+            <summary>
+            When specified, includes items from all nested subdirectories.
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Commands.GetPSDataRepositoryChildItemCommand.Directory">
+            <summary>
+            When specified, returns only directories (virtual folders).
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Commands.GetPSDataRepositoryChildItemCommand.File">
+            <summary>
+            When specified, returns only files (non-directory items).
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Commands.GetPSDataRepositoryChildItemCommand.Depth">
+            <summary>
+            Maximum directory depth for recursive listing (0 = only direct children).
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Commands.GetPSDataRepositoryChildItemCommand.BeginProcessing">
+            <inheritdoc />
+        </member>
+        <member name="M:PSDataRepository.Commands.GetPSDataRepositoryChildItemCommand.ProcessRecord">
+            <inheritdoc />
+        </member>
+        <member name="M:PSDataRepository.Commands.GetPSDataRepositoryChildItemCommand.GetLeafName(System.String)">
+            <summary>
+            Returns the leaf (file/folder) name from a relative path.
+            For "data/config.json" returns "config.json". For "data/" returns "data".
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Commands.GetPSDataRepositoryChildItemCommand.CountDepth(System.String,System.String)">
+            <summary>
+            Counts the directory depth of <paramref name="itemName"/> relative to <paramref name="basePath"/>.
+            </summary>
+        </member>
         <member name="T:PSDataRepository.Commands.GetPSDataRepositoryItemCommand">
             <summary>
             <para type="synopsis">Retrieves items from persistent storage (Blob, Disk).</para>
@@ -759,6 +977,7 @@
         <member name="P:PSDataRepository.Commands.GetPSDataRepositoryItemCommand.Encoding">
             <summary>
             Text encoding for reading. Default: UTF-8.
+            Accepts encoding names (UTF8, ASCII, Unicode, etc.) with tab-completion.
             </summary>
         </member>
         <member name="P:PSDataRepository.Commands.GetPSDataRepositoryItemCommand.Raw">
@@ -870,105 +1089,32 @@
         </member>
         <member name="T:PSDataRepository.Commands.ProviderDetector">
             <summary>
-            Determines the appropriate DataProvider based on connection parameters.
-            Encapsulates complex detection logic from ConnectPSDataRepositoryCommand.
+            Provides validation logic for provider and authentication method combinations.
+            Also supports connection-string-based provider detection for advanced scenarios.
             </summary>
-            <example>
-            <code>
-            // Detect from connection string
-            var provider = ProviderDetector.DetectProvider(
-                disk: false,
-                inMemory: false,
-                connectionString: "DefaultEndpointsProtocol=https;AccountName=myaccount;...",
-                containerName: "mycontainer");
-            // Result: DataProvider.AzureBlob
-            
-            // Detect from parameters
-            var provider = ProviderDetector.DetectProvider(
-                queueName: "myqueue",
-                containerName: null);
-            // Result: DataProvider.AzureQueue
-            </code>
-            </example>
         </member>
-        <member name="M:PSDataRepository.Commands.ProviderDetector.DetectProvider(System.Boolean,System.Boolean,System.String,System.String,System.String,System.String,System.String,System.String,System.Action{System.String})">
+        <member name="M:PSDataRepository.Commands.ProviderDetector.ValidateAuthMethodForProvider(PSDataRepository.Storage.DataProvider,PSDataRepository.Authentication.AuthenticationMode)">
             <summary>
-            Detects the provider type from explicit flags or connection parameters.
-            Uses intelligent heuristics to determine the most appropriate provider.
+            Validates that the authentication mode is supported by the given provider.
+            Throws <see cref="T:System.ArgumentException"/> if the combination is invalid.
             </summary>
-            <param name="disk">True if Disk provider explicitly requested.</param>
-            <param name="inMemory">True if InMemory provider explicitly requested.</param>
-            <param name="connectionString">Connection string (may contain provider hints).</param>
-            <param name="topicName">Service Bus topic name (indicates Service Bus).</param>
-            <param name="subscriptionName">Service Bus subscription name (indicates Service Bus).</param>
-            <param name="queueName">Queue name (indicates Queue or Service Bus).</param>
-            <param name="containerName">Container name (indicates Blob Storage).</param>
-            <param name="vaultName">Key Vault name (indicates Key Vault).</param>
-            <param name="warningCallback">Optional callback for validation warnings.</param>
-            <returns>Detected DataProvider type.</returns>
-            <example>
-            <code>
-            var provider = ProviderDetector.DetectProvider(
-                disk: false,
-                inMemory: false,
-                connectionString: "DefaultEndpointsProtocol=https;AccountName=storage;...",
-                containerName: "mycontainer",
-                warningCallback: msg => Console.WriteLine($"Warning: {msg}"));
-            </code>
-            </example>
+            <param name="provider">The selected provider.</param>
+            <param name="authMode">The detected authentication mode.</param>
+            <exception cref="T:System.ArgumentException">Thrown when auth mode is not supported by provider.</exception>
         </member>
-        <member name="M:PSDataRepository.Commands.ProviderDetector.DetectProviderFromConnectionString(System.String,System.String,System.String,System.Action{System.String})">
+        <member name="M:PSDataRepository.Commands.ProviderDetector.DetectProviderFromConnectionString(System.String,System.String,System.Action{System.String})">
             <summary>
-            Detects provider from connection string content using pattern matching.
-            Performs validation and invokes warning callback for invalid strings.
+            Detects the provider type from a connection string using pattern matching.
+            Useful for validation when the user provides both Provider and ConnectionString.
             </summary>
             <param name="connectionString">The connection string to analyze.</param>
             <param name="queueName">Optional queue name for disambiguation.</param>
-            <param name="vaultName">Optional vault name for Key Vault detection.</param>
             <param name="warningCallback">Optional callback for validation warnings.</param>
-            <returns>Detected DataProvider type.</returns>
+            <returns>Detected DataProvider type based on connection string patterns.</returns>
         </member>
         <member name="M:PSDataRepository.Commands.ProviderDetector.IsServiceBusConnectionString(System.String)">
             <summary>
             Checks if a connection string is for Azure Service Bus.
-            </summary>
-        </member>
-        <member name="M:PSDataRepository.Commands.ProviderDetector.DetectProviderFromParameters(System.String,System.String,System.String,System.String,System.String)">
-            <summary>
-            Detects provider from parameters when no connection string is provided.
-            </summary>
-        </member>
-        <member name="M:PSDataRepository.Commands.ProviderDetector.ValidateAuthMethodForProvider(PSDataRepository.Storage.DataProvider,System.String)">
-            <summary>
-            Validates that the authentication method is supported by the detected provider.
-            Throws ArgumentException if invalid combination is detected.
-            </summary>
-            <param name="provider">The detected provider.</param>
-            <param name="parameterSetName">The parameter set name from the cmdlet.</param>
-            <exception cref="T:System.ArgumentException">Thrown when auth method is not supported by provider.</exception>
-            <example>
-            <code>
-            try
-            {
-                ProviderDetector.ValidateAuthMethodForProvider(
-                    DataProvider.AzureServiceBus, 
-                    "SasToken");
-            }
-            catch (ArgumentException ex)
-            {
-                Console.WriteLine($"Invalid: {ex.Message}");
-            }
-            </code>
-            </example>
-        </member>
-        <member name="M:PSDataRepository.Commands.ProviderDetector.ValidateServiceBusAuth(System.String)">
-            <summary>
-            Validates Service Bus authentication (no standalone SAS token).
-            </summary>
-        </member>
-        <member name="M:PSDataRepository.Commands.ProviderDetector.ValidateLocalProviderAuth(System.String,PSDataRepository.Storage.DataProvider)">
-            <summary>
-            Validates that local providers (Disk/InMemory) don't have Azure auth parameters.
             </summary>
         </member>
         <member name="T:PSDataRepository.Commands.ReceivePSDataRepositoryMessageCommand">
@@ -1113,6 +1259,12 @@
             The name/key of the item(s) to remove.
             </summary>
         </member>
+        <member name="P:PSDataRepository.Commands.RemovePSDataRepositoryItemCommand.InputObject">
+            <summary>
+            Repository item received from <c>Get-PSDataRepositoryChildItem</c>.
+            Directories are automatically skipped.
+            </summary>
+        </member>
         <member name="P:PSDataRepository.Commands.RemovePSDataRepositoryItemCommand.Force">
             <summary>
             If specified, skips confirmation prompts.
@@ -1121,6 +1273,11 @@
         <member name="P:PSDataRepository.Commands.RemovePSDataRepositoryItemCommand.ContinueOnError">
             <summary>
             If specified, continues processing even if individual object deletion fails.
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Commands.RemovePSDataRepositoryItemCommand.RemoveItem(System.String)">
+            <summary>
+            Removes a single item by name with existence check, ShouldProcess, and ShouldContinue logic.
             </summary>
         </member>
         <member name="T:PSDataRepository.Commands.RemovePSDataRepositoryMessageCommand">
@@ -1329,12 +1486,13 @@
         </member>
         <member name="P:PSDataRepository.Commands.SetPSDataRepositoryItemCommand.Format">
             <summary>
-            Serialization format: Json (default), Xml, or Csv.
+            Serialization format: Json (default), Xml, Csv, or Yml.
             </summary>
         </member>
         <member name="P:PSDataRepository.Commands.SetPSDataRepositoryItemCommand.Encoding">
             <summary>
             Text encoding for writing. Default: UTF-8.
+            Accepts encoding names (UTF8, ASCII, Unicode, etc.) with tab-completion.
             </summary>
         </member>
         <member name="P:PSDataRepository.Commands.SetPSDataRepositoryItemCommand.MaxDepth">
@@ -1522,7 +1680,10 @@
             Provides AES-256 encryption and decryption with PBKDF2 key derivation.
             Shared by Compress-PSDataRepositoryItem and Expand-PSDataRepositoryItem cmdlets.
             <para>
-            V2 format (AES-GCM, default): <c>[PSDR-ENC-V2 11B][Salt 32B][Nonce 12B][Tag 16B][Ciphertext]</c>
+            V3 format (AES-GCM, 600k iterations, default): <c>[PSDR-ENC-V3 11B][Salt 32B][Nonce 12B][Tag 16B][Ciphertext]</c>
+            </para>
+            <para>
+            V2 format (AES-GCM, 100k iterations, legacy read-only): <c>[PSDR-ENC-V2 11B][Salt 32B][Nonce 12B][Tag 16B][Ciphertext]</c>
             </para>
             <para>
             V1 format (AES-CBC, legacy read-only): <c>[PSDR-ENC-V1 11B][Salt 32B][IV 16B][Ciphertext]</c>
@@ -1531,12 +1692,12 @@
         </member>
         <member name="M:PSDataRepository.Common.CryptoHelper.HasEncryptionHeader(System.Byte[])">
             <summary>
-            Checks whether the data starts with any known encryption header (V1 or V2).
+            Checks whether the data starts with any known encryption header (V1, V2 or V3).
             </summary>
         </member>
         <member name="M:PSDataRepository.Common.CryptoHelper.Encrypt(System.Byte[],System.Security.SecureString)">
             <summary>
-            Encrypts data using AES-256-GCM (V2) with a PBKDF2-derived key.
+            Encrypts data using AES-256-GCM (V3) with a PBKDF2-derived key (600k iterations).
             Provides authenticated encryption — ciphertext integrity is verified on decryption.
             </summary>
             <param name="data">Plaintext bytes to encrypt.</param>
@@ -1546,16 +1707,16 @@
         <member name="M:PSDataRepository.Common.CryptoHelper.Decrypt(System.Byte[],System.Security.SecureString)">
             <summary>
             Decrypts data encrypted by <see cref="M:PSDataRepository.Common.CryptoHelper.Encrypt(System.Byte[],System.Security.SecureString)"/>.
-            Supports both V2 (AES-GCM) and V1 (AES-CBC, legacy) formats.
+            Supports V3 (AES-GCM, 600k), V2 (AES-GCM, 100k) and V1 (AES-CBC, legacy) formats.
             </summary>
             <param name="encryptedData">Encrypted payload including header, salt, and ciphertext.</param>
             <param name="password">Password used for key derivation (must match encryption).</param>
             <returns>Decrypted plaintext bytes.</returns>
         </member>
-        <member name="M:PSDataRepository.Common.CryptoHelper.DecryptV2(System.Byte[],System.Security.SecureString)">
+        <member name="M:PSDataRepository.Common.CryptoHelper.DecryptGcm(System.Byte[],System.Security.SecureString,System.Byte[],System.Int32)">
             <summary>
-            Decrypts V2 (AES-GCM) payload.
-            Format: [PSDR-ENC-V2 11B][Salt 32B][Nonce 12B][Tag 16B][Ciphertext]
+            Decrypts AES-GCM payload (V2 or V3).
+            Format: [Header 11B][Salt 32B][Nonce 12B][Tag 16B][Ciphertext]
             </summary>
         </member>
         <member name="M:PSDataRepository.Common.CryptoHelper.DecryptV1(System.Byte[],System.Security.SecureString)">
@@ -1563,6 +1724,20 @@
             Decrypts V1 (AES-CBC) payload. Retained for backward compatibility with existing encrypted data.
             Format: [PSDR-ENC-V1 11B][Salt 32B][IV 16B][Ciphertext]
             </summary>
+        </member>
+        <member name="T:PSDataRepository.Common.EncodingCompleter">
+            <summary>
+            Provides tab-completion for common encoding names used in cmdlet parameters.
+            </summary>
+        </member>
+        <member name="T:PSDataRepository.Common.EncodingTransformationAttribute">
+            <summary>
+            Transforms string encoding names (e.g., "UTF8", "ASCII") into <see cref="T:System.Text.Encoding"/> instances.
+            Allows users to pass friendly encoding names instead of <c>[System.Text.Encoding]::UTF8</c>.
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Common.EncodingTransformationAttribute.Transform(System.Management.Automation.EngineIntrinsics,System.Object)">
+            <inheritdoc/>
         </member>
         <member name="T:PSDataRepository.Common.EncryptionConstants">
             <summary>
@@ -1583,19 +1758,26 @@
         <member name="F:PSDataRepository.Common.EncryptionConstants.IVSize">
             <summary>IV size in bytes for AES-CBC mode (V1 only).</summary>
         </member>
+        <member name="F:PSDataRepository.Common.EncryptionConstants.Pbkdf2IterationsLegacy">
+            <summary>
+            Number of PBKDF2 iterations for key derivation (V1 and V2 data).
+            Retained for backward-compatible decryption of existing encrypted data.
+            </summary>
+        </member>
         <member name="F:PSDataRepository.Common.EncryptionConstants.Pbkdf2Iterations">
             <summary>
-            Number of PBKDF2 iterations for key derivation.
-            OWASP 2023 recommends 600,000 for SHA-256. Current value is retained for backward
-            compatibility with existing encrypted data. Consider migrating to 600,000
-            with a re-encryption strategy for new data.
+            Number of PBKDF2 iterations for key derivation (V3+).
+            OWASP 2023 recommends 600,000 for SHA-256.
             </summary>
         </member>
         <member name="F:PSDataRepository.Common.EncryptionConstants.EncryptionMagicHeader">
             <summary>Magic header bytes for V1 (AES-CBC) encrypted files.</summary>
         </member>
         <member name="F:PSDataRepository.Common.EncryptionConstants.EncryptionMagicHeaderV2">
-            <summary>Magic header bytes for V2 (AES-GCM) encrypted files.</summary>
+            <summary>Magic header bytes for V2 (AES-GCM, 100k iterations) encrypted files.</summary>
+        </member>
+        <member name="F:PSDataRepository.Common.EncryptionConstants.EncryptionMagicHeaderV3">
+            <summary>Magic header bytes for V3 (AES-GCM, 600k iterations) encrypted files.</summary>
         </member>
         <member name="F:PSDataRepository.Common.EncryptionConstants.GcmNonceSize">
             <summary>AES-GCM nonce size in bytes (96 bits, NIST recommendation).</summary>
@@ -1608,6 +1790,76 @@
             Centralized provider name constants derived from <see cref="T:PSDataRepository.Storage.DataProvider"/> enum.
             Single source of truth: enum values define the canonical names.
             All comparisons should use <see cref="F:System.StringComparison.OrdinalIgnoreCase"/>.
+            </summary>
+        </member>
+        <member name="T:PSDataRepository.Common.RepositoryDiagnostics">
+            <summary>
+            Centralized OpenTelemetry instrumentation for PSDataRepository.
+            Provides <see cref="P:PSDataRepository.Common.RepositoryDiagnostics.ActivitySource"/> for distributed tracing and
+            <see cref="P:PSDataRepository.Common.RepositoryDiagnostics.Meter"/> for metrics (counters, histograms).
+            </summary>
+        </member>
+        <member name="F:PSDataRepository.Common.RepositoryDiagnostics.SourceName">
+            <summary>
+            The name used by all PSDataRepository telemetry sources.
+            Use this to register listeners:
+            <code>builder.AddSource(RepositoryDiagnostics.SourceName);</code>
+            </summary>
+        </member>
+        <member name="F:PSDataRepository.Common.RepositoryDiagnostics.Version">
+            <summary>
+            Assembly version used as the telemetry version.
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Common.RepositoryDiagnostics.ActivitySource">
+            <summary>
+            ActivitySource for distributed tracing of repository operations.
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Common.RepositoryDiagnostics.Meter">
+            <summary>
+            Meter for repository operation metrics (counters, histograms).
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Common.RepositoryDiagnostics.StorageReadCount">
+            <summary>Counts total storage read operations.</summary>
+        </member>
+        <member name="P:PSDataRepository.Common.RepositoryDiagnostics.StorageWriteCount">
+            <summary>Counts total storage write operations.</summary>
+        </member>
+        <member name="P:PSDataRepository.Common.RepositoryDiagnostics.StorageDeleteCount">
+            <summary>Counts total storage delete operations.</summary>
+        </member>
+        <member name="P:PSDataRepository.Common.RepositoryDiagnostics.StorageListCount">
+            <summary>Counts total storage list operations.</summary>
+        </member>
+        <member name="P:PSDataRepository.Common.RepositoryDiagnostics.StorageErrorCount">
+            <summary>Counts storage operation errors.</summary>
+        </member>
+        <member name="P:PSDataRepository.Common.RepositoryDiagnostics.QueueSendCount">
+            <summary>Counts total queue send operations.</summary>
+        </member>
+        <member name="P:PSDataRepository.Common.RepositoryDiagnostics.QueueReceiveCount">
+            <summary>Counts total queue receive operations.</summary>
+        </member>
+        <member name="P:PSDataRepository.Common.RepositoryDiagnostics.StorageOperationDuration">
+            <summary>Measures storage operation duration in milliseconds.</summary>
+        </member>
+        <member name="P:PSDataRepository.Common.RepositoryDiagnostics.StoragePayloadSize">
+            <summary>Measures read/write payload size in bytes.</summary>
+        </member>
+        <member name="M:PSDataRepository.Common.RepositoryDiagnostics.StartStorageActivity(System.String,System.String,System.String)">
+            <summary>
+            Starts a new <see cref="T:System.Diagnostics.Activity"/> for a storage operation.
+            Returns null if no listener is registered (no-op by default).
+            </summary>
+            <param name="operationName">Operation name (e.g., "ReadAsync", "WriteAsync").</param>
+            <param name="provider">Provider name (e.g., "AzureBlob", "Disk").</param>
+            <param name="itemName">Optional item/blob name.</param>
+        </member>
+        <member name="M:PSDataRepository.Common.RepositoryDiagnostics.RecordStorageOperation(System.String,System.String,System.Double,System.Nullable{System.Int64})">
+            <summary>
+            Records a storage operation completion with duration and optional payload size.
             </summary>
         </member>
         <member name="T:PSDataRepository.Common.RetryHelper">
@@ -1814,6 +2066,37 @@
             <summary>
             Exception thrown when serialization/deserialization fails.
             </summary>
+        </member>
+        <member name="T:PSDataRepository.Health.StorageRepositoryHealthCheck">
+            <summary>
+            Health check for <see cref="T:PSDataRepository.Storage.IStorageRepository"/> providers.
+            Verifies connectivity by calling <see cref="M:PSDataRepository.Storage.IStorageRepository.ListAsync(System.String,System.Threading.CancellationToken)"/> with a short timeout.
+            Register via <c>builder.Services.AddHealthChecks().Add(new RepositoryHealthCheck(repo))</c>.
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Health.StorageRepositoryHealthCheck.#ctor(PSDataRepository.Storage.IStorageRepository,System.String)">
+            <summary>
+            Initializes a new health check for the specified storage repository.
+            </summary>
+            <param name="repository">The storage repository to check.</param>
+            <param name="providerName">Friendly provider name for the health report.</param>
+        </member>
+        <member name="M:PSDataRepository.Health.StorageRepositoryHealthCheck.CheckHealthAsync(Microsoft.Extensions.Diagnostics.HealthChecks.HealthCheckContext,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="T:PSDataRepository.Health.SecretRepositoryHealthCheck">
+            <summary>
+            Health check for <see cref="T:PSDataRepository.Storage.ISecretRepository"/> providers.
+            Verifies connectivity by attempting to read a non-existent secret.
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Health.SecretRepositoryHealthCheck.#ctor(PSDataRepository.Storage.ISecretRepository,System.String)">
+            <summary>
+            Initializes a new health check for the specified secret repository.
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Health.SecretRepositoryHealthCheck.CheckHealthAsync(Microsoft.Extensions.Diagnostics.HealthChecks.HealthCheckContext,System.Threading.CancellationToken)">
+            <inheritdoc />
         </member>
         <member name="T:PSDataRepository.IRepository">
             <summary>
@@ -2430,6 +2713,26 @@
               Looks up a localized string similar to Connection to {0} is healthy..
             </summary>
         </member>
+        <member name="P:PSDataRepository.Resources.Strings.DiskSecret_InvalidData">
+            <summary>
+              Looks up a localized string similar to Encrypted secret data is corrupted or truncated..
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Resources.Strings.DiskSecret_InvalidKeySize">
+            <summary>
+              Looks up a localized string similar to Master key must be exactly {0} bytes..
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Resources.Strings.DiskSecret_PassphraseEmpty">
+            <summary>
+              Looks up a localized string similar to Passphrase cannot be empty. Provide a non-empty SecureString passphrase for disk secret encryption..
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Resources.Strings.DiskSecret_WrongPassphrase">
+            <summary>
+              Looks up a localized string similar to The passphrase does not match the existing secret vault. Verify your passphrase and try again..
+            </summary>
+        </member>
         <member name="P:PSDataRepository.Resources.Strings.Enc_DataTooShort">
             <summary>
               Looks up a localized string similar to Encrypted data is too short. File may be corrupted..
@@ -2807,7 +3110,7 @@
         </member>
         <member name="P:PSDataRepository.Resources.Strings.Prov_NotSecretRepository">
             <summary>
-              Looks up a localized string similar to Connected repository does not support secret operations. Use AzureKeyVault provider..
+              Looks up a localized string similar to Connected repository does not support secret operations. Use AzureKeyVault provider or Disk provider with -Passphrase..
             </summary>
         </member>
         <member name="P:PSDataRepository.Resources.Strings.Prov_NotStorageRepository">
@@ -3380,6 +3683,126 @@
               Looks up a localized string similar to XmlRootName parameter is ignored when Format is not Xml..
             </summary>
         </member>
+        <member name="P:PSDataRepository.Resources.Strings.Err_NoAuthMethodSpecified">
+            <summary>
+              Looks up a localized string similar to No authentication method specified for Azure provider....
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Resources.Strings.Cmd_AuthParamRequired">
+            <summary>
+              Looks up a localized string similar to -{0} is required when using {1} authentication..
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Resources.Strings.Prov_AuthNotSupported">
+            <summary>
+              Looks up a localized string similar to Authentication mode &apos;{0}&apos; is not supported by {1} provider..
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Resources.Strings.Err_UnsupportedEncoding">
+            <summary>
+              Looks up a localized string similar to Cannot convert &apos;{0}&apos; to System.Text.Encoding. Supported values: ASCII, BigEndianUnicode, Latin1, Unicode, UTF7, UTF8, UTF8BOM, UTF8NoBOM, UTF32..
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Resources.Strings.Err_EmptyInput">
+            <summary>
+              Looks up a localized string similar to Cannot deserialize null or empty {0} string..
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Resources.Strings.Err_ParseFailed">
+            <summary>
+              Looks up a localized string similar to Failed to parse {0}: {1}.
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Resources.Strings.Err_UnsupportedFormat">
+            <summary>
+              Looks up a localized string similar to Format &apos;{0}&apos; is not supported..
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Resources.Strings.Prov_MetadataNotSupported">
+            <summary>
+              Looks up a localized string similar to The connected provider does not support metadata listing. Get-PSDataRepositoryChildItem requires a storage provider (AzureBlob, Disk)..
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Resources.Strings.Verb_ChildItemStarting">
+            <summary>
+              Looks up a localized string similar to Listing child items from path &apos;{0}&apos; (Recurse: {1})..
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Resources.Strings.Verb_ChildItemFound">
+            <summary>
+              Looks up a localized string similar to Found {0} item(s)..
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Resources.Strings.Verb_CopyStarting">
+            <summary>
+              Looks up a localized string similar to Starting copy to destination: &apos;{0}&apos;.
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Resources.Strings.Verb_CopyCompleted">
+            <summary>
+              Looks up a localized string similar to Copy completed. {0} item(s) copied..
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Resources.Strings.Verb_CopyingItem">
+            <summary>
+              Looks up a localized string similar to Copying: {0} → {1} ({2} bytes).
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Resources.Strings.Verb_CopiedItem">
+            <summary>
+              Looks up a localized string similar to Copied: {0}.
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Resources.Strings.Verb_CopySkipped">
+            <summary>
+              Looks up a localized string similar to Skipped (not confirmed): {0}.
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Resources.Strings.Verb_CopySkippedDirectory">
+            <summary>
+              Looks up a localized string similar to Skipping directory: {0}.
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Resources.Strings.Verb_CopyShouldProcess">
+            <summary>
+              Looks up a localized string similar to {0} → {1}.
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Resources.Strings.Warn_CopySameSourceDest">
+            <summary>
+              Looks up a localized string similar to Source and destination are the same: &apos;{0}&apos;. Skipping..
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Resources.Strings.Verb_RemoveSkippedDirectory">
+            <summary>
+              Looks up a localized string similar to Skipping directory (cannot remove): {0}.
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Resources.Strings.Err_WriteItemFailed">
+            <summary>
+              Looks up a localized string similar to Failed to write item: {0}.
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Resources.Strings.Auth_TokenNullOrEmpty">
+            <summary>
+              Looks up a localized string similar to Token must not be null or empty..
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Resources.Strings.Auth_TokenAlreadyExpired">
+            <summary>
+              Looks up a localized string similar to Token is already expired..
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Resources.Strings.Auth_TokenExpired">
+            <summary>
+              Looks up a localized string similar to Access token has expired. Re-authenticate to obtain a new token..
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Resources.Strings.Verb_NoObjectsFound">
+            <summary>
+              Looks up a localized string similar to No objects found in the repository..
+            </summary>
+        </member>
         <member name="T:PSDataRepository.Serialization.FormatDetector">
             <summary>
             Provides centralized format detection logic used by storage and messaging cmdlets.
@@ -3405,7 +3828,7 @@
         </member>
         <member name="T:PSDataRepository.Serialization.Formatter">
              <summary>
-             Provides multi-format (JSON, XML, CSV) serialization and deserialization with:
+             Provides multi-format (JSON, XML, CSV, YAML) serialization and deserialization with:
              - Cycle detection
              - Depth limitation (maxDepth)
              - Ignored PS* properties
@@ -3418,6 +3841,7 @@
              - Formatter.Json.cs   — JSON serialization/deserialization
              - Formatter.Xml.cs    — XML serialization/deserialization
              - Formatter.Csv.cs    — CSV serialization/deserialization
+             - Formatter.Yml.cs    — YAML serialization/deserialization
              </summary>
         </member>
         <member name="F:PSDataRepository.Serialization.Formatter.DefaultMaxDepth">
@@ -3693,6 +4117,32 @@
             so that final XML can rename the element accordingly.
             </summary>
         </member>
+        <member name="M:PSDataRepository.Serialization.Formatter.SerializeToYaml(System.Object,System.Int32)">
+            <summary>
+            Serializes an object to YAML using recursion/cycle protection and respecting maxDepth.
+            Reuses <see cref="M:PSDataRepository.Serialization.Formatter.CleanObjectForJson(System.Object,System.Int32,System.Int32,System.Collections.Generic.HashSet{System.Object})"/> to produce a clean dictionary/list/scalar graph,
+            then feeds it to YamlDotNet serializer.
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Serialization.Formatter.DeserializeFromYaml(System.String)">
+            <summary>
+            Deserializes a YAML string into a PSObject, PSObject array, or scalar value.
+            Maps YAML mappings → PSObject with NoteProperties, sequences → arrays, scalars → typed values.
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Serialization.Formatter.ConvertYamlNode(System.Object)">
+            <summary>
+            Recursively converts a YamlDotNet-deserialized object graph into PSObject/array/scalar.
+            YamlDotNet deserializes to Dictionary&lt;object,object&gt; for mappings, List&lt;object&gt; for sequences,
+            and string for scalars.
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Serialization.Formatter.InferYamlScalar(System.String)">
+            <summary>
+            Infers the .NET type of a YAML scalar string value.
+            Handles booleans, integers, decimals, dates, null, and falls back to string.
+            </summary>
+        </member>
         <member name="T:PSDataRepository.Serialization.FormatType">
             <summary>
             Specifies the supported serialization formats.
@@ -3711,6 +4161,11 @@
         <member name="F:PSDataRepository.Serialization.FormatType.Csv">
             <summary>
             CSV format.
+            </summary>
+        </member>
+        <member name="F:PSDataRepository.Serialization.FormatType.Yml">
+            <summary>
+            YAML format.
             </summary>
         </member>
         <member name="T:PSDataRepository.Session.ISessionManager">
@@ -3748,6 +4203,13 @@
         <member name="M:PSDataRepository.Session.ISessionManager.GetStorageRepository">
             <summary>
             Gets the storage repository if the current repository supports storage operations.
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Session.ISessionManager.GetSecretRepository">
+            <summary>
+            Gets the secret repository if the current repository supports secret operations.
+            For Azure Key Vault the main repository is returned; for Disk provider a
+            <see cref="T:PSDataRepository.Storage.Providers.DiskSecretRepository"/> is lazily created when a passphrase was provided.
             </summary>
         </member>
         <member name="M:PSDataRepository.Session.ISessionManager.GetOptions">
@@ -3805,6 +4267,11 @@
             Cached queue repository instance for Disk provider to prevent creating multiple instances.
             </summary>
         </member>
+        <member name="P:PSDataRepository.Session.RepositorySession.CachedSecretRepository">
+            <summary>
+            Cached secret repository instance for Disk provider to prevent creating multiple instances.
+            </summary>
+        </member>
         <member name="P:PSDataRepository.Session.RepositorySession.IsConnected">
             <summary>
             Indicates whether a repository session is currently active (connected).
@@ -3848,6 +4315,17 @@
             Note: Disk queue functionality is separate via DiskQueueRepository.
             </summary>
         </member>
+        <member name="M:PSDataRepository.Session.SessionManager.CreateScpRepository(PSDataRepository.Storage.StorageOption)">
+            <summary>
+            Creates an SCP/SFTP repository from the provided options.
+            Supports password and private key authentication.
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Session.SessionManager.CreateFtpRepository(PSDataRepository.Storage.StorageOption)">
+            <summary>
+            Creates an FTP/FTPS repository from the provided options.
+            </summary>
+        </member>
         <member name="M:PSDataRepository.Session.SessionManager.ClearSession">
             <summary>
             Clears the current session state (disconnects the repository).
@@ -3873,6 +4351,14 @@
         <member name="M:PSDataRepository.Session.SessionManager.GetStorageRepository">
             <summary>
             Gets the storage repository if the current repository supports storage operations.
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Session.SessionManager.GetSecretRepository">
+            <summary>
+            Gets the secret repository if the current repository supports secret operations.
+            For Azure Key Vault the main repository is returned directly.
+            For Disk provider, a <see cref="T:PSDataRepository.Storage.Providers.DiskSecretRepository"/> is lazily created and cached
+            when a passphrase was provided at connect time.
             </summary>
         </member>
         <member name="M:PSDataRepository.Session.SessionManager.GetOptions">
@@ -3920,43 +4406,77 @@
             Disk-based provider
             </summary>
         </member>
+        <member name="F:PSDataRepository.Storage.DataProvider.Scp">
+            <summary>
+            SCP/SFTP provider using SSH protocol
+            </summary>
+        </member>
+        <member name="F:PSDataRepository.Storage.DataProvider.Ftp">
+            <summary>
+            FTP/FTPS provider
+            </summary>
+        </member>
         <member name="T:PSDataRepository.Storage.IFilesystemStorageRepository">
             <summary>
             Specialized file system repository interface for efficient stream operations.
             Inherits standard read/write/delete from <see cref="T:PSDataRepository.Storage.IStorageRepository"/>.
             </summary>
         </member>
-        <member name="M:PSDataRepository.Storage.IFilesystemStorageRepository.WriteAsync(System.String,System.IO.Stream)">
+        <member name="M:PSDataRepository.Storage.IFilesystemStorageRepository.WriteAsync(System.String,System.IO.Stream,System.Threading.CancellationToken)">
             <summary>
             Writes the contents of a stream to the storage with the specified name.
             </summary>
             <param name="name">The file name or key.</param>
             <param name="data">The source stream to write.</param>
+            <param name="ct">Cancellation token.</param>
         </member>
-        <member name="M:PSDataRepository.Storage.IFilesystemStorageRepository.OpenReadAsync(System.String)">
+        <member name="M:PSDataRepository.Storage.IFilesystemStorageRepository.OpenReadAsync(System.String,System.Threading.CancellationToken)">
             <summary>
             Opens a read-only stream for the specified item.
             Caller is responsible for disposing the returned stream.
             </summary>
             <param name="name">The file name or key.</param>
+            <param name="ct">Cancellation token.</param>
             <returns>A readable stream containing the item's data.</returns>
+        </member>
+        <member name="T:PSDataRepository.Storage.IMetadataStorageRepository">
+            <summary>
+            Optional capability interface for storage repositories that can return
+            rich metadata about stored items (size, timestamps, content type, etc.).
+            Providers that implement this interface are used by <c>Get-PSDataRepositoryChildItem</c>.
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Storage.IMetadataStorageRepository.ListItemsAsync(System.String,System.Boolean,System.Threading.CancellationToken)">
+            <summary>
+            Lists items in the repository with full metadata.
+            </summary>
+            <param name="prefix">
+            Optional prefix (subfolder/virtual directory) to scope the listing.
+            When null, lists from the root of the repository.
+            </param>
+            <param name="recurse">
+            When <c>true</c>, includes items from all nested subdirectories/virtual folders.
+            When <c>false</c>, returns only direct children of <paramref name="prefix"/>.
+            </param>
+            <param name="ct">Cancellation token.</param>
+            <returns>A collection of <see cref="T:PSDataRepository.Storage.RepositoryItemInfo"/> objects.</returns>
         </member>
         <member name="T:PSDataRepository.Storage.ISecretRepository">
             <summary>
             Defines secret storage operations for secret repositories (e.g., Azure Key Vault).
             </summary>
         </member>
-        <member name="M:PSDataRepository.Storage.ISecretRepository.GetSecretAsync(System.String)">
+        <member name="M:PSDataRepository.Storage.ISecretRepository.GetSecretAsync(System.String,System.Threading.CancellationToken)">
             <summary>
             Gets the value of a secret by name.
             </summary>
         </member>
-        <member name="M:PSDataRepository.Storage.ISecretRepository.SetSecretAsync(System.String,System.String)">
+        <member name="M:PSDataRepository.Storage.ISecretRepository.SetSecretAsync(System.String,System.String,System.Threading.CancellationToken)">
             <summary>
             Sets or updates the value of a secret.
             </summary>
         </member>
-        <member name="M:PSDataRepository.Storage.ISecretRepository.DeleteSecretAsync(System.String)">
+        <member name="M:PSDataRepository.Storage.ISecretRepository.DeleteSecretAsync(System.String,System.Threading.CancellationToken)">
             <summary>
             Deletes a secret by name.
             </summary>
@@ -3966,49 +4486,50 @@
             Defines basic operations for repositories that store text and binary data by name (e.g., file system, blob storage).
             </summary>
         </member>
-        <member name="M:PSDataRepository.Storage.IStorageRepository.ListAsync(System.String)">
+        <member name="M:PSDataRepository.Storage.IStorageRepository.ListAsync(System.String,System.Threading.CancellationToken)">
             <summary>
             Lists all item names in the repository, optionally filtered by prefix.
             </summary>
             <param name="prefix">Optional prefix to filter items. If null, returns all items.</param>
+            <param name="ct">Cancellation token.</param>
             <returns>A collection of item names.</returns>
         </member>
-        <member name="M:PSDataRepository.Storage.IStorageRepository.WriteAsync(System.String,System.String)">
+        <member name="M:PSDataRepository.Storage.IStorageRepository.WriteAsync(System.String,System.String,System.Threading.CancellationToken)">
             <summary>
             Writes string content to a storage item.
             </summary>
         </member>
-        <member name="M:PSDataRepository.Storage.IStorageRepository.WriteAsync(System.String,System.String,System.Text.Encoding)">
+        <member name="M:PSDataRepository.Storage.IStorageRepository.WriteAsync(System.String,System.String,System.Text.Encoding,System.Threading.CancellationToken)">
             <summary>
             Writes string content to a storage item using the specified encoding.
             </summary>
         </member>
-        <member name="M:PSDataRepository.Storage.IStorageRepository.WriteAsync(System.String,System.Byte[])">
+        <member name="M:PSDataRepository.Storage.IStorageRepository.WriteAsync(System.String,System.Byte[],System.Threading.CancellationToken)">
             <summary>
             Writes binary content to a storage item.
             </summary>
         </member>
-        <member name="M:PSDataRepository.Storage.IStorageRepository.ExistsAsync(System.String)">
+        <member name="M:PSDataRepository.Storage.IStorageRepository.ExistsAsync(System.String,System.Threading.CancellationToken)">
             <summary>
             Checks whether the item exists in the repository.
             </summary>
         </member>
-        <member name="M:PSDataRepository.Storage.IStorageRepository.ReadAsync(System.String)">
+        <member name="M:PSDataRepository.Storage.IStorageRepository.ReadAsync(System.String,System.Threading.CancellationToken)">
             <summary>
             Reads text content from a storage item (using default encoding).
             </summary>
         </member>
-        <member name="M:PSDataRepository.Storage.IStorageRepository.ReadAsync(System.String,System.Text.Encoding)">
+        <member name="M:PSDataRepository.Storage.IStorageRepository.ReadAsync(System.String,System.Text.Encoding,System.Threading.CancellationToken)">
             <summary>
             Reads text content from a storage item using the specified encoding.
             </summary>
         </member>
-        <member name="M:PSDataRepository.Storage.IStorageRepository.ReadAsBytesAsync(System.String)">
+        <member name="M:PSDataRepository.Storage.IStorageRepository.ReadAsBytesAsync(System.String,System.Threading.CancellationToken)">
             <summary>
             Reads binary content from a storage item.
             </summary>
         </member>
-        <member name="M:PSDataRepository.Storage.IStorageRepository.DeleteAsync(System.String)">
+        <member name="M:PSDataRepository.Storage.IStorageRepository.DeleteAsync(System.String,System.Threading.CancellationToken)">
             <summary>
             Deletes a storage item by name.
             </summary>
@@ -4036,52 +4557,52 @@
             Internal constructor for unit testing — accepts a pre-configured BlobContainerClient.
             </summary>
         </member>
-        <member name="M:PSDataRepository.Storage.Providers.AzureBlobStorageRepository.EnsureContainerExistsAsync">
+        <member name="M:PSDataRepository.Storage.Providers.AzureBlobStorageRepository.EnsureContainerExistsAsync(System.Threading.CancellationToken)">
             <summary>
             Ensures the container exists (lazy initialization, thread-safe).
             </summary>
         </member>
-        <member name="M:PSDataRepository.Storage.Providers.AzureBlobStorageRepository.ListAsync(System.String)">
+        <member name="M:PSDataRepository.Storage.Providers.AzureBlobStorageRepository.ListAsync(System.String,System.Threading.CancellationToken)">
             <summary>
             Lists all blob names in the container, optionally filtered by prefix.
             </summary>
         </member>
-        <member name="M:PSDataRepository.Storage.Providers.AzureBlobStorageRepository.WriteAsync(System.String,System.String)">
+        <member name="M:PSDataRepository.Storage.Providers.AzureBlobStorageRepository.WriteAsync(System.String,System.String,System.Threading.CancellationToken)">
             <summary>
             Writes string content to a storage item using default encoding.
             </summary>
         </member>
-        <member name="M:PSDataRepository.Storage.Providers.AzureBlobStorageRepository.WriteAsync(System.String,System.String,System.Text.Encoding)">
+        <member name="M:PSDataRepository.Storage.Providers.AzureBlobStorageRepository.WriteAsync(System.String,System.String,System.Text.Encoding,System.Threading.CancellationToken)">
             <summary>
             Writes string content to a storage item using the specified encoding.
             </summary>
         </member>
-        <member name="M:PSDataRepository.Storage.Providers.AzureBlobStorageRepository.WriteAsync(System.String,System.Byte[])">
+        <member name="M:PSDataRepository.Storage.Providers.AzureBlobStorageRepository.WriteAsync(System.String,System.Byte[],System.Threading.CancellationToken)">
             <summary>
             Writes binary content to a storage item.
             </summary>
         </member>
-        <member name="M:PSDataRepository.Storage.Providers.AzureBlobStorageRepository.ExistsAsync(System.String)">
+        <member name="M:PSDataRepository.Storage.Providers.AzureBlobStorageRepository.ExistsAsync(System.String,System.Threading.CancellationToken)">
             <summary>
             Checks whether the item exists in the repository.
             </summary>
         </member>
-        <member name="M:PSDataRepository.Storage.Providers.AzureBlobStorageRepository.ReadAsync(System.String)">
+        <member name="M:PSDataRepository.Storage.Providers.AzureBlobStorageRepository.ReadAsync(System.String,System.Threading.CancellationToken)">
             <summary>
             Reads text content from a storage item using default encoding.
             </summary>
         </member>
-        <member name="M:PSDataRepository.Storage.Providers.AzureBlobStorageRepository.ReadAsync(System.String,System.Text.Encoding)">
+        <member name="M:PSDataRepository.Storage.Providers.AzureBlobStorageRepository.ReadAsync(System.String,System.Text.Encoding,System.Threading.CancellationToken)">
             <summary>
             Reads text content from a storage item using the specified encoding.
             </summary>
         </member>
-        <member name="M:PSDataRepository.Storage.Providers.AzureBlobStorageRepository.ReadAsBytesAsync(System.String)">
+        <member name="M:PSDataRepository.Storage.Providers.AzureBlobStorageRepository.ReadAsBytesAsync(System.String,System.Threading.CancellationToken)">
             <summary>
             Reads binary content from a storage item.
             </summary>
         </member>
-        <member name="M:PSDataRepository.Storage.Providers.AzureBlobStorageRepository.DeleteAsync(System.String)">
+        <member name="M:PSDataRepository.Storage.Providers.AzureBlobStorageRepository.DeleteAsync(System.String,System.Threading.CancellationToken)">
             <summary>
             Deletes a storage item by name.
             </summary>
@@ -4089,6 +4610,13 @@
         <member name="M:PSDataRepository.Storage.Providers.AzureBlobStorageRepository.GetItemPath(System.String)">
             <summary>
             Gets the physical path or URI for the storage item.
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Storage.Providers.AzureBlobStorageRepository.ListItemsAsync(System.String,System.Boolean,System.Threading.CancellationToken)">
+            <summary>
+            Lists blobs with full metadata. Non-recursive listing uses hierarchy
+            (delimiter '/') to return both blobs and virtual directories at the current level.
+            Recursive listing returns all blobs under the given prefix.
             </summary>
         </member>
         <member name="M:PSDataRepository.Storage.Providers.AzureBlobStorageRepository.SanitizeBlobName(System.String)">
@@ -4136,11 +4664,12 @@
             Internal constructor for unit testing — accepts a pre-configured SecretClient.
             </summary>
         </member>
-        <member name="M:PSDataRepository.Storage.Providers.AzureKeyVaultRepository.GetSecretAsync(System.String)">
+        <member name="M:PSDataRepository.Storage.Providers.AzureKeyVaultRepository.GetSecretAsync(System.String,System.Threading.CancellationToken)">
             <summary>
             Retrieves a secret value by name from Azure Key Vault.
             </summary>
             <param name="name">The secret name (Key Vault secret identifier).</param>
+            <param name="ct">Cancellation token.</param>
             <returns>The secret value, or null if not found.</returns>
             <example>
             <code>
@@ -4152,12 +4681,13 @@
             </code>
             </example>
         </member>
-        <member name="M:PSDataRepository.Storage.Providers.AzureKeyVaultRepository.SetSecretAsync(System.String,System.String)">
+        <member name="M:PSDataRepository.Storage.Providers.AzureKeyVaultRepository.SetSecretAsync(System.String,System.String,System.Threading.CancellationToken)">
             <summary>
             Sets or updates a secret value in Azure Key Vault.
             </summary>
             <param name="name">The secret name (Key Vault secret identifier).</param>
             <param name="value">The secret value to store.</param>
+            <param name="ct">Cancellation token.</param>
             <example>
             <code>
             await repository.SetSecretAsync("ApiKey", "abc123xyz789");
@@ -4165,19 +4695,96 @@
             </code>
             </example>
         </member>
-        <member name="M:PSDataRepository.Storage.Providers.AzureKeyVaultRepository.DeleteSecretAsync(System.String)">
+        <member name="M:PSDataRepository.Storage.Providers.AzureKeyVaultRepository.DeleteSecretAsync(System.String,System.Threading.CancellationToken)">
             <summary>
             Deletes a secret from Azure Key Vault.
             Note: This is a soft delete operation. The secret can be recovered within the retention period.
             Use PurgeDeletedSecretAsync for permanent deletion (requires purge permissions).
             </summary>
             <param name="name">The secret name to delete.</param>
+            <param name="ct">Cancellation token.</param>
             <example>
             <code>
             await repository.DeleteSecretAsync("OldApiKey");
             // Secret is soft-deleted and can be recovered within retention period
             </code>
             </example>
+        </member>
+        <member name="T:PSDataRepository.Storage.Providers.DiskSecretRepository">
+            <summary>
+            Disk-based secret repository with AES-256-GCM encryption.
+            Secrets are encrypted using a master key derived from the user-supplied passphrase
+            via PBKDF2 (SHA-256, 600 000 iterations). Each encrypt operation uses a unique random nonce.
+            On first use a random master salt is persisted; a verification token confirms that
+            subsequent sessions supply the correct passphrase.
+            <para>
+            File layout per secret: <c>[nonce 12B][tag 16B][ciphertext]</c>
+            </para>
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Storage.Providers.DiskSecretRepository.#ctor(System.String,System.Security.SecureString)">
+            <summary>
+            Initializes a new instance.
+            Creates the secrets directory, derives the master key from the passphrase,
+            and verifies (or initializes) the passphrase verification token.
+            </summary>
+            <param name="basePath">Root directory for the disk provider.</param>
+            <param name="passphrase">User-supplied encryption passphrase.</param>
+            <exception cref="T:System.ArgumentException">Thrown when <paramref name="basePath"/> is empty.</exception>
+            <exception cref="T:System.ArgumentNullException">Thrown when <paramref name="passphrase"/> is null.</exception>
+            <exception cref="T:System.Security.Cryptography.CryptographicException">Thrown when the passphrase does not match the existing vault.</exception>
+        </member>
+        <member name="M:PSDataRepository.Storage.Providers.DiskSecretRepository.#ctor(System.String,System.Byte[])">
+            <summary>
+            Internal constructor for unit testing with a pre-derived master key.
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Storage.Providers.DiskSecretRepository.GetSecretAsync(System.String,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:PSDataRepository.Storage.Providers.DiskSecretRepository.SetSecretAsync(System.String,System.String,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:PSDataRepository.Storage.Providers.DiskSecretRepository.DeleteSecretAsync(System.String,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:PSDataRepository.Storage.Providers.DiskSecretRepository.Encrypt(System.Byte[])">
+            <summary>
+            Encrypts plaintext using AES-256-GCM with a random nonce.
+            Returns <c>[nonce 12B][tag 16B][ciphertext]</c>.
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Storage.Providers.DiskSecretRepository.Decrypt(System.Byte[])">
+            <summary>
+            Decrypts data produced by <see cref="M:PSDataRepository.Storage.Providers.DiskSecretRepository.Encrypt(System.Byte[])"/>.
+            Expects <c>[nonce 12B][tag 16B][ciphertext]</c>.
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Storage.Providers.DiskSecretRepository.GetOrCreateMasterSalt">
+            <summary>
+            Returns the master salt, creating and persisting it on first use.
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Storage.Providers.DiskSecretRepository.VerifyOrCreateToken">
+            <summary>
+            Verifies the passphrase against an existing verification token,
+            or creates one on first use.
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Storage.Providers.DiskSecretRepository.GetPassphraseBytes(System.Security.SecureString)">
+            <summary>
+            Converts a <see cref="T:System.Security.SecureString"/> to a UTF-8 byte array.
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Storage.Providers.DiskSecretRepository.GetSecretFilePath(System.String)">
+            <summary>
+            Maps a secret name to a unique file path using URL-safe Base64 encoding.
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Storage.Providers.DiskSecretRepository.Dispose">
+            <summary>
+            Securely clears the master key from memory.
+            </summary>
         </member>
         <member name="T:PSDataRepository.Storage.Providers.DiskStorageRepository">
             <summary>
@@ -4198,6 +4805,19 @@
             <see cref="T:System.UnauthorizedAccessException"/> (e.g., protected junction points).
             </summary>
         </member>
+        <member name="M:PSDataRepository.Storage.Providers.DiskStorageRepository.ListItemsAsync(System.String,System.Boolean,System.Threading.CancellationToken)">
+            <summary>
+            Lists items (files and directories) with full metadata.
+            Non-recursive listing returns only direct children of the specified prefix.
+            Recursive listing returns all descendants.
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Storage.Providers.DiskStorageRepository.EnumerateItemsSafe(System.IO.DirectoryInfo,System.Boolean,System.Collections.Generic.List{PSDataRepository.Storage.RepositoryItemInfo})">
+            <summary>
+            Enumerates file system entries, gracefully skipping directories that
+            deny access (e.g. protected junction points).
+            </summary>
+        </member>
         <member name="M:PSDataRepository.Storage.Providers.DiskStorageRepository.SanitizePath(System.String)">
             <summary>
             Sanitizes the path to prevent directory traversal attacks and normalize separators.
@@ -4209,6 +4829,140 @@
             <summary>
             Disposes resources. FluentStorage IBlobStorage may hold file handles.
             </summary>
+        </member>
+        <member name="T:PSDataRepository.Storage.Providers.FtpStorageRepository">
+            <summary>
+            FTP/FTPS storage repository using FluentFTP.
+            Provides file storage over FTP or FTPS protocol with username/password authentication.
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Storage.Providers.FtpStorageRepository.#ctor(System.String,System.Int32,System.String,System.String,System.String,System.Boolean,System.Boolean,System.Text.Encoding,Microsoft.Extensions.Logging.ILogger{PSDataRepository.Storage.Providers.FtpStorageRepository})">
+            <summary>
+            Initializes a new instance using FluentFTP with username/password authentication.
+            </summary>
+            <param name="host">The FTP server hostname.</param>
+            <param name="port">The FTP port (default 21 for FTP, 990 for FTPS).</param>
+            <param name="username">The FTP username.</param>
+            <param name="password">The FTP password.</param>
+            <param name="basePath">The remote base directory path.</param>
+            <param name="useSsl">Whether to use FTPS (FTP over TLS).</param>
+            <param name="skipCertificateCheck">When true, skips TLS certificate validation (NOT recommended for production).</param>
+            <param name="encoding">The text encoding to use (defaults to UTF8).</param>
+            <param name="logger">Optional logger for diagnostics.</param>
+        </member>
+        <member name="M:PSDataRepository.Storage.Providers.FtpStorageRepository.#ctor(FluentFTP.AsyncFtpClient,System.String,System.Text.Encoding,System.Boolean)">
+            <summary>
+            Internal constructor for unit testing — accepts a pre-configured AsyncFtpClient.
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Storage.Providers.FtpStorageRepository.EnsureConnectedAsync(System.Threading.CancellationToken)">
+            <summary>
+            Ensures the FTP client is connected (lazy initialization, thread-safe).
+            </summary>
+        </member>
+        <member name="T:PSDataRepository.Storage.Providers.ScpStorageRepository">
+            <summary>
+            SCP/SFTP storage repository using SSH.NET.
+            Provides file storage over SFTP protocol with username/password or private key authentication.
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Storage.Providers.ScpStorageRepository.#ctor(System.String,System.Int32,System.String,System.String,System.String,System.Text.Encoding,Microsoft.Extensions.Logging.ILogger{PSDataRepository.Storage.Providers.ScpStorageRepository})">
+            <summary>
+            Initializes a new instance using SSH.NET SftpClient with password authentication.
+            Connection is deferred until the first operation.
+            </summary>
+            <param name="host">The SSH/SFTP server hostname.</param>
+            <param name="port">The SSH port (default 22).</param>
+            <param name="username">The SSH username.</param>
+            <param name="password">The SSH password.</param>
+            <param name="basePath">The remote base directory path.</param>
+            <param name="encoding">The text encoding to use (defaults to UTF8).</param>
+            <param name="logger">Optional logger for diagnostics.</param>
+        </member>
+        <member name="M:PSDataRepository.Storage.Providers.ScpStorageRepository.#ctor(System.String,System.Int32,System.String,System.String,System.String,System.String,System.Text.Encoding,Microsoft.Extensions.Logging.ILogger{PSDataRepository.Storage.Providers.ScpStorageRepository})">
+            <summary>
+            Initializes a new instance using SSH.NET SftpClient with private key authentication.
+            Connection is deferred until the first operation.
+            </summary>
+            <param name="host">The SSH/SFTP server hostname.</param>
+            <param name="port">The SSH port (default 22).</param>
+            <param name="username">The SSH username.</param>
+            <param name="keyFilePath">Path to the private key file.</param>
+            <param name="keyPassphrase">Optional passphrase for the private key.</param>
+            <param name="basePath">The remote base directory path.</param>
+            <param name="encoding">The text encoding to use (defaults to UTF8).</param>
+            <param name="logger">Optional logger for diagnostics.</param>
+        </member>
+        <member name="M:PSDataRepository.Storage.Providers.ScpStorageRepository.#ctor(Renci.SshNet.SftpClient,System.String,System.Text.Encoding)">
+            <summary>
+            Internal constructor for unit testing — accepts a pre-configured SftpClient.
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Storage.Providers.ScpStorageRepository.EnsureConnected">
+            <summary>
+            Ensures the SFTP client is connected (lazy initialization, thread-safe).
+            </summary>
+        </member>
+        <member name="T:PSDataRepository.Storage.RepositoryItemInfo">
+            <summary>
+            Represents metadata about an item in a storage repository.
+            Returned by <see cref="M:PSDataRepository.Storage.IMetadataStorageRepository.ListItemsAsync(System.String,System.Boolean,System.Threading.CancellationToken)"/> and the
+            <c>Get-PSDataRepositoryChildItem</c> cmdlet. Does not contain the item content.
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Storage.RepositoryItemInfo.Name">
+            <summary>
+            Relative name or key of the item (e.g. "data/config.json" or "data/").
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Storage.RepositoryItemInfo.FullPath">
+            <summary>
+            Full physical path or URI of the item.
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Storage.RepositoryItemInfo.Size">
+            <summary>
+            Size in bytes. Null for directories or when the provider does not report size.
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Storage.RepositoryItemInfo.LastModified">
+            <summary>
+            Last modification timestamp. Null when the provider does not report it.
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Storage.RepositoryItemInfo.CreatedOn">
+            <summary>
+            Creation timestamp. Null when the provider does not report it.
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Storage.RepositoryItemInfo.ContentType">
+            <summary>
+            MIME content type (e.g. "application/json"). Null for directories or
+            when the provider does not report it.
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Storage.RepositoryItemInfo.IsDirectory">
+            <summary>
+            True when the item represents a directory or virtual folder.
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Storage.RepositoryItemInfo.Provider">
+            <summary>
+            Name of the provider that owns this item (e.g. "AzureBlob", "Disk").
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Storage.RepositoryItemInfo.Extension">
+            <summary>
+            File extension including the leading dot (e.g. ".json"), or null for directories.
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Storage.RepositoryItemInfo.#ctor(System.String,System.String,System.String,System.Boolean,System.Nullable{System.Int64},System.Nullable{System.DateTimeOffset},System.Nullable{System.DateTimeOffset},System.String)">
+            <summary>
+            Creates a new <see cref="T:PSDataRepository.Storage.RepositoryItemInfo"/>.
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Storage.RepositoryItemInfo.ToString">
+            <inheritdoc />
         </member>
         <member name="T:PSDataRepository.Storage.StorageOption">
             <summary>
@@ -4263,6 +5017,13 @@
             Gets or sets the text encoding for file/blob operations (optional).
             Defaults to UTF8 if not specified.
             Applicable only to <see cref="F:PSDataRepository.Storage.DataProvider.AzureBlob"/> and <see cref="F:PSDataRepository.Storage.DataProvider.Disk"/> providers.
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Storage.StorageOption.Passphrase">
+            <summary>
+            Gets or sets the encryption passphrase for disk-based secret storage (optional).
+            When provided with the <see cref="F:PSDataRepository.Storage.DataProvider.Disk"/> provider, enables encrypted
+            secret operations via <see cref="T:PSDataRepository.Storage.Providers.DiskSecretRepository"/>.
             </summary>
         </member>
         <member name="M:PSDataRepository.Storage.StorageOption.Validate">

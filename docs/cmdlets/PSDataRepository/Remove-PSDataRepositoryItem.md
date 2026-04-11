@@ -2,9 +2,9 @@
 document type: cmdlet
 external help file: PSDataRepository.dll-Help.xml
 HelpUri: ''
-Locale: en-US
+Locale: cs-CZ
 Module Name: PSDataRepository
-ms.date: 04/08/2026
+ms.date: 04.08.2026
 PlatyPS schema version: 2024-05-01
 title: Remove-PSDataRepositoryItem
 ---
@@ -39,11 +39,15 @@ Prompts for confirmation before deleting unless `-Force` is specified.
 
 ### Remove single item
 
+Remove-PSDataRepositoryItem -Name "temp.json"
 
+Removes temp.json from storage (with confirmation prompt).
 
 ### Force removal without confirmation
 
+Remove-PSDataRepositoryItem -Name "backup/*.json" -Force
 
+Removes all JSON files in backup folder without confirmation.
 
 ## PARAMETERS
 
@@ -53,7 +57,7 @@ Prompts you for confirmation before running the cmdlet.
 
 ```yaml
 Type: System.Management.Automation.SwitchParameter
-DefaultValue: ''
+DefaultValue: False
 SupportsWildcards: false
 Aliases:
 - cf
@@ -75,7 +79,7 @@ If specified, continues processing even if individual object deletion fails.
 
 ```yaml
 Type: System.Management.Automation.SwitchParameter
-DefaultValue: ''
+DefaultValue: False
 SupportsWildcards: false
 Aliases: []
 ParameterSets:
@@ -96,7 +100,7 @@ If specified, skips confirmation prompts.
 
 ```yaml
 Type: System.Management.Automation.SwitchParameter
-DefaultValue: ''
+DefaultValue: False
 SupportsWildcards: false
 Aliases: []
 ParameterSets:
@@ -117,7 +121,7 @@ The name/key of the item(s) to remove.
 
 ```yaml
 Type: System.String[]
-DefaultValue: ''
+DefaultValue: None
 SupportsWildcards: false
 Aliases: []
 ParameterSets:
@@ -139,7 +143,7 @@ The cmdlet is not run.
 
 ```yaml
 Type: System.Management.Automation.SwitchParameter
-DefaultValue: ''
+DefaultValue: False
 SupportsWildcards: false
 Aliases:
 - wi
@@ -182,7 +186,6 @@ Uses `ConfirmImpact = High`.
 
 ## RELATED LINKS
 
-- [Online Version]()
 - [Get-PSDataRepositoryItem]()
 - [Set-PSDataRepositoryItem]()
 - [Test-PSDataRepositoryItem]()

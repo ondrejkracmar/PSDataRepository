@@ -2,9 +2,9 @@
 document type: cmdlet
 external help file: PSDataRepository.dll-Help.xml
 HelpUri: ''
-Locale: en-US
+Locale: cs-CZ
 Module Name: PSDataRepository
-ms.date: 04/08/2026
+ms.date: 04.08.2026
 PlatyPS schema version: 2024-05-01
 title: Get-PSDataRepositorySecret
 ---
@@ -37,7 +37,9 @@ Fails if the repository type does not support secrets or is not connected.
 
 ### Retrieve a secret
 
+Get-PSDataRepositorySecret -Name "ApiKey"
 
+Retrieves the value of the secret named "ApiKey".
 
 ## PARAMETERS
 
@@ -47,7 +49,7 @@ The name of the secret to retrieve.
 
 ```yaml
 Type: System.String
-DefaultValue: ''
+DefaultValue: None
 SupportsWildcards: false
 Aliases: []
 ParameterSets:
@@ -92,6 +94,5 @@ Requires an active session to a provider that supports secrets (e.g., AzureKeyVa
 
 ## RELATED LINKS
 
-- [Online Version]()
 - [Set-PSDataRepositorySecret]()
 - [Remove-PSDataRepositorySecret]()

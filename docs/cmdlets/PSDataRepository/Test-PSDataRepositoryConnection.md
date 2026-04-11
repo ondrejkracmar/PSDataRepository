@@ -2,9 +2,9 @@
 document type: cmdlet
 external help file: PSDataRepository.dll-Help.xml
 HelpUri: ''
-Locale: en-US
+Locale: cs-CZ
 Module Name: PSDataRepository
-ms.date: 04/08/2026
+ms.date: 04.08.2026
 PlatyPS schema version: 2024-05-01
 title: Test-PSDataRepositoryConnection
 ---
@@ -43,19 +43,36 @@ This cmdlet is useful for detecting expired tokens, network failures, or stale s
 
 ### Basic connection test
 
+Test-PSDataRepositoryConnection
 
+Returns $true if the current connection is healthy, $false otherwise.
 
 ### Reconnect if unhealthy
 
+if (-not (Test-PSDataRepositoryConnection)) {
+    Connect-PSDataRepository -Provider AzureBlob -StorageAccountName "myaccount" -ContainerName "data" -Interactive
+}
 
+Checks the connection and reconnects if it has expired or failed.
 
 ### Health check in a script loop
 
+while ($true) {
+    if (-not (Test-PSDataRepositoryConnection)) {
+        Write-Warning "Connection lost! Reconnecting..."
+        Connect-PSDataRepository -Provider AzureBlob -StorageAccountName "myaccount" -ContainerName "data" -DefaultAzureCredential
+    }
+    # ... process data ...
+    Start-Sleep -Seconds 60
+}
 
+Periodically validates the connection in a long-running script.
 
 ### Verbose diagnostics
 
+Test-PSDataRepositoryConnection -Verbose
 
+Shows detailed diagnostic output including the provider name and test result.
 
 ## PARAMETERS
 
@@ -86,7 +103,6 @@ Use -Verbose to see which provider is being tested and the result.
 
 ## RELATED LINKS
 
-- [Online Version]()
 - [Connect-PSDataRepository]()
 - [Disconnect-PSDataRepository]()
 - [Get-PSDataRepositorySession]()

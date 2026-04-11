@@ -2,9 +2,9 @@
 document type: cmdlet
 external help file: PSDataRepository.dll-Help.xml
 HelpUri: ''
-Locale: en-US
+Locale: cs-CZ
 Module Name: PSDataRepository
-ms.date: 04/08/2026
+ms.date: 04.08.2026
 PlatyPS schema version: 2024-05-01
 title: Receive-PSDataRepositoryMessage
 ---
@@ -65,15 +65,22 @@ Messages are automatically acknowledged/deleted after successful deserialization
 
 ### Receive batch
 
+Receive-PSDataRepositoryMessage -MaxMessages 10
 
+Receives up to 10 messages and returns them as deserialized objects.
 
 ### Continuous polling
 
+Receive-PSDataRepositoryMessage -Continuous -MaxMessages 100 -DelaySeconds 5
 
+Continuously polls for messages, retrieving up to 100 per batch with 5-second delay between polls.
+Press Ctrl+C to stop.
 
 ### Peek without removing
 
+Receive-PSDataRepositoryMessage -Peek
 
+Peeks at messages without removing them from the queue.
 
 ## PARAMETERS
 
@@ -83,7 +90,7 @@ If specified, continues processing even if individual message deserialization fa
 
 ```yaml
 Type: System.Management.Automation.SwitchParameter
-DefaultValue: ''
+DefaultValue: False
 SupportsWildcards: false
 Aliases: []
 ParameterSets:
@@ -104,7 +111,7 @@ If specified, continues polling continuously until interrupted (Ctrl+C) or `-Max
 
 ```yaml
 Type: System.Management.Automation.SwitchParameter
-DefaultValue: ''
+DefaultValue: False
 SupportsWildcards: false
 Aliases: []
 ParameterSets:
@@ -126,7 +133,7 @@ Only used with `-Continuous`.
 
 ```yaml
 Type: System.Int32
-DefaultValue: ''
+DefaultValue: 5
 SupportsWildcards: false
 Aliases: []
 ParameterSets:
@@ -148,7 +155,7 @@ If not specified, attempts auto-detection based on content.
 
 ```yaml
 Type: System.Nullable`1[PSDataRepository.Serialization.FormatType]
-DefaultValue: ''
+DefaultValue: None (auto-detect)
 SupportsWildcards: false
 Aliases: []
 ParameterSets:
@@ -169,7 +176,7 @@ If specified, includes message metadata (Id, Receipt, DequeueCount, timestamps) 
 
 ```yaml
 Type: System.Management.Automation.SwitchParameter
-DefaultValue: ''
+DefaultValue: False
 SupportsWildcards: false
 Aliases: []
 ParameterSets:
@@ -191,7 +198,7 @@ Only used with `-Continuous`.
 
 ```yaml
 Type: System.Int32
-DefaultValue: ''
+DefaultValue: 2147483647 (unlimited)
 SupportsWildcards: false
 Aliases: []
 ParameterSets:
@@ -212,7 +219,7 @@ Maximum number of messages to receive in one call.
 
 ```yaml
 Type: System.Int32
-DefaultValue: ''
+DefaultValue: 1
 SupportsWildcards: false
 Aliases: []
 ParameterSets:
@@ -234,7 +241,7 @@ When specified, only the message with the matching ID is returned (using peek, w
 
 ```yaml
 Type: System.String
-DefaultValue: ''
+DefaultValue: None
 SupportsWildcards: false
 Aliases: []
 ParameterSets:
@@ -256,7 +263,7 @@ Useful for manual acknowledgement scenarios or debugging.
 
 ```yaml
 Type: System.Management.Automation.SwitchParameter
-DefaultValue: ''
+DefaultValue: False
 SupportsWildcards: false
 Aliases: []
 ParameterSets:
@@ -277,7 +284,7 @@ If specified, peeks messages without removing them from the queue (read-only).
 
 ```yaml
 Type: System.Management.Automation.SwitchParameter
-DefaultValue: ''
+DefaultValue: False
 SupportsWildcards: false
 Aliases: []
 ParameterSets:
@@ -298,7 +305,7 @@ If specified, returns raw message content without deserialization.
 
 ```yaml
 Type: System.Management.Automation.SwitchParameter
-DefaultValue: ''
+DefaultValue: False
 SupportsWildcards: false
 Aliases: []
 ParameterSets:
@@ -319,7 +326,7 @@ Visibility timeout for received messages (how long they remain invisible to othe
 
 ```yaml
 Type: System.Int32
-DefaultValue: ''
+DefaultValue: 30
 SupportsWildcards: false
 Aliases: []
 ParameterSets:
@@ -358,7 +365,6 @@ Use `-NoAutoDelete` to disable this behavior and manually delete with `Remove-PS
 
 ## RELATED LINKS
 
-- [Online Version]()
 - [Send-PSDataRepositoryMessage]()
 - [Remove-PSDataRepositoryMessage]()
 - [ConvertFrom-PSDataRepositoryMessage]()

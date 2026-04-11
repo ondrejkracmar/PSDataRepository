@@ -13,18 +13,22 @@
           "Azure.Security.KeyVault.Secrets": "4.7.0",
           "Azure.Storage.Blobs": "12.22.2",
           "Azure.Storage.Queues": "12.20.1",
+          "FluentFTP": "52.1.0",
           "FluentStorage": "6.0.0",
           "Isystem.AzAuth.Core": "1.0.0",
           "Microsoft.Extensions.Configuration": "9.0.0",
           "Microsoft.Extensions.Configuration.Abstractions": "9.0.0",
           "Microsoft.Extensions.Configuration.Binder": "9.0.0",
           "Microsoft.Extensions.DependencyInjection": "9.0.0",
+          "Microsoft.Extensions.Diagnostics.HealthChecks.Abstractions": "9.0.0",
           "Microsoft.Extensions.Hosting.Abstractions": "9.0.0",
           "Microsoft.Extensions.Logging.Abstractions": "9.0.0",
           "Microsoft.Extensions.Options": "9.0.0",
           "Microsoft.Extensions.Options.ConfigurationExtensions": "9.0.0",
           "PowerShellStandard.Library": "5.1.1",
-          "SharpZipLib": "1.4.2"
+          "SSH.NET": "2024.2.0",
+          "SharpZipLib": "1.4.2",
+          "YamlDotNet": "17.0.0"
         },
         "runtime": {
           "PSDataRepository.dll": {}
@@ -143,6 +147,22 @@
           }
         }
       },
+      "BouncyCastle.Cryptography/2.4.0": {
+        "runtime": {
+          "lib/net6.0/BouncyCastle.Cryptography.dll": {
+            "assemblyVersion": "2.0.0.0",
+            "fileVersion": "2.4.0.33771"
+          }
+        }
+      },
+      "FluentFTP/52.1.0": {
+        "runtime": {
+          "lib/net7.0/FluentFTP.dll": {
+            "assemblyVersion": "52.1.0.0",
+            "fileVersion": "52.1.0.0"
+          }
+        }
+      },
       "FluentStorage/6.0.0": {
         "dependencies": {
           "Microsoft.IO.RecyclableMemoryStream": "3.0.1",
@@ -233,6 +253,14 @@
           "lib/net9.0/Microsoft.Extensions.Diagnostics.Abstractions.dll": {
             "assemblyVersion": "9.0.0.0",
             "fileVersion": "9.0.24.52809"
+          }
+        }
+      },
+      "Microsoft.Extensions.Diagnostics.HealthChecks.Abstractions/9.0.0": {
+        "runtime": {
+          "lib/net9.0/Microsoft.Extensions.Diagnostics.HealthChecks.Abstractions.dll": {
+            "assemblyVersion": "9.0.0.0",
+            "fileVersion": "9.0.24.52903"
           }
         }
       },
@@ -550,6 +578,17 @@
           }
         }
       },
+      "SSH.NET/2024.2.0": {
+        "dependencies": {
+          "BouncyCastle.Cryptography": "2.4.0"
+        },
+        "runtime": {
+          "lib/net8.0/Renci.SshNet.dll": {
+            "assemblyVersion": "2024.2.0.1",
+            "fileVersion": "2024.2.0.1"
+          }
+        }
+      },
       "System.ClientModel/1.4.1": {
         "dependencies": {
           "Microsoft.Extensions.Logging.Abstractions": "9.0.0",
@@ -614,6 +653,14 @@
           "lib/net9.0/Testably.Abstractions.FileSystem.Interface.dll": {
             "assemblyVersion": "9.0.0.0",
             "fileVersion": "9.0.0.0"
+          }
+        }
+      },
+      "YamlDotNet/17.0.0": {
+        "runtime": {
+          "lib/net10.0/YamlDotNet.dll": {
+            "assemblyVersion": "17.0.0.0",
+            "fileVersion": "17.0.0.0"
           }
         }
       },
@@ -704,6 +751,20 @@
       "path": "azure.storage.queues/12.20.1",
       "hashPath": "azure.storage.queues.12.20.1.nupkg.sha512"
     },
+    "BouncyCastle.Cryptography/2.4.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-SwXsAV3sMvAU/Nn31pbjhWurYSjJ+/giI/0n6tCrYoupEK34iIHCuk3STAd9fx8yudM85KkLSVdn951vTng/vQ==",
+      "path": "bouncycastle.cryptography/2.4.0",
+      "hashPath": "bouncycastle.cryptography.2.4.0.nupkg.sha512"
+    },
+    "FluentFTP/52.1.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-d5RnVIr/tnuaS8agbTePwfY0YDN7FTlYP4cFb8Vk3GYcpVSjAEV2VNgPLosU8hrLkOhC5IRsLLVgQz8yiHv11Q==",
+      "path": "fluentftp/52.1.0",
+      "hashPath": "fluentftp.52.1.0.nupkg.sha512"
+    },
     "FluentStorage/6.0.0": {
       "type": "package",
       "serviceable": true,
@@ -766,6 +827,13 @@
       "sha512": "sha512-1K8P7XzuzX8W8pmXcZjcrqS6x5eSSdvhQohmcpgiQNY/HlDAlnrhR9dvlURfFz428A+RTCJpUyB+aKTA6AgVcQ==",
       "path": "microsoft.extensions.diagnostics.abstractions/9.0.0",
       "hashPath": "microsoft.extensions.diagnostics.abstractions.9.0.0.nupkg.sha512"
+    },
+    "Microsoft.Extensions.Diagnostics.HealthChecks.Abstractions/9.0.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-H1IbHm/MnUgEV0N07WrkPBIIoX7isP6IPaqUdZ3CwbMcUVDGIu+okamW28kyDRfIiZqbTbyHuNIkr4ZSHPyvDw==",
+      "path": "microsoft.extensions.diagnostics.healthchecks.abstractions/9.0.0",
+      "hashPath": "microsoft.extensions.diagnostics.healthchecks.abstractions.9.0.0.nupkg.sha512"
     },
     "Microsoft.Extensions.FileProviders.Abstractions/9.0.0": {
       "type": "package",
@@ -907,6 +975,13 @@
       "path": "sharpziplib/1.4.2",
       "hashPath": "sharpziplib.1.4.2.nupkg.sha512"
     },
+    "SSH.NET/2024.2.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-9r+4UF2P51lTztpd+H7SJywk7WgmlWB//Cm2o96c6uGVZU5r58ys2/cD9pCgTk0zCdSkfflWL1WtqQ9I4IVO9Q==",
+      "path": "ssh.net/2024.2.0",
+      "hashPath": "ssh.net.2024.2.0.nupkg.sha512"
+    },
     "System.ClientModel/1.4.1": {
       "type": "package",
       "serviceable": true,
@@ -955,6 +1030,13 @@
       "sha512": "sha512-uksk86YlnzAdyfVNu3wICU0X5iXVe9LF7Q3UkngNliHWEvM5gvAlOUr+jmd9JwmbJWISH5+i1vyXE02lEVz7WQ==",
       "path": "testably.abstractions.filesystem.interface/9.0.0",
       "hashPath": "testably.abstractions.filesystem.interface.9.0.0.nupkg.sha512"
+    },
+    "YamlDotNet/17.0.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-mqRrb+XA8PMI53nP3JqgElUuRB79r6ySYulfPG/O/NvavZZZdv6IjwlhjeeGyOv6rLSSygyzDnSL4qpKaHWfKQ==",
+      "path": "yamldotnet/17.0.0",
+      "hashPath": "yamldotnet.17.0.0.nupkg.sha512"
     },
     "Isystem.AzAuth.Core/1.0.0": {
       "type": "project",

@@ -2,9 +2,9 @@
 document type: cmdlet
 external help file: PSDataRepository.dll-Help.xml
 HelpUri: ''
-Locale: en-US
+Locale: cs-CZ
 Module Name: PSDataRepository
-ms.date: 04/08/2026
+ms.date: 04.08.2026
 PlatyPS schema version: 2024-05-01
 title: Get-PSDataRepositorySession
 ---
@@ -42,17 +42,22 @@ Displays details about the active PSDataRepository session including:
 
 - Capabilities (Storage, Queue, Secrets, Filesystem)
 
+
 Useful for debugging connectivity issues or verifying session configuration.
 
 ## EXAMPLES
 
 ### Display session info
 
+Get-PSDataRepositorySession
 
+Displays current session information.
 
 ### Detailed session info
 
+Get-PSDataRepositorySession | Format-List
 
+Shows detailed session information in list format.
 
 ## PARAMETERS
 
@@ -80,7 +85,6 @@ Connection strings, account keys, and SAS tokens are automatically sanitized in 
 
 ## RELATED LINKS
 
-- [Online Version]()
 - [Connect-PSDataRepository]()
 - [Disconnect-PSDataRepository]()
 - [Get-PSDataRepositoryProvider]()

@@ -2,9 +2,9 @@
 document type: cmdlet
 external help file: PSDataRepository.dll-Help.xml
 HelpUri: ''
-Locale: en-US
+Locale: cs-CZ
 Module Name: PSDataRepository
-ms.date: 04/08/2026
+ms.date: 04.08.2026
 PlatyPS schema version: 2024-05-01
 title: Compress-PSDataRepositoryItem
 ---
@@ -42,19 +42,28 @@ Ideal for archiving large datasets or reducing storage costs with security.
 
 ### Simple compression
 
+Compress-PSDataRepositoryItem -Name "largefile.json"
 
+Compresses largefile.json to largefile.json.gz and removes the original.
 
 ### Compress and encrypt
 
+$pwd = Read-Host -AsSecureString "Password"
+Compress-PSDataRepositoryItem -Name "sensitive.json" -Password $pwd
 
+Compresses and encrypts sensitive.json to sensitive.json.gz.enc.
 
 ### Keep original
 
+Compress-PSDataRepositoryItem -Name "logs/*.txt" -KeepOriginal
 
+Compresses all log files, keeping originals.
 
 ### Custom destination
 
+Compress-PSDataRepositoryItem -Name "data.json" -DestinationName "archive/data.gz"
 
+Compresses data.json to a specific destination path.
 
 ## PARAMETERS
 
@@ -64,7 +73,7 @@ Compression level: Optimal (default), Fastest, or NoCompression.
 
 ```yaml
 Type: System.IO.Compression.CompressionLevel
-DefaultValue: ''
+DefaultValue: Optimal
 SupportsWildcards: false
 Aliases: []
 ParameterSets:
@@ -85,7 +94,7 @@ Prompts you for confirmation before running the cmdlet.
 
 ```yaml
 Type: System.Management.Automation.SwitchParameter
-DefaultValue: ''
+DefaultValue: False
 SupportsWildcards: false
 Aliases:
 - cf
@@ -108,7 +117,7 @@ If not specified, adds `.gz` extension (or `.gz.enc` if encrypted).
 
 ```yaml
 Type: System.String
-DefaultValue: ''
+DefaultValue: '{Name}.gz or {Name}.gz.enc'
 SupportsWildcards: false
 Aliases: []
 ParameterSets:
@@ -129,7 +138,7 @@ If specified, overwrites existing compressed item without confirmation.
 
 ```yaml
 Type: System.Management.Automation.SwitchParameter
-DefaultValue: ''
+DefaultValue: False
 SupportsWildcards: false
 Aliases: []
 ParameterSets:
@@ -150,7 +159,7 @@ If specified, keeps the original item after compression.
 
 ```yaml
 Type: System.Management.Automation.SwitchParameter
-DefaultValue: ''
+DefaultValue: False
 SupportsWildcards: false
 Aliases: []
 ParameterSets:
@@ -171,7 +180,7 @@ The name/key of the item to compress.
 
 ```yaml
 Type: System.String
-DefaultValue: ''
+DefaultValue: None
 SupportsWildcards: false
 Aliases: []
 ParameterSets:
@@ -192,7 +201,7 @@ If specified, returns compression statistics (SourceName, DestinationName, Origi
 
 ```yaml
 Type: System.Management.Automation.SwitchParameter
-DefaultValue: ''
+DefaultValue: False
 SupportsWildcards: false
 Aliases: []
 ParameterSets:
@@ -215,7 +224,7 @@ Use `Read-Host -AsSecureString` to securely prompt for password.
 
 ```yaml
 Type: System.Security.SecureString
-DefaultValue: ''
+DefaultValue: None
 SupportsWildcards: false
 Aliases: []
 ParameterSets:
@@ -237,7 +246,7 @@ The cmdlet is not run.
 
 ```yaml
 Type: System.Management.Automation.SwitchParameter
-DefaultValue: ''
+DefaultValue: False
 SupportsWildcards: false
 Aliases:
 - wi
@@ -281,6 +290,5 @@ Use `Expand-PSDataRepositoryItem` with the same password to decrypt.
 
 ## RELATED LINKS
 
-- [Online Version]()
 - [Expand-PSDataRepositoryItem]()
 - [Get-PSDataRepositoryItem]()

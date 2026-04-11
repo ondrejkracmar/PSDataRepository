@@ -2,9 +2,9 @@
 document type: cmdlet
 external help file: PSDataRepository.dll-Help.xml
 HelpUri: ''
-Locale: en-US
+Locale: cs-CZ
 Module Name: PSDataRepository
-ms.date: 04/08/2026
+ms.date: 04.08.2026
 PlatyPS schema version: 2024-05-01
 title: Get-PSDataRepositoryProvider
 ---
@@ -37,15 +37,21 @@ Does not require an active session.
 
 ### List all providers
 
+Get-PSDataRepositoryProvider
 
+Lists all available providers with their capabilities.
 
 ### Filter by name
 
+Get-PSDataRepositoryProvider -Name AzureBlob
 
+Shows details for the AzureBlob provider.
 
 ### Filter by capability
 
+Get-PSDataRepositoryProvider -Capability Queue
 
+Lists only providers that support queue messaging.
 
 ## PARAMETERS
 
@@ -55,7 +61,7 @@ Filter providers by capability.
 
 ```yaml
 Type: System.String
-DefaultValue: ''
+DefaultValue: None
 SupportsWildcards: false
 Aliases: []
 ParameterSets:
@@ -77,7 +83,7 @@ If not specified, all providers are listed.
 
 ```yaml
 Type: System.String
-DefaultValue: ''
+DefaultValue: None
 SupportsWildcards: false
 Aliases: []
 ParameterSets:
@@ -116,6 +122,5 @@ This cmdlet does not require an active session.
 
 ## RELATED LINKS
 
-- [Online Version]()
 - [Connect-PSDataRepository]()
 - [Get-PSDataRepositorySession]()

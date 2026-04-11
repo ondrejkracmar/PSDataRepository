@@ -2,9 +2,9 @@
 document type: cmdlet
 external help file: PSDataRepository.dll-Help.xml
 HelpUri: ''
-Locale: en-US
+Locale: cs-CZ
 Module Name: PSDataRepository
-ms.date: 04/08/2026
+ms.date: 04.08.2026
 PlatyPS schema version: 2024-05-01
 title: Connect-PSDataRepository
 ---
@@ -163,31 +163,45 @@ The provider is auto-detected based on supplied parameters:
 
 ### Local disk storage
 
+Connect-PSDataRepository -Disk -Path "C:\Data\MyRepo"
 
+Connects to a local disk-based repository at the specified path.
 
 ### In-memory (testing)
 
+Connect-PSDataRepository -InMemory
 
+Connects to a volatile in-memory repository (useful for testing).
 
 ### Azure Blob Storage (connection string)
 
+Connect-PSDataRepository -ConnectionString $connStr -ContainerName "mydata"
 
+Connects to Azure Blob Storage using a connection string.
 
 ### Azure Queue (DefaultAzureCredential)
 
+Connect-PSDataRepository -DefaultAzureCredential -AccountName "mystorageaccount" -QueueName "tasks"
 
+Connects to Azure Queue Storage using DefaultAzureCredential.
 
 ### Azure Key Vault (Managed Identity)
 
+Connect-PSDataRepository -ManagedIdentity -VaultName "mykeyvault"
 
+Connects to Azure Key Vault using Managed Identity.
 
 ### Azure Service Bus topic
 
+Connect-PSDataRepository -ConnectionString $sbConnStr -TopicName "events" -SubscriptionName "processor"
 
+Connects to an Azure Service Bus topic with a subscription.
 
 ### With connection test and proxy
 
+Connect-PSDataRepository -ManagedIdentity -AccountName "stprod" -ContainerName "data" -TestConnection -ProxyUri "http://proxy.corp:8080"
 
+Connects via proxy and validates the connection after establishing it.
 
 ## PARAMETERS
 
@@ -197,7 +211,7 @@ Storage account name, namespace, or path.
 
 ```yaml
 Type: System.String
-DefaultValue: ''
+DefaultValue: None
 SupportsWildcards: false
 Aliases: []
 ParameterSets:
@@ -218,7 +232,7 @@ Certificate password.
 
 ```yaml
 Type: System.Security.SecureString
-DefaultValue: ''
+DefaultValue: None
 SupportsWildcards: false
 Aliases: []
 ParameterSets:
@@ -239,7 +253,7 @@ Path to certificate file (.pfx).
 
 ```yaml
 Type: System.String
-DefaultValue: ''
+DefaultValue: None
 SupportsWildcards: false
 Aliases: []
 ParameterSets:
@@ -260,7 +274,7 @@ Azure AD Application (Client) ID.
 
 ```yaml
 Type: System.String
-DefaultValue: ''
+DefaultValue: None
 SupportsWildcards: false
 Aliases: []
 ParameterSets:
@@ -311,7 +325,7 @@ Azure AD Application Client Secret.
 
 ```yaml
 Type: System.Security.SecureString
-DefaultValue: ''
+DefaultValue: None
 SupportsWildcards: false
 Aliases: []
 ParameterSets:
@@ -332,7 +346,7 @@ Connection string with AccountKey or SharedAccessKey.
 
 ```yaml
 Type: System.String
-DefaultValue: ''
+DefaultValue: None
 SupportsWildcards: false
 Aliases: []
 ParameterSets:
@@ -353,7 +367,7 @@ Container, queue, or topic name.
 
 ```yaml
 Type: System.String
-DefaultValue: ''
+DefaultValue: None
 SupportsWildcards: false
 Aliases: []
 ParameterSets:
@@ -374,7 +388,7 @@ Use DefaultAzureCredential (tries multiple authentication methods automatically)
 
 ```yaml
 Type: System.Management.Automation.SwitchParameter
-DefaultValue: ''
+DefaultValue: False
 SupportsWildcards: false
 Aliases: []
 ParameterSets:
@@ -395,7 +409,7 @@ Use device code authentication.
 
 ```yaml
 Type: System.Management.Automation.SwitchParameter
-DefaultValue: ''
+DefaultValue: False
 SupportsWildcards: false
 Aliases: []
 ParameterSets:
@@ -416,7 +430,7 @@ Use Disk provider with file-based storage (no authentication required).
 
 ```yaml
 Type: System.Management.Automation.SwitchParameter
-DefaultValue: ''
+DefaultValue: False
 SupportsWildcards: false
 Aliases: []
 ParameterSets:
@@ -437,7 +451,7 @@ Use InMemory provider for volatile storage (no authentication required).
 
 ```yaml
 Type: System.Management.Automation.SwitchParameter
-DefaultValue: ''
+DefaultValue: False
 SupportsWildcards: false
 Aliases: []
 ParameterSets:
@@ -458,7 +472,7 @@ Use interactive browser authentication.
 
 ```yaml
 Type: System.Management.Automation.SwitchParameter
-DefaultValue: ''
+DefaultValue: False
 SupportsWildcards: false
 Aliases: []
 ParameterSets:
@@ -479,7 +493,7 @@ Use Managed Identity for authentication.
 
 ```yaml
 Type: System.Management.Automation.SwitchParameter
-DefaultValue: ''
+DefaultValue: False
 SupportsWildcards: false
 Aliases: []
 ParameterSets:
@@ -500,7 +514,7 @@ Maximum number of retry attempts for failed operations.
 
 ```yaml
 Type: System.Int32
-DefaultValue: ''
+DefaultValue: 3
 SupportsWildcards: false
 Aliases: []
 ParameterSets:
@@ -521,7 +535,7 @@ Maximum delay in seconds between retry attempts (exponential backoff cap).
 
 ```yaml
 Type: System.Int32
-DefaultValue: ''
+DefaultValue: 30
 SupportsWildcards: false
 Aliases: []
 ParameterSets:
@@ -542,7 +556,7 @@ File path for Disk provider storage.
 
 ```yaml
 Type: System.String
-DefaultValue: ''
+DefaultValue: None
 SupportsWildcards: false
 Aliases:
 - FilePath
@@ -564,7 +578,7 @@ Proxy URI for corporate proxy (e.g., `http://proxy.corp.local:8080`).
 
 ```yaml
 Type: System.String
-DefaultValue: ''
+DefaultValue: None
 SupportsWildcards: false
 Aliases: []
 ParameterSets:
@@ -585,7 +599,7 @@ Queue name (for queue providers).
 
 ```yaml
 Type: System.String
-DefaultValue: ''
+DefaultValue: None
 SupportsWildcards: false
 Aliases: []
 ParameterSets:
@@ -606,7 +620,7 @@ Delay in seconds between retry attempts.
 
 ```yaml
 Type: System.Int32
-DefaultValue: ''
+DefaultValue: 2
 SupportsWildcards: false
 Aliases: []
 ParameterSets:
@@ -627,7 +641,7 @@ SAS (Shared Access Signature) token or full SAS URI.
 
 ```yaml
 Type: System.String
-DefaultValue: ''
+DefaultValue: None
 SupportsWildcards: false
 Aliases: []
 ParameterSets:
@@ -648,7 +662,7 @@ Use shared token cache authentication.
 
 ```yaml
 Type: System.Management.Automation.SwitchParameter
-DefaultValue: ''
+DefaultValue: False
 SupportsWildcards: false
 Aliases: []
 ParameterSets:
@@ -669,7 +683,7 @@ Subscription name (for Service Bus topics).
 
 ```yaml
 Type: System.String
-DefaultValue: ''
+DefaultValue: None
 SupportsWildcards: false
 Aliases: []
 ParameterSets:
@@ -690,7 +704,7 @@ Azure AD Tenant ID.
 
 ```yaml
 Type: System.String
-DefaultValue: ''
+DefaultValue: None
 SupportsWildcards: false
 Aliases: []
 ParameterSets:
@@ -747,7 +761,7 @@ Test connection after establishing it to validate connectivity.
 
 ```yaml
 Type: System.Management.Automation.SwitchParameter
-DefaultValue: ''
+DefaultValue: False
 SupportsWildcards: false
 Aliases: []
 ParameterSets:
@@ -768,7 +782,7 @@ Connection timeout in seconds.
 
 ```yaml
 Type: System.Int32
-DefaultValue: ''
+DefaultValue: 30
 SupportsWildcards: false
 Aliases: []
 ParameterSets:
@@ -789,7 +803,7 @@ Token file path for Workload Identity.
 
 ```yaml
 Type: System.String
-DefaultValue: ''
+DefaultValue: None
 SupportsWildcards: false
 Aliases: []
 ParameterSets:
@@ -810,7 +824,7 @@ Topic name (for Service Bus topics).
 
 ```yaml
 Type: System.String
-DefaultValue: ''
+DefaultValue: None
 SupportsWildcards: false
 Aliases: []
 ParameterSets:
@@ -831,7 +845,7 @@ Username for shared token cache.
 
 ```yaml
 Type: System.String
-DefaultValue: ''
+DefaultValue: None
 SupportsWildcards: false
 Aliases: []
 ParameterSets:
@@ -852,7 +866,7 @@ Key Vault name (for Azure Key Vault provider).
 
 ```yaml
 Type: System.String
-DefaultValue: ''
+DefaultValue: None
 SupportsWildcards: false
 Aliases: []
 ParameterSets:
@@ -873,7 +887,7 @@ Use Workload Identity (Kubernetes) for authentication.
 
 ```yaml
 Type: System.Management.Automation.SwitchParameter
-DefaultValue: ''
+DefaultValue: False
 SupportsWildcards: false
 Aliases: []
 ParameterSets:
@@ -915,7 +929,6 @@ Enterprise features (proxy, retries, timeout) are only applied to Azure provider
 
 ## RELATED LINKS
 
-- [Online Version]()
 - [Disconnect-PSDataRepository]()
 - [Get-PSDataRepositorySession]()
 - [Get-PSDataRepositoryProvider]()

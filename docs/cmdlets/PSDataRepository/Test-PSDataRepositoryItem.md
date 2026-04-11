@@ -2,9 +2,9 @@
 document type: cmdlet
 external help file: PSDataRepository.dll-Help.xml
 HelpUri: ''
-Locale: en-US
+Locale: cs-CZ
 Module Name: PSDataRepository
-ms.date: 04/08/2026
+ms.date: 04.08.2026
 PlatyPS schema version: 2024-05-01
 title: Test-PSDataRepositoryItem
 ---
@@ -38,11 +38,15 @@ Requires an active session established by `Connect-PSDataRepository`.
 
 ### Test single item
 
+Test-PSDataRepositoryItem -Name "config.json"
 
+Returns `$true` if config.json exists, `$false` otherwise.
 
 ### Conditional execution
 
+if (Test-PSDataRepositoryItem -Name "backup.json") { "File exists!" }
 
+Conditional execution based on item existence.
 
 ## PARAMETERS
 
@@ -52,7 +56,7 @@ The name/key of the object(s) to test for existence.
 
 ```yaml
 Type: System.String[]
-DefaultValue: ''
+DefaultValue: None
 SupportsWildcards: false
 Aliases: []
 ParameterSets:
@@ -99,7 +103,6 @@ Use `Connect-PSDataRepository` first.
 
 ## RELATED LINKS
 
-- [Online Version]()
 - [Get-PSDataRepositoryItem]()
 - [Set-PSDataRepositoryItem]()
 - [Remove-PSDataRepositoryItem]()

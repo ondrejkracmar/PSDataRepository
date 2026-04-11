@@ -2,9 +2,9 @@
 document type: cmdlet
 external help file: PSDataRepository.dll-Help.xml
 HelpUri: ''
-Locale: en-US
+Locale: cs-CZ
 Module Name: PSDataRepository
-ms.date: 04/08/2026
+ms.date: 04.08.2026
 PlatyPS schema version: 2024-05-01
 title: Set-PSDataRepositorySecret
 ---
@@ -39,11 +39,12 @@ Supported repositories: AzureKeyVault, FileSystem.
 
 ### Set a secret with plain text
 
-
+Set-PSDataRepositorySecret -Name "ApiKey" -Value "my-secret-key-123"
 
 ### Set a secret with secure string
 
-
+$secret = Read-Host -AsSecureString "Enter secret"
+Set-PSDataRepositorySecret -Name "DbPassword" -SecureValue $secret
 
 ## PARAMETERS
 
@@ -96,7 +97,7 @@ The name of the secret to set.
 
 ```yaml
 Type: System.String
-DefaultValue: ''
+DefaultValue: None
 SupportsWildcards: false
 Aliases: []
 ParameterSets:
@@ -118,7 +119,7 @@ Preferred over `-Value` for sensitive data.
 
 ```yaml
 Type: System.Security.SecureString
-DefaultValue: ''
+DefaultValue: None
 SupportsWildcards: false
 Aliases: []
 ParameterSets:
@@ -140,7 +141,7 @@ Use `-SecureValue` for sensitive values.
 
 ```yaml
 Type: System.String
-DefaultValue: ''
+DefaultValue: None
 SupportsWildcards: false
 Aliases: []
 ParameterSets:
@@ -200,6 +201,5 @@ Requires an active session to a secrets provider.
 
 ## RELATED LINKS
 
-- [Online Version]()
 - [Get-PSDataRepositorySecret]()
 - [Remove-PSDataRepositorySecret]()

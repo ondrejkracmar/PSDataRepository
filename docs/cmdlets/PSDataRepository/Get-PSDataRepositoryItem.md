@@ -2,9 +2,9 @@
 document type: cmdlet
 external help file: PSDataRepository.dll-Help.xml
 HelpUri: ''
-Locale: en-US
+Locale: cs-CZ
 Module Name: PSDataRepository
-ms.date: 04/08/2026
+ms.date: 04.08.2026
 PlatyPS schema version: 2024-05-01
 title: Get-PSDataRepositoryItem
 ---
@@ -47,19 +47,27 @@ Ideal for loading configuration, datasets, or processing results.
 
 ### Retrieve single item
 
+Get-PSDataRepositoryItem -Name "config.json"
 
+Retrieves and deserializes config.json.
 
 ### Pattern matching
 
+Get-PSDataRepositoryItem -Name "data/*.json"
 
+Retrieves all JSON files from the data folder.
 
 ### Explicit format
 
+Get-PSDataRepositoryItem -Name "backup.xml" -Format Xml
 
+Explicitly deserializes as XML.
 
 ### Raw content
 
+Get-PSDataRepositoryItem -Name "export.csv" -Raw
 
+Returns raw content without deserialization.
 
 ## PARAMETERS
 
@@ -69,7 +77,7 @@ If specified, returns content as byte array (binary mode).
 
 ```yaml
 Type: System.Management.Automation.SwitchParameter
-DefaultValue: ''
+DefaultValue: False
 SupportsWildcards: false
 Aliases: []
 ParameterSets:
@@ -90,7 +98,7 @@ If specified, continues processing even if individual object retrieval fails.
 
 ```yaml
 Type: System.Management.Automation.SwitchParameter
-DefaultValue: ''
+DefaultValue: False
 SupportsWildcards: false
 Aliases: []
 ParameterSets:
@@ -112,7 +120,7 @@ Default: UTF-8.
 
 ```yaml
 Type: System.Text.Encoding
-DefaultValue: ''
+DefaultValue: UTF8
 SupportsWildcards: false
 Aliases: []
 ParameterSets:
@@ -134,7 +142,7 @@ If not specified, auto-detects from content or file extension.
 
 ```yaml
 Type: System.Nullable`1[PSDataRepository.Serialization.FormatType]
-DefaultValue: ''
+DefaultValue: None (auto-detect)
 SupportsWildcards: false
 Aliases: []
 ParameterSets:
@@ -155,7 +163,7 @@ If specified, includes metadata (Name, Path, Format) as properties on output obj
 
 ```yaml
 Type: System.Management.Automation.SwitchParameter
-DefaultValue: ''
+DefaultValue: False
 SupportsWildcards: false
 Aliases: []
 ParameterSets:
@@ -176,7 +184,7 @@ If specified, lists all available objects in the repository.
 
 ```yaml
 Type: System.Management.Automation.SwitchParameter
-DefaultValue: ''
+DefaultValue: False
 SupportsWildcards: false
 Aliases: []
 ParameterSets:
@@ -198,7 +206,7 @@ Supports wildcards (* and ?) depending on provider.
 
 ```yaml
 Type: System.String[]
-DefaultValue: ''
+DefaultValue: None
 SupportsWildcards: false
 Aliases:
 - Key
@@ -221,7 +229,7 @@ If specified, returns raw content as string without deserialization.
 
 ```yaml
 Type: System.Management.Automation.SwitchParameter
-DefaultValue: ''
+DefaultValue: False
 SupportsWildcards: false
 Aliases: []
 ParameterSets:
@@ -267,7 +275,6 @@ Format auto-detection uses file extension first, then content analysis (JSON: `{
 
 ## RELATED LINKS
 
-- [Online Version]()
 - [Set-PSDataRepositoryItem]()
 - [Remove-PSDataRepositoryItem]()
 - [Test-PSDataRepositoryItem]()

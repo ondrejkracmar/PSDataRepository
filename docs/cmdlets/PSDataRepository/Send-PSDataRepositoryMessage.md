@@ -2,9 +2,9 @@
 document type: cmdlet
 external help file: PSDataRepository.dll-Help.xml
 HelpUri: ''
-Locale: en-US
+Locale: cs-CZ
 Module Name: PSDataRepository
-ms.date: 04/08/2026
+ms.date: 04.08.2026
 PlatyPS schema version: 2024-05-01
 title: Send-PSDataRepositoryMessage
 ---
@@ -43,11 +43,16 @@ On pipeline interruption (Ctrl+C), any buffered messages are flushed before stop
 
 ### Send pipeline objects
 
+$tasks = @([PSCustomObject]@{ Id = 1; Action = "Backup"; Target = "DB01" }; [PSCustomObject]@{ Id = 2; Action = "Restart"; Target = "App02" })
+$tasks | Send-PSDataRepositoryMessage
 
+Sends a collection of objects to the queue (serialized as JSON).
 
 ### High-volume with custom batch size
 
+1..100000 | ForEach-Object { [PSCustomObject]@{Id=$_; Data="Item$_"} } | Send-PSDataRepositoryMessage -Format Json -BatchSize 500
 
+Sends 100,000 custom objects with batching of 500 messages.
 
 ## PARAMETERS
 
@@ -58,7 +63,7 @@ Larger batches improve throughput but use more memory.
 
 ```yaml
 Type: System.Int32
-DefaultValue: ''
+DefaultValue: 100
 SupportsWildcards: false
 Aliases: []
 ParameterSets:
@@ -79,7 +84,7 @@ Prompts you for confirmation before running the cmdlet.
 
 ```yaml
 Type: System.Management.Automation.SwitchParameter
-DefaultValue: ''
+DefaultValue: False
 SupportsWildcards: false
 Aliases:
 - cf
@@ -101,7 +106,7 @@ If specified, continues processing even if individual message serialization fail
 
 ```yaml
 Type: System.Management.Automation.SwitchParameter
-DefaultValue: ''
+DefaultValue: False
 SupportsWildcards: false
 Aliases: []
 ParameterSets:
@@ -122,7 +127,7 @@ CSV delimiter character (only for CSV format).
 
 ```yaml
 Type: System.Char
-DefaultValue: ''
+DefaultValue: ','
 SupportsWildcards: false
 Aliases: []
 ParameterSets:
@@ -164,7 +169,7 @@ Serialization format: Json (default), Xml, or Csv.
 
 ```yaml
 Type: PSDataRepository.Serialization.FormatType
-DefaultValue: ''
+DefaultValue: Json
 SupportsWildcards: false
 Aliases: []
 ParameterSets:
@@ -207,7 +212,7 @@ The envelope can be unwrapped by `ConvertFrom-PSDataRepositoryMessage -IncludeMe
 
 ```yaml
 Type: System.Management.Automation.SwitchParameter
-DefaultValue: ''
+DefaultValue: False
 SupportsWildcards: false
 Aliases: []
 ParameterSets:
@@ -229,7 +234,7 @@ Accepts pipeline input.
 
 ```yaml
 Type: System.Management.Automation.PSObject
-DefaultValue: ''
+DefaultValue: None
 SupportsWildcards: false
 Aliases: []
 ParameterSets:
@@ -250,7 +255,7 @@ Maximum serialization depth to prevent infinite recursion.
 
 ```yaml
 Type: System.Int32
-DefaultValue: ''
+DefaultValue: 10
 SupportsWildcards: false
 Aliases: []
 ParameterSets:
@@ -272,7 +277,7 @@ The cmdlet is not run.
 
 ```yaml
 Type: System.Management.Automation.SwitchParameter
-DefaultValue: ''
+DefaultValue: False
 SupportsWildcards: false
 Aliases:
 - wi
@@ -295,7 +300,7 @@ Leave empty for auto-detection from object type.
 
 ```yaml
 Type: System.String
-DefaultValue: ''
+DefaultValue: None (auto-detect)
 SupportsWildcards: false
 Aliases: []
 ParameterSets:
@@ -338,7 +343,6 @@ The batch is flushed at the end of pipeline or when buffer reaches `-BatchSize`.
 
 ## RELATED LINKS
 
-- [Online Version]()
 - [Receive-PSDataRepositoryMessage]()
 - [Remove-PSDataRepositoryMessage]()
 - [ConvertFrom-PSDataRepositoryMessage]()
