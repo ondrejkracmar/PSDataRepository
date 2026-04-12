@@ -5,7 +5,7 @@ HelpInfoUri:
 Locale: en-US
 Module Guid: d2e7fbb1-9f84-4e12-9cb7-bf604e12b8b4
 Module Name: PSDataRepository
-ms.date: 04.12.2026
+ms.date: 04/12/2026
 PlatyPS schema version: 2024-05-01
 title: PSDataRepository Module
 ---
