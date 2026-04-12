@@ -4,25 +4,25 @@ external help file: PSDataRepository.dll-Help.xml
 HelpUri: ''
 Locale: en-US
 Module Name: PSDataRepository
-ms.date: 04.12.2026
+ms.date: 04/12/2026
 PlatyPS schema version: 2024-05-01
-title: Compress-PSDataRepositoryItem
+title: Send-PSDataRepositoryMessage
 ---
 
-# Compress-PSDataRepositoryItem
+# Send-PSDataRepositoryMessage
 
 ## SYNOPSIS
 
-Compresses and optionally encrypts items in persistent storage.
+Sends objects to the connected queue repository.
 
 ## SYNTAX
 
-### Default (Default)
+### __AllParameterSets
 
 ```
-Compress-PSDataRepositoryItem [-Name] <string> [[-DestinationName] <string>]
- [-Password <securestring>] [-CompressionLevel <CompressionLevel>] [-KeepOriginal] [-Force]
- [-PassThru] [-WhatIf] [-Confirm] [<CommonParameters>]
+Send-PSDataRepositoryMessage [-InputObject] <psobject> [-Format <FormatType>] [-BatchSize <int>]
+ [-MaxDepth <int>] [-CsvDelimiter <char>] [-XmlRootName <string>] [-Force] [-IncludeMetadata]
+ [-IncludeMachineInfo] [-ContinueOnError] [-WhatIf] [-Confirm] [<CommonParameters>]
 ```
 
 ## ALIASES
@@ -32,38 +32,32 @@ This cmdlet has the following aliases,
 
 ## DESCRIPTION
 
-Compresses stored items using GZip compression to reduce storage size.
-Optionally encrypts compressed data using AES-256 encryption with PBKDF2 key derivation (100,000 iterations, SHA-256).
-The compressed item is saved with `.gz` extension (or `.gz.enc` if encrypted).
-Supports in-place compression or creating a new compressed copy.
-Ideal for archiving large datasets or reducing storage costs with security.
+Serializes and sends objects to the active queue repository (InMemory, Disk, Azure Queue, Service Bus).
+Supports pipeline input for processing large volumes of objects efficiently.
+Objects are serialized to JSON by default, with configurable format (XML, CSV).
+Uses batching for optimal performance (default batch size: 100 messages).
+
+On pipeline interruption (Ctrl+C), any buffered messages are flushed before stopping.
 
 ## EXAMPLES
 
-### Simple compression
+### Send pipeline objects
 
 
 
-### Compress and encrypt
-
-
-
-### Keep original
-
-
-
-### Custom destination
+### High-volume with custom batch size
 
 
 
 ## PARAMETERS
 
-### -CompressionLevel
+### -BatchSize
 
-Compression level: Optimal (default), Fastest, or NoCompression.
+Batch size for sending messages.
+Larger batches improve throughput but use more memory.
 
 ```yaml
-Type: System.IO.Compression.CompressionLevel
+Type: System.Int32
 DefaultValue: ''
 SupportsWildcards: false
 Aliases: []
@@ -101,19 +95,39 @@ AcceptedValues: []
 HelpMessage: ''
 ```
 
-### -DestinationName
+### -ContinueOnError
 
-Destination name for compressed item.
-If not specified, adds `.gz` extension (or `.gz.enc` if encrypted).
+If specified, continues processing even if individual message serialization fails.
 
 ```yaml
-Type: System.String
+Type: System.Management.Automation.SwitchParameter
 DefaultValue: ''
 SupportsWildcards: false
 Aliases: []
 ParameterSets:
 - Name: (All)
-  Position: 1
+  Position: Named
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
+
+### -CsvDelimiter
+
+CSV delimiter character (only for CSV format).
+
+```yaml
+Type: System.Char
+DefaultValue: ''
+SupportsWildcards: false
+Aliases: []
+ParameterSets:
+- Name: (All)
+  Position: Named
   IsRequired: false
   ValueFromPipeline: false
   ValueFromPipelineByPropertyName: false
@@ -125,7 +139,7 @@ HelpMessage: ''
 
 ### -Force
 
-If specified, overwrites existing compressed item without confirmation.
+Skip confirmation prompts.
 
 ```yaml
 Type: System.Management.Automation.SwitchParameter
@@ -144,9 +158,30 @@ AcceptedValues: []
 HelpMessage: ''
 ```
 
-### -KeepOriginal
+### -Format
 
-If specified, keeps the original item after compression.
+Serialization format: Json (default), Xml, or Csv.
+
+```yaml
+Type: PSDataRepository.Serialization.FormatType
+DefaultValue: ''
+SupportsWildcards: false
+Aliases: []
+ParameterSets:
+- Name: (All)
+  Position: Named
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
+
+### -IncludeMachineInfo
+
+Include machine/user info in metadata (security-sensitive).
 
 ```yaml
 Type: System.Management.Automation.SwitchParameter
@@ -165,12 +200,35 @@ AcceptedValues: []
 HelpMessage: ''
 ```
 
-### -Name
+### -IncludeMetadata
 
-The name/key of the item to compress.
+If specified, includes metadata envelope with type information, timestamp, machine name, and username.
+The envelope can be unwrapped by `ConvertFrom-PSDataRepositoryMessage -IncludeMetadata`.
 
 ```yaml
-Type: System.String
+Type: System.Management.Automation.SwitchParameter
+DefaultValue: ''
+SupportsWildcards: false
+Aliases: []
+ParameterSets:
+- Name: (All)
+  Position: Named
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
+
+### -InputObject
+
+The object(s) to send.
+Accepts pipeline input.
+
+```yaml
+Type: System.Management.Automation.PSObject
 DefaultValue: ''
 SupportsWildcards: false
 Aliases: []
@@ -186,35 +244,12 @@ AcceptedValues: []
 HelpMessage: ''
 ```
 
-### -PassThru
+### -MaxDepth
 
-If specified, returns compression statistics (SourceName, DestinationName, OriginalSize, CompressedSize, FinalSize, CompressionRatio, IsEncrypted).
-
-```yaml
-Type: System.Management.Automation.SwitchParameter
-DefaultValue: ''
-SupportsWildcards: false
-Aliases: []
-ParameterSets:
-- Name: (All)
-  Position: Named
-  IsRequired: false
-  ValueFromPipeline: false
-  ValueFromPipelineByPropertyName: false
-  ValueFromRemainingArguments: false
-DontShow: false
-AcceptedValues: []
-HelpMessage: ''
-```
-
-### -Password
-
-Password for AES-256 encryption.
-If specified, compressed data will be encrypted.
-Use `Read-Host -AsSecureString` to securely prompt for password.
+Maximum serialization depth to prevent infinite recursion.
 
 ```yaml
-Type: System.Security.SecureString
+Type: System.Int32
 DefaultValue: ''
 SupportsWildcards: false
 Aliases: []
@@ -253,6 +288,28 @@ AcceptedValues: []
 HelpMessage: ''
 ```
 
+### -XmlRootName
+
+XML root element name (only for XML format).
+Leave empty for auto-detection from object type.
+
+```yaml
+Type: System.String
+DefaultValue: ''
+SupportsWildcards: false
+Aliases: []
+ParameterSets:
+- Name: (All)
+  Position: Named
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
+
 ### CommonParameters
 
 This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable,
@@ -262,25 +319,26 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ## INPUTS
 
-### System.String
+### System.Management.Automation.PSObject
 
-Item name to compress.
+Any PowerShell object.
+Accepts pipeline input.
 
 ## OUTPUTS
 
-### System.Management.Automation.PSObject
+### System.String
 
-When `-PassThru` is specified, returns an object with compression statistics.
+Summary message with count of messages sent.
 
 ## NOTES
 
-Encryption uses AES-256-CBC with PBKDF2 key derivation (100,000 iterations, SHA-256, 32-byte salt).
-Binary format: `[Magic Header 11B][Salt 32B][IV 16B][Encrypted Data]`.
-Use `Expand-PSDataRepositoryItem` with the same password to decrypt.
+Messages are buffered and sent in batches for performance.
+The batch is flushed at the end of pipeline or when buffer reaches `-BatchSize`.
 
 
 ## RELATED LINKS
 
 - [Online Version]()
-- [Expand-PSDataRepositoryItem]()
-- [Get-PSDataRepositoryItem]()
+- [Receive-PSDataRepositoryMessage]()
+- [Remove-PSDataRepositoryMessage]()
+- [ConvertFrom-PSDataRepositoryMessage]()

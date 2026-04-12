@@ -4,24 +4,31 @@ external help file: PSDataRepository.dll-Help.xml
 HelpUri: ''
 Locale: en-US
 Module Name: PSDataRepository
-ms.date: 04.12.2026
+ms.date: 04/12/2026
 PlatyPS schema version: 2024-05-01
-title: Set-PSDataRepositorySecret
+title: Remove-PSDataRepositoryMessage
 ---
 
-# Set-PSDataRepositorySecret
+# Remove-PSDataRepositoryMessage
 
 ## SYNOPSIS
 
-Creates or updates a secret in the connected repository (Key Vault, FileSystem).
+Removes/deletes messages from the queue.
 
 ## SYNTAX
 
-### __AllParameterSets
+### ByMessage
 
 ```
-Set-PSDataRepositorySecret [-Name] <string> [[-Value] <string>] [-SecureValue <securestring>]
- [-Force] [-WhatIf] [-Confirm] [<CommonParameters>]
+Remove-PSDataRepositoryMessage [-Message] <QueueMessage[]> [-Force] [-WhatIf] [-Confirm]
+ [<CommonParameters>]
+```
+
+### ByPipelineObject
+
+```
+Remove-PSDataRepositoryMessage -InputObject <psobject> [-Force] [-WhatIf] [-Confirm]
+ [<CommonParameters>]
 ```
 
 ## ALIASES
@@ -31,17 +38,19 @@ This cmdlet has the following aliases,
 
 ## DESCRIPTION
 
-Sets (creates or updates) a secret in the connected repository.
-Supports either plain text or secure string as the secret value.
-Supported repositories: AzureKeyVault, FileSystem.
+Deletes messages from the connected queue repository (InMemory, Disk, Azure Queue, Service Bus).
+Typically used after successful message processing to prevent reprocessing.
+Messages must have been received first (to obtain receipt handles).
+For Azure providers, uses receipt handle for deletion.
+For Disk/InMemory, uses message ID.
 
 ## EXAMPLES
 
-### Set a secret with plain text
+### Receive and delete a message
 
 
 
-### Set a secret with secure string
+### Pipeline deletion
 
 
 
@@ -71,7 +80,7 @@ HelpMessage: ''
 
 ### -Force
 
-Skip confirmation prompts.
+If specified, suppresses confirmation prompts.
 
 ```yaml
 Type: System.Management.Automation.SwitchParameter
@@ -90,42 +99,20 @@ AcceptedValues: []
 HelpMessage: ''
 ```
 
-### -Name
+### -InputObject
 
-The name of the secret to set.
+Pipeline object from Receive-PSDataRepositoryMessage.
 
 ```yaml
-Type: System.String
+Type: System.Management.Automation.PSObject
 DefaultValue: ''
 SupportsWildcards: false
 Aliases: []
 ParameterSets:
-- Name: (All)
-  Position: 0
-  IsRequired: true
-  ValueFromPipeline: false
-  ValueFromPipelineByPropertyName: true
-  ValueFromRemainingArguments: false
-DontShow: false
-AcceptedValues: []
-HelpMessage: ''
-```
-
-### -SecureValue
-
-The secure string value to store as the secret.
-Preferred over `-Value` for sensitive data.
-
-```yaml
-Type: System.Security.SecureString
-DefaultValue: ''
-SupportsWildcards: false
-Aliases: []
-ParameterSets:
-- Name: (All)
+- Name: ByPipelineObject
   Position: Named
-  IsRequired: false
-  ValueFromPipeline: false
+  IsRequired: true
+  ValueFromPipeline: true
   ValueFromPipelineByPropertyName: false
   ValueFromRemainingArguments: false
 DontShow: false
@@ -133,21 +120,21 @@ AcceptedValues: []
 HelpMessage: ''
 ```
 
-### -Value
+### -Message
 
-The plain text value to store as the secret.
-Use `-SecureValue` for sensitive values.
+The message object(s) to delete.
+Typically obtained from `Receive-PSDataRepositoryMessage`.
 
 ```yaml
-Type: System.String
+Type: PSDataRepository.Messaging.QueueMessage[]
 DefaultValue: ''
 SupportsWildcards: false
 Aliases: []
 ParameterSets:
-- Name: (All)
-  Position: 1
-  IsRequired: false
-  ValueFromPipeline: false
+- Name: ByMessage
+  Position: 0
+  IsRequired: true
+  ValueFromPipeline: true
   ValueFromPipelineByPropertyName: false
   ValueFromRemainingArguments: false
 DontShow: false
@@ -157,7 +144,8 @@ HelpMessage: ''
 
 ### -WhatIf
 
-Runs the command in a mode that only reports what would happen without performing the actions.
+Shows what would happen if the cmdlet runs.
+The cmdlet is not run.
 
 ```yaml
 Type: System.Management.Automation.SwitchParameter
@@ -186,7 +174,15 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ## INPUTS
 
-### System.String
+### PSDataRepository.Messaging.QueueMessage
+
+Message objects from `Receive-PSDataRepositoryMessage`.
+
+### System.Management.Automation.PSObject
+
+{{ Fill in the Description }}
+
+### PSDataRepository.Messaging.QueueMessage[]
 
 {{ Fill in the Description }}
 
@@ -194,12 +190,12 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ## NOTES
 
-Either `-Value` or `-SecureValue` must be provided.
-Requires an active session to a secrets provider.
+If using `Receive-PSDataRepositoryMessage` without `-NoAutoDelete`, messages are automatically deleted after successful processing.
+This cmdlet is needed only when `-NoAutoDelete` is used.
 
 
 ## RELATED LINKS
 
 - [Online Version]()
-- [Get-PSDataRepositorySecret]()
-- [Remove-PSDataRepositorySecret]()
+- [Receive-PSDataRepositoryMessage]()
+- [Send-PSDataRepositoryMessage]()

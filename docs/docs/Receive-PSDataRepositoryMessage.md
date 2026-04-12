@@ -4,25 +4,49 @@ external help file: PSDataRepository.dll-Help.xml
 HelpUri: ''
 Locale: en-US
 Module Name: PSDataRepository
-ms.date: 04.12.2026
+ms.date: 04/12/2026
 PlatyPS schema version: 2024-05-01
-title: Send-PSDataRepositoryMessage
+title: Receive-PSDataRepositoryMessage
 ---
 
-# Send-PSDataRepositoryMessage
+# Receive-PSDataRepositoryMessage
 
 ## SYNOPSIS
 
-Sends objects to the connected queue repository.
+Receives and deserializes messages from the connected queue repository.
 
 ## SYNTAX
 
-### __AllParameterSets
+### Single (Default)
 
 ```
-Send-PSDataRepositoryMessage [-InputObject] <psobject> [-Format <FormatType>] [-BatchSize <int>]
- [-MaxDepth <int>] [-CsvDelimiter <char>] [-XmlRootName <string>] [-Force] [-IncludeMetadata]
- [-IncludeMachineInfo] [-ContinueOnError] [-WhatIf] [-Confirm] [<CommonParameters>]
+Receive-PSDataRepositoryMessage [-MaxMessages <int>] [-VisibilityTimeoutSeconds <int>]
+ [-Format <FormatType>] [-Raw] [-NoAutoDelete] [-ContinueOnError] [-IncludeMetadata]
+ [<CommonParameters>]
+```
+
+### Peek
+
+```
+Receive-PSDataRepositoryMessage [-MaxMessages <int>] [-VisibilityTimeoutSeconds <int>]
+ [-Format <FormatType>] [-Peek] [-Raw] [-NoAutoDelete] [-ContinueOnError] [-IncludeMetadata]
+ [<CommonParameters>]
+```
+
+### Continuous
+
+```
+Receive-PSDataRepositoryMessage [-MaxMessages <int>] [-VisibilityTimeoutSeconds <int>]
+ [-Format <FormatType>] [-Raw] [-NoAutoDelete] [-Continuous] [-DelaySeconds <int>]
+ [-MaxIterations <int>] [-ContinueOnError] [-IncludeMetadata] [<CommonParameters>]
+```
+
+### ById
+
+```
+Receive-PSDataRepositoryMessage -MessageId <string> [-MaxMessages <int>]
+ [-VisibilityTimeoutSeconds <int>] [-Format <FormatType>] [-Raw] [-NoAutoDelete] [-ContinueOnError]
+ [-IncludeMetadata] [<CommonParameters>]
 ```
 
 ## ALIASES
@@ -32,29 +56,73 @@ This cmdlet has the following aliases,
 
 ## DESCRIPTION
 
-Serializes and sends objects to the active queue repository (InMemory, Disk, Azure Queue, Service Bus).
-Supports pipeline input for processing large volumes of objects efficiently.
-Objects are serialized to JSON by default, with configurable format (XML, CSV).
-Uses batching for optimal performance (default batch size: 100 messages).
-
-On pipeline interruption (Ctrl+C), any buffered messages are flushed before stopping.
+Retrieves messages from the active queue repository and deserializes them back to objects.
+Supports batching for efficient retrieval of large message volumes.
+Can operate in single-message mode, batch mode, continuous polling mode, or by-ID peek mode.
+Messages are automatically acknowledged/deleted after successful deserialization by default.
 
 ## EXAMPLES
 
-### Send pipeline objects
+### Receive batch
 
 
 
-### High-volume with custom batch size
+### Continuous polling
+
+
+
+### Peek without removing
 
 
 
 ## PARAMETERS
 
-### -BatchSize
+### -ContinueOnError
 
-Batch size for sending messages.
-Larger batches improve throughput but use more memory.
+If specified, continues processing even if individual message deserialization fails.
+
+```yaml
+Type: System.Management.Automation.SwitchParameter
+DefaultValue: ''
+SupportsWildcards: false
+Aliases: []
+ParameterSets:
+- Name: (All)
+  Position: Named
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
+
+### -Continuous
+
+If specified, continues polling continuously until interrupted (Ctrl+C) or `-MaxIterations` is reached.
+
+```yaml
+Type: System.Management.Automation.SwitchParameter
+DefaultValue: ''
+SupportsWildcards: false
+Aliases: []
+ParameterSets:
+- Name: Continuous
+  Position: Named
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
+
+### -DelaySeconds
+
+Delay in seconds between continuous polling attempts.
+Only used with `-Continuous`.
 
 ```yaml
 Type: System.Int32
@@ -62,92 +130,7 @@ DefaultValue: ''
 SupportsWildcards: false
 Aliases: []
 ParameterSets:
-- Name: (All)
-  Position: Named
-  IsRequired: false
-  ValueFromPipeline: false
-  ValueFromPipelineByPropertyName: false
-  ValueFromRemainingArguments: false
-DontShow: false
-AcceptedValues: []
-HelpMessage: ''
-```
-
-### -Confirm
-
-Prompts you for confirmation before running the cmdlet.
-
-```yaml
-Type: System.Management.Automation.SwitchParameter
-DefaultValue: ''
-SupportsWildcards: false
-Aliases:
-- cf
-ParameterSets:
-- Name: (All)
-  Position: Named
-  IsRequired: false
-  ValueFromPipeline: false
-  ValueFromPipelineByPropertyName: false
-  ValueFromRemainingArguments: false
-DontShow: false
-AcceptedValues: []
-HelpMessage: ''
-```
-
-### -ContinueOnError
-
-If specified, continues processing even if individual message serialization fails.
-
-```yaml
-Type: System.Management.Automation.SwitchParameter
-DefaultValue: ''
-SupportsWildcards: false
-Aliases: []
-ParameterSets:
-- Name: (All)
-  Position: Named
-  IsRequired: false
-  ValueFromPipeline: false
-  ValueFromPipelineByPropertyName: false
-  ValueFromRemainingArguments: false
-DontShow: false
-AcceptedValues: []
-HelpMessage: ''
-```
-
-### -CsvDelimiter
-
-CSV delimiter character (only for CSV format).
-
-```yaml
-Type: System.Char
-DefaultValue: ''
-SupportsWildcards: false
-Aliases: []
-ParameterSets:
-- Name: (All)
-  Position: Named
-  IsRequired: false
-  ValueFromPipeline: false
-  ValueFromPipelineByPropertyName: false
-  ValueFromRemainingArguments: false
-DontShow: false
-AcceptedValues: []
-HelpMessage: ''
-```
-
-### -Force
-
-Skip confirmation prompts.
-
-```yaml
-Type: System.Management.Automation.SwitchParameter
-DefaultValue: ''
-SupportsWildcards: false
-Aliases: []
-ParameterSets:
-- Name: (All)
+- Name: Continuous
   Position: Named
   IsRequired: false
   ValueFromPipeline: false
@@ -160,31 +143,11 @@ HelpMessage: ''
 
 ### -Format
 
-Serialization format: Json (default), Xml, or Csv.
+Deserialization format.
+If not specified, attempts auto-detection based on content.
 
 ```yaml
-Type: PSDataRepository.Serialization.FormatType
-DefaultValue: ''
-SupportsWildcards: false
-Aliases: []
-ParameterSets:
-- Name: (All)
-  Position: Named
-  IsRequired: false
-  ValueFromPipeline: false
-  ValueFromPipelineByPropertyName: false
-  ValueFromRemainingArguments: false
-DontShow: false
-AcceptedValues: []
-HelpMessage: ''
-```
-
-### -IncludeMachineInfo
-
-Include machine/user info in metadata (security-sensitive).
-
-```yaml
-Type: System.Management.Automation.SwitchParameter
+Type: System.Nullable`1[PSDataRepository.Serialization.FormatType]
 DefaultValue: ''
 SupportsWildcards: false
 Aliases: []
@@ -202,8 +165,7 @@ HelpMessage: ''
 
 ### -IncludeMetadata
 
-If specified, includes metadata envelope with type information, timestamp, machine name, and username.
-The envelope can be unwrapped by `ConvertFrom-PSDataRepositoryMessage -IncludeMetadata`.
+If specified, includes message metadata (Id, Receipt, DequeueCount, timestamps) as note properties on output objects: ` _MessageId`, ` MessageReceipt`, ` DequeueCount`, ` InsertedOn`, ` ExpiresOn`, ` _NextVisibleOn`.
 
 ```yaml
 Type: System.Management.Automation.SwitchParameter
@@ -222,21 +184,21 @@ AcceptedValues: []
 HelpMessage: ''
 ```
 
-### -InputObject
+### -MaxIterations
 
-The object(s) to send.
-Accepts pipeline input.
+Maximum number of continuous polling iterations.
+Only used with `-Continuous`.
 
 ```yaml
-Type: System.Management.Automation.PSObject
+Type: System.Int32
 DefaultValue: ''
 SupportsWildcards: false
 Aliases: []
 ParameterSets:
-- Name: (All)
-  Position: 0
-  IsRequired: true
-  ValueFromPipeline: true
+- Name: Continuous
+  Position: Named
+  IsRequired: false
+  ValueFromPipeline: false
   ValueFromPipelineByPropertyName: false
   ValueFromRemainingArguments: false
 DontShow: false
@@ -244,9 +206,9 @@ AcceptedValues: []
 HelpMessage: ''
 ```
 
-### -MaxDepth
+### -MaxMessages
 
-Maximum serialization depth to prevent infinite recursion.
+Maximum number of messages to receive in one call.
 
 ```yaml
 Type: System.Int32
@@ -265,17 +227,38 @@ AcceptedValues: []
 HelpMessage: ''
 ```
 
-### -WhatIf
+### -MessageId
 
-Shows what would happen if the cmdlet runs.
-The cmdlet is not run.
+The ID of a specific message to retrieve.
+When specified, only the message with the matching ID is returned (using peek, without removing from queue).
+
+```yaml
+Type: System.String
+DefaultValue: ''
+SupportsWildcards: false
+Aliases: []
+ParameterSets:
+- Name: ById
+  Position: Named
+  IsRequired: true
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
+
+### -NoAutoDelete
+
+If specified, does not automatically delete/acknowledge messages after processing.
+Useful for manual acknowledgement scenarios or debugging.
 
 ```yaml
 Type: System.Management.Automation.SwitchParameter
 DefaultValue: ''
 SupportsWildcards: false
-Aliases:
-- wi
+Aliases: []
 ParameterSets:
 - Name: (All)
   Position: Named
@@ -288,13 +271,54 @@ AcceptedValues: []
 HelpMessage: ''
 ```
 
-### -XmlRootName
+### -Peek
 
-XML root element name (only for XML format).
-Leave empty for auto-detection from object type.
+If specified, peeks messages without removing them from the queue (read-only).
 
 ```yaml
-Type: System.String
+Type: System.Management.Automation.SwitchParameter
+DefaultValue: ''
+SupportsWildcards: false
+Aliases: []
+ParameterSets:
+- Name: Peek
+  Position: Named
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
+
+### -Raw
+
+If specified, returns raw message content without deserialization.
+
+```yaml
+Type: System.Management.Automation.SwitchParameter
+DefaultValue: ''
+SupportsWildcards: false
+Aliases: []
+ParameterSets:
+- Name: (All)
+  Position: Named
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
+
+### -VisibilityTimeoutSeconds
+
+Visibility timeout for received messages (how long they remain invisible to other consumers).
+
+```yaml
+Type: System.Int32
 DefaultValue: ''
 SupportsWildcards: false
 Aliases: []
@@ -319,26 +343,22 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ## INPUTS
 
-### System.Management.Automation.PSObject
-
-Any PowerShell object.
-Accepts pipeline input.
-
 ## OUTPUTS
 
-### System.String
+### System.Management.Automation.PSObject
 
-Summary message with count of messages sent.
+Deserialized message objects.
+When `-IncludeMetadata` is used, additional note properties are added.
 
 ## NOTES
 
-Messages are buffered and sent in batches for performance.
-The batch is flushed at the end of pipeline or when buffer reaches `-BatchSize`.
+In the default (non-Peek) mode, messages are automatically deleted after successful processing.
+Use `-NoAutoDelete` to disable this behavior and manually delete with `Remove-PSDataRepositoryMessage`.
 
 
 ## RELATED LINKS
 
 - [Online Version]()
-- [Receive-PSDataRepositoryMessage]()
+- [Send-PSDataRepositoryMessage]()
 - [Remove-PSDataRepositoryMessage]()
 - [ConvertFrom-PSDataRepositoryMessage]()

@@ -4,24 +4,23 @@ external help file: PSDataRepository.dll-Help.xml
 HelpUri: ''
 Locale: en-US
 Module Name: PSDataRepository
-ms.date: 04.12.2026
+ms.date: 04/12/2026
 PlatyPS schema version: 2024-05-01
-title: Set-PSDataRepositorySecret
+title: Remove-PSDataRepositorySecret
 ---
 
-# Set-PSDataRepositorySecret
+# Remove-PSDataRepositorySecret
 
 ## SYNOPSIS
 
-Creates or updates a secret in the connected repository (Key Vault, FileSystem).
+Deletes a secret from the connected repository.
 
 ## SYNTAX
 
 ### __AllParameterSets
 
 ```
-Set-PSDataRepositorySecret [-Name] <string> [[-Value] <string>] [-SecureValue <securestring>]
- [-Force] [-WhatIf] [-Confirm] [<CommonParameters>]
+Remove-PSDataRepositorySecret [-Name] <string> [-Force] [-WhatIf] [-Confirm] [<CommonParameters>]
 ```
 
 ## ALIASES
@@ -31,17 +30,12 @@ This cmdlet has the following aliases,
 
 ## DESCRIPTION
 
-Sets (creates or updates) a secret in the connected repository.
-Supports either plain text or secure string as the secret value.
-Supported repositories: AzureKeyVault, FileSystem.
+Removes (deletes) a secret from the connected repository (typically Azure Key Vault or FileSystem).
+Fails if the repository type does not support secrets or is not connected.
 
 ## EXAMPLES
 
-### Set a secret with plain text
-
-
-
-### Set a secret with secure string
+### Remove a secret
 
 
 
@@ -92,7 +86,7 @@ HelpMessage: ''
 
 ### -Name
 
-The name of the secret to set.
+The name of the secret to remove.
 
 ```yaml
 Type: System.String
@@ -105,50 +99,6 @@ ParameterSets:
   IsRequired: true
   ValueFromPipeline: false
   ValueFromPipelineByPropertyName: true
-  ValueFromRemainingArguments: false
-DontShow: false
-AcceptedValues: []
-HelpMessage: ''
-```
-
-### -SecureValue
-
-The secure string value to store as the secret.
-Preferred over `-Value` for sensitive data.
-
-```yaml
-Type: System.Security.SecureString
-DefaultValue: ''
-SupportsWildcards: false
-Aliases: []
-ParameterSets:
-- Name: (All)
-  Position: Named
-  IsRequired: false
-  ValueFromPipeline: false
-  ValueFromPipelineByPropertyName: false
-  ValueFromRemainingArguments: false
-DontShow: false
-AcceptedValues: []
-HelpMessage: ''
-```
-
-### -Value
-
-The plain text value to store as the secret.
-Use `-SecureValue` for sensitive values.
-
-```yaml
-Type: System.String
-DefaultValue: ''
-SupportsWildcards: false
-Aliases: []
-ParameterSets:
-- Name: (All)
-  Position: 1
-  IsRequired: false
-  ValueFromPipeline: false
-  ValueFromPipelineByPropertyName: false
   ValueFromRemainingArguments: false
 DontShow: false
 AcceptedValues: []
@@ -194,12 +144,11 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ## NOTES
 
-Either `-Value` or `-SecureValue` must be provided.
-Requires an active session to a secrets provider.
+Requires an active session to a secrets provider (e.g., AzureKeyVault).
 
 
 ## RELATED LINKS
 
 - [Online Version]()
 - [Get-PSDataRepositorySecret]()
-- [Remove-PSDataRepositorySecret]()
+- [Set-PSDataRepositorySecret]()

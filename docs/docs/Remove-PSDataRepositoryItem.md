@@ -4,31 +4,31 @@ external help file: PSDataRepository.dll-Help.xml
 HelpUri: ''
 Locale: en-US
 Module Name: PSDataRepository
-ms.date: 04.12.2026
+ms.date: 04/12/2026
 PlatyPS schema version: 2024-05-01
-title: Get-PSDataRepositoryItem
+title: Remove-PSDataRepositoryItem
 ---
 
-# Get-PSDataRepositoryItem
+# Remove-PSDataRepositoryItem
 
 ## SYNOPSIS
 
-Retrieves items from persistent storage (Blob, Disk).
+Removes items from persistent storage (Blob, Disk).
 
 ## SYNTAX
 
 ### ByName (Default)
 
 ```
-Get-PSDataRepositoryItem [-Name] <string[]> [-Format <FormatType>] [-Encoding <Encoding>] [-Raw]
- [-AsByteArray] [-IncludeMetadata] [-ContinueOnError] [<CommonParameters>]
+Remove-PSDataRepositoryItem [-Name] <string[]> [-Force] [-ContinueOnError] [-WhatIf] [-Confirm]
+ [<CommonParameters>]
 ```
 
-### ListAll
+### ByInputObject
 
 ```
-Get-PSDataRepositoryItem -ListAll [-Format <FormatType>] [-Encoding <Encoding>] [-Raw]
- [-AsByteArray] [-IncludeMetadata] [-ContinueOnError] [<CommonParameters>]
+Remove-PSDataRepositoryItem -InputObject <RepositoryItemInfo> [-Force] [-ContinueOnError] [-WhatIf]
+ [-Confirm] [<CommonParameters>]
 ```
 
 ## ALIASES
@@ -38,40 +38,32 @@ This cmdlet has the following aliases,
 
 ## DESCRIPTION
 
-Loads and deserializes items from the connected repository (Azure Blob Storage, Disk).
-Supports retrieving single items, multiple items by pattern, or listing all items.
-Items are automatically deserialized based on format (JSON, XML, CSV) or content detection.
-Ideal for loading configuration, datasets, or processing results.
+Deletes items from the connected repository (Azure Blob Storage, Disk).
+Supports removing single or multiple items by name.
+Prompts for confirmation before deleting unless `-Force` is specified.
 
 ## EXAMPLES
 
-### Retrieve single item
+### Remove single item
 
 
 
-### Pattern matching
-
-
-
-### Explicit format
-
-
-
-### Raw content
+### Force removal without confirmation
 
 
 
 ## PARAMETERS
 
-### -AsByteArray
+### -Confirm
 
-If specified, returns content as byte array (binary mode).
+Prompts you for confirmation before running the cmdlet.
 
 ```yaml
 Type: System.Management.Automation.SwitchParameter
 DefaultValue: ''
 SupportsWildcards: false
-Aliases: []
+Aliases:
+- cf
 ParameterSets:
 - Name: (All)
   Position: Named
@@ -86,7 +78,7 @@ HelpMessage: ''
 
 ### -ContinueOnError
 
-If specified, continues processing even if individual object retrieval fails.
+If specified, continues processing even if individual object deletion fails.
 
 ```yaml
 Type: System.Management.Automation.SwitchParameter
@@ -105,53 +97,9 @@ AcceptedValues: []
 HelpMessage: ''
 ```
 
-### -Encoding
+### -Force
 
-Text encoding for reading.
-Default: UTF-8.
-
-```yaml
-Type: System.Text.Encoding
-DefaultValue: ''
-SupportsWildcards: false
-Aliases: []
-ParameterSets:
-- Name: (All)
-  Position: Named
-  IsRequired: false
-  ValueFromPipeline: false
-  ValueFromPipelineByPropertyName: false
-  ValueFromRemainingArguments: false
-DontShow: false
-AcceptedValues: []
-HelpMessage: ''
-```
-
-### -Format
-
-Expected deserialization format.
-If not specified, auto-detects from content or file extension.
-
-```yaml
-Type: System.Nullable`1[PSDataRepository.Serialization.FormatType]
-DefaultValue: ''
-SupportsWildcards: false
-Aliases: []
-ParameterSets:
-- Name: (All)
-  Position: Named
-  IsRequired: false
-  ValueFromPipeline: false
-  ValueFromPipelineByPropertyName: false
-  ValueFromRemainingArguments: false
-DontShow: false
-AcceptedValues: []
-HelpMessage: ''
-```
-
-### -IncludeMetadata
-
-If specified, includes metadata (Name, Path, Format) as properties on output objects (` _Name`, ` Path`, ` _Format`).
+If specified, skips confirmation prompts.
 
 ```yaml
 Type: System.Management.Automation.SwitchParameter
@@ -170,20 +118,20 @@ AcceptedValues: []
 HelpMessage: ''
 ```
 
-### -ListAll
+### -InputObject
 
-If specified, lists all available objects in the repository.
+Repository item from Get-PSDataRepositoryChildItem.
 
 ```yaml
-Type: System.Management.Automation.SwitchParameter
+Type: PSDataRepository.Storage.RepositoryItemInfo
 DefaultValue: ''
 SupportsWildcards: false
 Aliases: []
 ParameterSets:
-- Name: ListAll
+- Name: ByInputObject
   Position: Named
   IsRequired: true
-  ValueFromPipeline: false
+  ValueFromPipeline: true
   ValueFromPipelineByPropertyName: false
   ValueFromRemainingArguments: false
 DontShow: false
@@ -193,16 +141,13 @@ HelpMessage: ''
 
 ### -Name
 
-The name/key or pattern of the object(s) to retrieve.
-Supports wildcards (* and ?) depending on provider.
+The name/key of the item(s) to remove.
 
 ```yaml
 Type: System.String[]
 DefaultValue: ''
 SupportsWildcards: false
-Aliases:
-- Key
-- Path
+Aliases: []
 ParameterSets:
 - Name: ByName
   Position: 0
@@ -215,15 +160,17 @@ AcceptedValues: []
 HelpMessage: ''
 ```
 
-### -Raw
+### -WhatIf
 
-If specified, returns raw content as string without deserialization.
+Shows what would happen if the cmdlet runs.
+The cmdlet is not run.
 
 ```yaml
 Type: System.Management.Automation.SwitchParameter
 DefaultValue: ''
 SupportsWildcards: false
-Aliases: []
+Aliases:
+- wi
 ParameterSets:
 - Name: (All)
   Position: Named
@@ -253,21 +200,21 @@ Item names can be piped to this cmdlet.
 
 {{ Fill in the Description }}
 
+### PSDataRepository.Storage.RepositoryItemInfo
+
+{{ Fill in the Description }}
+
 ## OUTPUTS
-
-### System.Management.Automation.PSObject
-
-Deserialized object(s).
-The output type depends on the stored content and format.
 
 ## NOTES
 
-Format auto-detection uses file extension first, then content analysis (JSON: `{`/`[`, XML: `<`, CSV: header row).
+Requires an active session to a storage provider.
+Uses `ConfirmImpact = High`.
 
 
 ## RELATED LINKS
 
 - [Online Version]()
+- [Get-PSDataRepositoryItem]()
 - [Set-PSDataRepositoryItem]()
-- [Remove-PSDataRepositoryItem]()
 - [Test-PSDataRepositoryItem]()

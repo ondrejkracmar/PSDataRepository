@@ -4,25 +4,38 @@ external help file: PSDataRepository.dll-Help.xml
 HelpUri: ''
 Locale: en-US
 Module Name: PSDataRepository
-ms.date: 04.12.2026
+ms.date: 04/12/2026
 PlatyPS schema version: 2024-05-01
-title: Compress-PSDataRepositoryItem
+title: Copy-PSDataRepositoryItem
 ---
 
-# Compress-PSDataRepositoryItem
+# Copy-PSDataRepositoryItem
 
 ## SYNOPSIS
 
-Compresses and optionally encrypts items in persistent storage.
+{{ Fill in the Synopsis }}
 
 ## SYNTAX
 
-### Default (Default)
+### ByPath (Default)
 
 ```
-Compress-PSDataRepositoryItem [-Name] <string> [[-DestinationName] <string>]
- [-Password <securestring>] [-CompressionLevel <CompressionLevel>] [-KeepOriginal] [-Force]
- [-PassThru] [-WhatIf] [-Confirm] [<CommonParameters>]
+Copy-PSDataRepositoryItem [-Path] <string[]> [[-Destination] <string>] [-Recurse] [-Filter <string>]
+ [-Force] [-PassThru] [-Flatten] [-ContinueOnError] [-WhatIf] [-Confirm] [<CommonParameters>]
+```
+
+### ByLiteralPath
+
+```
+Copy-PSDataRepositoryItem [[-Destination] <string>] -LiteralPath <string[]> [-Recurse] [-Force]
+ [-PassThru] [-Flatten] [-ContinueOnError] [-WhatIf] [-Confirm] [<CommonParameters>]
+```
+
+### ByRepositoryItem
+
+```
+Copy-PSDataRepositoryItem [[-Destination] <string>] -InputObject <RepositoryItemInfo> [-Force]
+ [-PassThru] [-Flatten] [-ContinueOnError] [-WhatIf] [-Confirm] [<CommonParameters>]
 ```
 
 ## ALIASES
@@ -32,52 +45,15 @@ This cmdlet has the following aliases,
 
 ## DESCRIPTION
 
-Compresses stored items using GZip compression to reduce storage size.
-Optionally encrypts compressed data using AES-256 encryption with PBKDF2 key derivation (100,000 iterations, SHA-256).
-The compressed item is saved with `.gz` extension (or `.gz.enc` if encrypted).
-Supports in-place compression or creating a new compressed copy.
-Ideal for archiving large datasets or reducing storage costs with security.
+{{ Fill in the Description }}
 
 ## EXAMPLES
 
-### Simple compression
+### Example 1
 
-
-
-### Compress and encrypt
-
-
-
-### Keep original
-
-
-
-### Custom destination
-
-
+{{ Add example description here }}
 
 ## PARAMETERS
-
-### -CompressionLevel
-
-Compression level: Optimal (default), Fastest, or NoCompression.
-
-```yaml
-Type: System.IO.Compression.CompressionLevel
-DefaultValue: ''
-SupportsWildcards: false
-Aliases: []
-ParameterSets:
-- Name: (All)
-  Position: Named
-  IsRequired: false
-  ValueFromPipeline: false
-  ValueFromPipelineByPropertyName: false
-  ValueFromRemainingArguments: false
-DontShow: false
-AcceptedValues: []
-HelpMessage: ''
-```
 
 ### -Confirm
 
@@ -101,10 +77,30 @@ AcceptedValues: []
 HelpMessage: ''
 ```
 
-### -DestinationName
+### -ContinueOnError
 
-Destination name for compressed item.
-If not specified, adds `.gz` extension (or `.gz.enc` if encrypted).
+Continue processing when individual copy operations fail.
+
+```yaml
+Type: System.Management.Automation.SwitchParameter
+DefaultValue: ''
+SupportsWildcards: false
+Aliases: []
+ParameterSets:
+- Name: (All)
+  Position: Named
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
+
+### -Destination
+
+Destination prefix/folder in the repository (e.g. 'backup/').
 
 ```yaml
 Type: System.String
@@ -123,60 +119,81 @@ AcceptedValues: []
 HelpMessage: ''
 ```
 
-### -Force
+### -Filter
 
-If specified, overwrites existing compressed item without confirmation.
-
-```yaml
-Type: System.Management.Automation.SwitchParameter
-DefaultValue: ''
-SupportsWildcards: false
-Aliases: []
-ParameterSets:
-- Name: (All)
-  Position: Named
-  IsRequired: false
-  ValueFromPipeline: false
-  ValueFromPipelineByPropertyName: false
-  ValueFromRemainingArguments: false
-DontShow: false
-AcceptedValues: []
-HelpMessage: ''
-```
-
-### -KeepOriginal
-
-If specified, keeps the original item after compression.
-
-```yaml
-Type: System.Management.Automation.SwitchParameter
-DefaultValue: ''
-SupportsWildcards: false
-Aliases: []
-ParameterSets:
-- Name: (All)
-  Position: Named
-  IsRequired: false
-  ValueFromPipeline: false
-  ValueFromPipelineByPropertyName: false
-  ValueFromRemainingArguments: false
-DontShow: false
-AcceptedValues: []
-HelpMessage: ''
-```
-
-### -Name
-
-The name/key of the item to compress.
+Wildcard filter pattern (e.g. '*.json').
 
 ```yaml
 Type: System.String
 DefaultValue: ''
+SupportsWildcards: true
+Aliases: []
+ParameterSets:
+- Name: ByPath
+  Position: Named
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
+
+### -Flatten
+
+Flatten directory structure (use only leaf file names).
+
+```yaml
+Type: System.Management.Automation.SwitchParameter
+DefaultValue: ''
 SupportsWildcards: false
 Aliases: []
 ParameterSets:
 - Name: (All)
-  Position: 0
+  Position: Named
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
+
+### -Force
+
+Overwrite existing items without confirmation.
+
+```yaml
+Type: System.Management.Automation.SwitchParameter
+DefaultValue: ''
+SupportsWildcards: false
+Aliases: []
+ParameterSets:
+- Name: (All)
+  Position: Named
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
+
+### -InputObject
+
+Repository item from Get-PSDataRepositoryChildItem.
+
+```yaml
+Type: PSDataRepository.Storage.RepositoryItemInfo
+DefaultValue: ''
+SupportsWildcards: false
+Aliases: []
+ParameterSets:
+- Name: ByRepositoryItem
+  Position: Named
   IsRequired: true
   ValueFromPipeline: true
   ValueFromPipelineByPropertyName: false
@@ -186,9 +203,31 @@ AcceptedValues: []
 HelpMessage: ''
 ```
 
+### -LiteralPath
+
+Literal local path(s) (no wildcard expansion).
+
+```yaml
+Type: System.String[]
+DefaultValue: ''
+SupportsWildcards: false
+Aliases:
+- LP
+ParameterSets:
+- Name: ByLiteralPath
+  Position: Named
+  IsRequired: true
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: true
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
+
 ### -PassThru
 
-If specified, returns compression statistics (SourceName, DestinationName, OriginalSize, CompressedSize, FinalSize, CompressionRatio, IsEncrypted).
+Return information about copied items.
 
 ```yaml
 Type: System.Management.Automation.SwitchParameter
@@ -207,19 +246,46 @@ AcceptedValues: []
 HelpMessage: ''
 ```
 
-### -Password
+### -Path
 
-Password for AES-256 encryption.
-If specified, compressed data will be encrypted.
-Use `Read-Host -AsSecureString` to securely prompt for password.
+Local file or directory path(s) to copy to the repository.
 
 ```yaml
-Type: System.Security.SecureString
+Type: System.String[]
+DefaultValue: ''
+SupportsWildcards: false
+Aliases:
+- FullName
+- PSPath
+ParameterSets:
+- Name: ByPath
+  Position: 0
+  IsRequired: true
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: true
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
+
+### -Recurse
+
+Recursively copy files from directories.
+
+```yaml
+Type: System.Management.Automation.SwitchParameter
 DefaultValue: ''
 SupportsWildcards: false
 Aliases: []
 ParameterSets:
-- Name: (All)
+- Name: ByPath
+  Position: Named
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+- Name: ByLiteralPath
   Position: Named
   IsRequired: false
   ValueFromPipeline: false
@@ -232,8 +298,7 @@ HelpMessage: ''
 
 ### -WhatIf
 
-Shows what would happen if the cmdlet runs.
-The cmdlet is not run.
+Runs the command in a mode that only reports what would happen without performing the actions.
 
 ```yaml
 Type: System.Management.Automation.SwitchParameter
@@ -264,23 +329,27 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ### System.String
 
-Item name to compress.
+{{ Fill in the Description }}
+
+### PSDataRepository.Storage.RepositoryItemInfo
+
+{{ Fill in the Description }}
+
+### System.String[]
+
+{{ Fill in the Description }}
 
 ## OUTPUTS
 
 ### System.Management.Automation.PSObject
 
-When `-PassThru` is specified, returns an object with compression statistics.
+{{ Fill in the Description }}
 
 ## NOTES
 
-Encryption uses AES-256-CBC with PBKDF2 key derivation (100,000 iterations, SHA-256, 32-byte salt).
-Binary format: `[Magic Header 11B][Salt 32B][IV 16B][Encrypted Data]`.
-Use `Expand-PSDataRepositoryItem` with the same password to decrypt.
-
+{{ Fill in the Notes }}
 
 ## RELATED LINKS
 
-- [Online Version]()
-- [Expand-PSDataRepositoryItem]()
-- [Get-PSDataRepositoryItem]()
+{{ Fill in the related links here }}
+

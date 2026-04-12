@@ -2,9 +2,9 @@
 document type: cmdlet
 external help file: PSDataRepository.dll-Help.xml
 HelpUri: ''
-Locale: cs-CZ
+Locale: en-US
 Module Name: PSDataRepository
-ms.date: 04.08.2026
+ms.date: 04.12.2026
 PlatyPS schema version: 2024-05-01
 title: Remove-PSDataRepositorySecret
 ---
@@ -37,9 +37,7 @@ Fails if the repository type does not support secrets or is not connected.
 
 ### Remove a secret
 
-Remove-PSDataRepositorySecret -Name "ApiKey"
 
-Deletes the secret named "ApiKey" from the connected repository.
 
 ## PARAMETERS
 
@@ -92,7 +90,7 @@ The name of the secret to remove.
 
 ```yaml
 Type: System.String
-DefaultValue: None
+DefaultValue: ''
 SupportsWildcards: false
 Aliases: []
 ParameterSets:
@@ -151,5 +149,6 @@ Requires an active session to a secrets provider (e.g., AzureKeyVault).
 
 ## RELATED LINKS
 
+- [Online Version]()
 - [Get-PSDataRepositorySecret]()
 - [Set-PSDataRepositorySecret]()

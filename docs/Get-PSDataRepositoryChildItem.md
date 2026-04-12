@@ -6,22 +6,22 @@ Locale: en-US
 Module Name: PSDataRepository
 ms.date: 04.12.2026
 PlatyPS schema version: 2024-05-01
-title: Set-PSDataRepositorySecret
+title: Get-PSDataRepositoryChildItem
 ---
 
-# Set-PSDataRepositorySecret
+# Get-PSDataRepositoryChildItem
 
 ## SYNOPSIS
 
-Creates or updates a secret in the connected repository (Key Vault, FileSystem).
+{{ Fill in the Synopsis }}
 
 ## SYNTAX
 
 ### __AllParameterSets
 
 ```
-Set-PSDataRepositorySecret [-Name] <string> [[-Value] <string>] [-SecureValue <securestring>]
- [-Force] [-WhatIf] [-Confirm] [<CommonParameters>]
+Get-PSDataRepositoryChildItem [[-Path] <string>] [-Filter <string>] [-Recurse] [-Directory] [-File]
+ [-Depth <int>] [<CommonParameters>]
 ```
 
 ## ALIASES
@@ -31,32 +31,25 @@ This cmdlet has the following aliases,
 
 ## DESCRIPTION
 
-Sets (creates or updates) a secret in the connected repository.
-Supports either plain text or secure string as the secret value.
-Supported repositories: AzureKeyVault, FileSystem.
+{{ Fill in the Description }}
 
 ## EXAMPLES
 
-### Set a secret with plain text
+### Example 1
 
-
-
-### Set a secret with secure string
-
-
+{{ Add example description here }}
 
 ## PARAMETERS
 
-### -Confirm
+### -Depth
 
-Prompts you for confirmation before running the cmdlet.
+Maximum recursion depth. Applies only with -Recurse.
 
 ```yaml
-Type: System.Management.Automation.SwitchParameter
+Type: System.Nullable`1[System.Int32]
 DefaultValue: ''
 SupportsWildcards: false
-Aliases:
-- cf
+Aliases: []
 ParameterSets:
 - Name: (All)
   Position: Named
@@ -69,9 +62,9 @@ AcceptedValues: []
 HelpMessage: ''
 ```
 
-### -Force
+### -Directory
 
-Skip confirmation prompts.
+Return only directories.
 
 ```yaml
 Type: System.Management.Automation.SwitchParameter
@@ -90,20 +83,63 @@ AcceptedValues: []
 HelpMessage: ''
 ```
 
-### -Name
+### -File
 
-The name of the secret to set.
+Return only files.
+
+```yaml
+Type: System.Management.Automation.SwitchParameter
+DefaultValue: ''
+SupportsWildcards: false
+Aliases: []
+ParameterSets:
+- Name: (All)
+  Position: Named
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
+
+### -Filter
+
+Wildcard filter pattern (e.g. '*.json').
+
+```yaml
+Type: System.String
+DefaultValue: ''
+SupportsWildcards: true
+Aliases: []
+ParameterSets:
+- Name: (All)
+  Position: Named
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
+
+### -Path
+
+Subfolder or prefix to list (defaults to root).
 
 ```yaml
 Type: System.String
 DefaultValue: ''
 SupportsWildcards: false
-Aliases: []
+Aliases:
+- Prefix
 ParameterSets:
 - Name: (All)
   Position: 0
-  IsRequired: true
-  ValueFromPipeline: false
+  IsRequired: false
+  ValueFromPipeline: true
   ValueFromPipelineByPropertyName: true
   ValueFromRemainingArguments: false
 DontShow: false
@@ -111,60 +147,15 @@ AcceptedValues: []
 HelpMessage: ''
 ```
 
-### -SecureValue
+### -Recurse
 
-The secure string value to store as the secret.
-Preferred over `-Value` for sensitive data.
-
-```yaml
-Type: System.Security.SecureString
-DefaultValue: ''
-SupportsWildcards: false
-Aliases: []
-ParameterSets:
-- Name: (All)
-  Position: Named
-  IsRequired: false
-  ValueFromPipeline: false
-  ValueFromPipelineByPropertyName: false
-  ValueFromRemainingArguments: false
-DontShow: false
-AcceptedValues: []
-HelpMessage: ''
-```
-
-### -Value
-
-The plain text value to store as the secret.
-Use `-SecureValue` for sensitive values.
-
-```yaml
-Type: System.String
-DefaultValue: ''
-SupportsWildcards: false
-Aliases: []
-ParameterSets:
-- Name: (All)
-  Position: 1
-  IsRequired: false
-  ValueFromPipeline: false
-  ValueFromPipelineByPropertyName: false
-  ValueFromRemainingArguments: false
-DontShow: false
-AcceptedValues: []
-HelpMessage: ''
-```
-
-### -WhatIf
-
-Runs the command in a mode that only reports what would happen without performing the actions.
+Include items from nested subdirectories.
 
 ```yaml
 Type: System.Management.Automation.SwitchParameter
 DefaultValue: ''
 SupportsWildcards: false
-Aliases:
-- wi
+Aliases: []
 ParameterSets:
 - Name: (All)
   Position: Named
@@ -192,14 +183,15 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ## OUTPUTS
 
+### PSDataRepository.Storage.RepositoryItemInfo
+
+{{ Fill in the Description }}
+
 ## NOTES
 
-Either `-Value` or `-SecureValue` must be provided.
-Requires an active session to a secrets provider.
-
+{{ Fill in the Notes }}
 
 ## RELATED LINKS
 
-- [Online Version]()
-- [Get-PSDataRepositorySecret]()
-- [Remove-PSDataRepositorySecret]()
+{{ Fill in the related links here }}
+

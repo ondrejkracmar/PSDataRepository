@@ -2,9 +2,9 @@
 document type: cmdlet
 external help file: PSDataRepository.dll-Help.xml
 HelpUri: ''
-Locale: cs-CZ
+Locale: en-US
 Module Name: PSDataRepository
-ms.date: 04.08.2026
+ms.date: 04.12.2026
 PlatyPS schema version: 2024-05-01
 title: Set-PSDataRepositoryItem
 ---
@@ -53,22 +53,15 @@ Use `{0}` in `-Name` for per-object naming, or `-NameProperty` for property-base
 
 ### Save pipeline objects as collection
 
-$data = @([PSCustomObject]@{ Id = 1; Name = "Server01"; Status = "Running" }; [PSCustomObject]@{ Id = 2; Name = "Server02"; Status = "Stopped" })
-$data | Set-PSDataRepositoryItem -Name "servers.json"
 
-Saves a collection of objects as a JSON array to storage (auto-accumulate mode).
 
 ### Save hashtable
 
-$config = @{ApiKey="xxx"; Endpoint="https://..."} | Set-PSDataRepositoryItem -Name "config.json"
 
-Saves configuration hashtable as JSON.
 
 ### Property-based naming
 
-Get-ChildItem | Set-PSDataRepositoryItem -NameProperty FullName -NameSuffix ".json" -Format Json
 
-Saves each file item with unique name based on FullName property.
 
 ## PARAMETERS
 
@@ -79,7 +72,7 @@ Useful for creating a single JSON/XML/CSV file from multiple pipeline objects.
 
 ```yaml
 Type: System.Management.Automation.SwitchParameter
-DefaultValue: False
+DefaultValue: ''
 SupportsWildcards: false
 Aliases: []
 ParameterSets:
@@ -100,7 +93,7 @@ Prompts you for confirmation before running the cmdlet.
 
 ```yaml
 Type: System.Management.Automation.SwitchParameter
-DefaultValue: False
+DefaultValue: ''
 SupportsWildcards: false
 Aliases:
 - cf
@@ -124,7 +117,7 @@ Default: comma (`,`).
 
 ```yaml
 Type: System.Char
-DefaultValue: ','
+DefaultValue: ''
 SupportsWildcards: false
 Aliases: []
 ParameterSets:
@@ -146,7 +139,7 @@ Default: UTF-8.
 
 ```yaml
 Type: System.Text.Encoding
-DefaultValue: UTF8
+DefaultValue: ''
 SupportsWildcards: false
 Aliases: []
 ParameterSets:
@@ -167,7 +160,7 @@ If specified, overwrites existing objects without confirmation.
 
 ```yaml
 Type: System.Management.Automation.SwitchParameter
-DefaultValue: False
+DefaultValue: ''
 SupportsWildcards: false
 Aliases: []
 ParameterSets:
@@ -188,7 +181,7 @@ Serialization format: Json (default), Xml, or Csv.
 
 ```yaml
 Type: PSDataRepository.Serialization.FormatType
-DefaultValue: Json
+DefaultValue: ''
 SupportsWildcards: false
 Aliases: []
 ParameterSets:
@@ -210,7 +203,7 @@ Accepts pipeline input.
 
 ```yaml
 Type: System.Management.Automation.PSObject
-DefaultValue: None
+DefaultValue: ''
 SupportsWildcards: false
 Aliases: []
 ParameterSets:
@@ -232,7 +225,7 @@ Default: 10.
 
 ```yaml
 Type: System.Int32
-DefaultValue: 10
+DefaultValue: ''
 SupportsWildcards: false
 Aliases: []
 ParameterSets:
@@ -255,7 +248,7 @@ Examples: `"data.json"`, `"item-{0}.json"`, `"backup/{0}.xml"`
 
 ```yaml
 Type: System.String
-DefaultValue: None
+DefaultValue: ''
 SupportsWildcards: false
 Aliases: []
 ParameterSets:
@@ -276,7 +269,7 @@ Prefix to add before generated names (used with `-NameProperty`).
 
 ```yaml
 Type: System.String
-DefaultValue: '"" (empty)'
+DefaultValue: ''
 SupportsWildcards: false
 Aliases: []
 ParameterSets:
@@ -298,7 +291,7 @@ Example: `-NameProperty "Id"` uses each object's Id property as the name.
 
 ```yaml
 Type: System.String
-DefaultValue: None
+DefaultValue: ''
 SupportsWildcards: false
 Aliases: []
 ParameterSets:
@@ -319,7 +312,7 @@ Suffix/extension to add after generated names (used with `-NameProperty`).
 
 ```yaml
 Type: System.String
-DefaultValue: .json
+DefaultValue: ''
 SupportsWildcards: false
 Aliases: []
 ParameterSets:
@@ -340,7 +333,7 @@ If specified, returns storage path/URI after saving.
 
 ```yaml
 Type: System.Management.Automation.SwitchParameter
-DefaultValue: False
+DefaultValue: ''
 SupportsWildcards: false
 Aliases: []
 ParameterSets:
@@ -362,7 +355,7 @@ The cmdlet is not run.
 
 ```yaml
 Type: System.Management.Automation.SwitchParameter
-DefaultValue: False
+DefaultValue: ''
 SupportsWildcards: false
 Aliases:
 - wi
@@ -386,7 +379,7 @@ If not specified, automatically inferred from object type.
 
 ```yaml
 Type: System.String
-DefaultValue: None (auto-detect)
+DefaultValue: ''
 SupportsWildcards: false
 Aliases: []
 ParameterSets:
@@ -429,6 +422,7 @@ In this mode, all pipeline objects are collected and saved as a single array.
 
 ## RELATED LINKS
 
+- [Online Version]()
 - [Get-PSDataRepositoryItem]()
 - [Remove-PSDataRepositoryItem]()
 - [Test-PSDataRepositoryItem]()

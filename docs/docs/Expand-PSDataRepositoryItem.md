@@ -4,25 +4,25 @@ external help file: PSDataRepository.dll-Help.xml
 HelpUri: ''
 Locale: en-US
 Module Name: PSDataRepository
-ms.date: 04.12.2026
+ms.date: 04/12/2026
 PlatyPS schema version: 2024-05-01
-title: Compress-PSDataRepositoryItem
+title: Expand-PSDataRepositoryItem
 ---
 
-# Compress-PSDataRepositoryItem
+# Expand-PSDataRepositoryItem
 
 ## SYNOPSIS
 
-Compresses and optionally encrypts items in persistent storage.
+Decompresses and optionally decrypts items in persistent storage.
 
 ## SYNTAX
 
 ### Default (Default)
 
 ```
-Compress-PSDataRepositoryItem [-Name] <string> [[-DestinationName] <string>]
- [-Password <securestring>] [-CompressionLevel <CompressionLevel>] [-KeepOriginal] [-Force]
- [-PassThru] [-WhatIf] [-Confirm] [<CommonParameters>]
+Expand-PSDataRepositoryItem [-Name] <string> [[-DestinationName] <string>]
+ [-Password <securestring>] [-KeepOriginal] [-Force] [-PassThru] [-WhatIf] [-Confirm]
+ [<CommonParameters>]
 ```
 
 ## ALIASES
@@ -32,23 +32,23 @@ This cmdlet has the following aliases,
 
 ## DESCRIPTION
 
-Compresses stored items using GZip compression to reduce storage size.
-Optionally encrypts compressed data using AES-256 encryption with PBKDF2 key derivation (100,000 iterations, SHA-256).
-The compressed item is saved with `.gz` extension (or `.gz.enc` if encrypted).
-Supports in-place compression or creating a new compressed copy.
-Ideal for archiving large datasets or reducing storage costs with security.
+Decompresses GZip-compressed items stored in the repository.
+Automatically decrypts items encrypted with `Compress-PSDataRepositoryItem` if password is provided.
+Automatically detects `.gz` and `.gz.enc` extensions and removes them from decompressed item name.
+Supports in-place decompression or creating a new decompressed copy.
+Ideal for restoring archived datasets or processing compressed/encrypted data.
 
 ## EXAMPLES
 
-### Simple compression
+### Simple decompression
 
 
 
-### Compress and encrypt
+### Decrypt and decompress
 
 
 
-### Keep original
+### Keep compressed original
 
 
 
@@ -57,27 +57,6 @@ Ideal for archiving large datasets or reducing storage costs with security.
 
 
 ## PARAMETERS
-
-### -CompressionLevel
-
-Compression level: Optimal (default), Fastest, or NoCompression.
-
-```yaml
-Type: System.IO.Compression.CompressionLevel
-DefaultValue: ''
-SupportsWildcards: false
-Aliases: []
-ParameterSets:
-- Name: (All)
-  Position: Named
-  IsRequired: false
-  ValueFromPipeline: false
-  ValueFromPipelineByPropertyName: false
-  ValueFromRemainingArguments: false
-DontShow: false
-AcceptedValues: []
-HelpMessage: ''
-```
 
 ### -Confirm
 
@@ -103,8 +82,8 @@ HelpMessage: ''
 
 ### -DestinationName
 
-Destination name for compressed item.
-If not specified, adds `.gz` extension (or `.gz.enc` if encrypted).
+Destination name for decompressed item.
+If not specified, removes `.gz` or `.gz.enc` extension from original name.
 
 ```yaml
 Type: System.String
@@ -125,7 +104,7 @@ HelpMessage: ''
 
 ### -Force
 
-If specified, overwrites existing compressed item without confirmation.
+If specified, overwrites existing decompressed item without confirmation.
 
 ```yaml
 Type: System.Management.Automation.SwitchParameter
@@ -146,7 +125,7 @@ HelpMessage: ''
 
 ### -KeepOriginal
 
-If specified, keeps the original item after compression.
+If specified, keeps the compressed item after decompression.
 
 ```yaml
 Type: System.Management.Automation.SwitchParameter
@@ -167,7 +146,7 @@ HelpMessage: ''
 
 ### -Name
 
-The name/key of the item to compress.
+The name/key of the compressed item to expand.
 
 ```yaml
 Type: System.String
@@ -188,7 +167,7 @@ HelpMessage: ''
 
 ### -PassThru
 
-If specified, returns compression statistics (SourceName, DestinationName, OriginalSize, CompressedSize, FinalSize, CompressionRatio, IsEncrypted).
+If specified, returns decompression statistics (SourceName, DestinationName, OriginalSize, CompressedSize, DecompressedSize, ExpansionRatio, WasEncrypted).
 
 ```yaml
 Type: System.Management.Automation.SwitchParameter
@@ -209,8 +188,8 @@ HelpMessage: ''
 
 ### -Password
 
-Password for AES-256 encryption.
-If specified, compressed data will be encrypted.
+Password for AES-256 decryption.
+Required if item was encrypted with `Compress-PSDataRepositoryItem`.
 Use `Read-Host -AsSecureString` to securely prompt for password.
 
 ```yaml
@@ -264,23 +243,23 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ### System.String
 
-Item name to compress.
+Compressed item name to expand.
 
 ## OUTPUTS
 
 ### System.Management.Automation.PSObject
 
-When `-PassThru` is specified, returns an object with compression statistics.
+When `-PassThru` is specified, returns an object with decompression statistics.
 
 ## NOTES
 
-Encryption uses AES-256-CBC with PBKDF2 key derivation (100,000 iterations, SHA-256, 32-byte salt).
-Binary format: `[Magic Header 11B][Salt 32B][IV 16B][Encrypted Data]`.
-Use `Expand-PSDataRepositoryItem` with the same password to decrypt.
+Automatically detects encryption by checking for the magic header written by `Compress-PSDataRepositoryItem`.
+If the file is encrypted but no `-Password` is provided, the cmdlet writes an error.
+If `-Password` is provided but the file is not encrypted, a warning is shown.
 
 
 ## RELATED LINKS
 
 - [Online Version]()
-- [Expand-PSDataRepositoryItem]()
+- [Compress-PSDataRepositoryItem]()
 - [Get-PSDataRepositoryItem]()

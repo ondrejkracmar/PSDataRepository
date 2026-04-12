@@ -2,9 +2,9 @@
 document type: cmdlet
 external help file: PSDataRepository.dll-Help.xml
 HelpUri: ''
-Locale: cs-CZ
+Locale: en-US
 Module Name: PSDataRepository
-ms.date: 04.08.2026
+ms.date: 04.12.2026
 PlatyPS schema version: 2024-05-01
 title: Remove-PSDataRepositoryItem
 ---
@@ -17,11 +17,18 @@ Removes items from persistent storage (Blob, Disk).
 
 ## SYNTAX
 
-### __AllParameterSets
+### ByName (Default)
 
 ```
 Remove-PSDataRepositoryItem [-Name] <string[]> [-Force] [-ContinueOnError] [-WhatIf] [-Confirm]
  [<CommonParameters>]
+```
+
+### ByInputObject
+
+```
+Remove-PSDataRepositoryItem -InputObject <RepositoryItemInfo> [-Force] [-ContinueOnError] [-WhatIf]
+ [-Confirm] [<CommonParameters>]
 ```
 
 ## ALIASES
@@ -39,15 +46,11 @@ Prompts for confirmation before deleting unless `-Force` is specified.
 
 ### Remove single item
 
-Remove-PSDataRepositoryItem -Name "temp.json"
 
-Removes temp.json from storage (with confirmation prompt).
 
 ### Force removal without confirmation
 
-Remove-PSDataRepositoryItem -Name "backup/*.json" -Force
 
-Removes all JSON files in backup folder without confirmation.
 
 ## PARAMETERS
 
@@ -57,7 +60,7 @@ Prompts you for confirmation before running the cmdlet.
 
 ```yaml
 Type: System.Management.Automation.SwitchParameter
-DefaultValue: False
+DefaultValue: ''
 SupportsWildcards: false
 Aliases:
 - cf
@@ -79,7 +82,7 @@ If specified, continues processing even if individual object deletion fails.
 
 ```yaml
 Type: System.Management.Automation.SwitchParameter
-DefaultValue: False
+DefaultValue: ''
 SupportsWildcards: false
 Aliases: []
 ParameterSets:
@@ -100,7 +103,7 @@ If specified, skips confirmation prompts.
 
 ```yaml
 Type: System.Management.Automation.SwitchParameter
-DefaultValue: False
+DefaultValue: ''
 SupportsWildcards: false
 Aliases: []
 ParameterSets:
@@ -115,17 +118,38 @@ AcceptedValues: []
 HelpMessage: ''
 ```
 
+### -InputObject
+
+Repository item from Get-PSDataRepositoryChildItem.
+
+```yaml
+Type: PSDataRepository.Storage.RepositoryItemInfo
+DefaultValue: ''
+SupportsWildcards: false
+Aliases: []
+ParameterSets:
+- Name: ByInputObject
+  Position: Named
+  IsRequired: true
+  ValueFromPipeline: true
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
+
 ### -Name
 
 The name/key of the item(s) to remove.
 
 ```yaml
 Type: System.String[]
-DefaultValue: None
+DefaultValue: ''
 SupportsWildcards: false
 Aliases: []
 ParameterSets:
-- Name: (All)
+- Name: ByName
   Position: 0
   IsRequired: true
   ValueFromPipeline: true
@@ -143,7 +167,7 @@ The cmdlet is not run.
 
 ```yaml
 Type: System.Management.Automation.SwitchParameter
-DefaultValue: False
+DefaultValue: ''
 SupportsWildcards: false
 Aliases:
 - wi
@@ -176,6 +200,10 @@ Item names can be piped to this cmdlet.
 
 {{ Fill in the Description }}
 
+### PSDataRepository.Storage.RepositoryItemInfo
+
+{{ Fill in the Description }}
+
 ## OUTPUTS
 
 ## NOTES
@@ -186,6 +214,7 @@ Uses `ConfirmImpact = High`.
 
 ## RELATED LINKS
 
+- [Online Version]()
 - [Get-PSDataRepositoryItem]()
 - [Set-PSDataRepositoryItem]()
 - [Test-PSDataRepositoryItem]()

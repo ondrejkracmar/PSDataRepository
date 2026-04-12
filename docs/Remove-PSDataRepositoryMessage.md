@@ -2,9 +2,9 @@
 document type: cmdlet
 external help file: PSDataRepository.dll-Help.xml
 HelpUri: ''
-Locale: cs-CZ
+Locale: en-US
 Module Name: PSDataRepository
-ms.date: 04.08.2026
+ms.date: 04.12.2026
 PlatyPS schema version: 2024-05-01
 title: Remove-PSDataRepositoryMessage
 ---
@@ -48,16 +48,11 @@ For Disk/InMemory, uses message ID.
 
 ### Receive and delete a message
 
-$msg = Receive-PSDataRepositoryMessage
-Remove-PSDataRepositoryMessage -Message $msg
 
-Receives and then deletes a message.
 
 ### Pipeline deletion
 
-Receive-PSDataRepositoryMessage -MaxMessages 10 | Remove-PSDataRepositoryMessage
 
-Receives and deletes multiple messages via pipeline.
 
 ## PARAMETERS
 
@@ -67,7 +62,7 @@ Prompts you for confirmation before running the cmdlet.
 
 ```yaml
 Type: System.Management.Automation.SwitchParameter
-DefaultValue: False
+DefaultValue: ''
 SupportsWildcards: false
 Aliases:
 - cf
@@ -89,7 +84,7 @@ If specified, suppresses confirmation prompts.
 
 ```yaml
 Type: System.Management.Automation.SwitchParameter
-DefaultValue: False
+DefaultValue: ''
 SupportsWildcards: false
 Aliases: []
 ParameterSets:
@@ -132,7 +127,7 @@ Typically obtained from `Receive-PSDataRepositoryMessage`.
 
 ```yaml
 Type: PSDataRepository.Messaging.QueueMessage[]
-DefaultValue: None
+DefaultValue: ''
 SupportsWildcards: false
 Aliases: []
 ParameterSets:
@@ -154,7 +149,7 @@ The cmdlet is not run.
 
 ```yaml
 Type: System.Management.Automation.SwitchParameter
-DefaultValue: False
+DefaultValue: ''
 SupportsWildcards: false
 Aliases:
 - wi
@@ -183,11 +178,11 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 Message objects from `Receive-PSDataRepositoryMessage`.
 
-### PSDataRepository.Messaging.QueueMessage[]
+### System.Management.Automation.PSObject
 
 {{ Fill in the Description }}
 
-### System.Management.Automation.PSObject
+### PSDataRepository.Messaging.QueueMessage[]
 
 {{ Fill in the Description }}
 
@@ -201,5 +196,6 @@ This cmdlet is needed only when `-NoAutoDelete` is used.
 
 ## RELATED LINKS
 
+- [Online Version]()
 - [Receive-PSDataRepositoryMessage]()
 - [Send-PSDataRepositoryMessage]()

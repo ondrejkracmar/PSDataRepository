@@ -2,9 +2,9 @@
 document type: cmdlet
 external help file: PSDataRepository.dll-Help.xml
 HelpUri: ''
-Locale: cs-CZ
+Locale: en-US
 Module Name: PSDataRepository
-ms.date: 04.08.2026
+ms.date: 04.12.2026
 PlatyPS schema version: 2024-05-01
 title: Disconnect-PSDataRepository
 ---
@@ -39,17 +39,11 @@ Safe to call even when no session is active.
 
 ### Simple disconnect
 
-Disconnect-PSDataRepository
 
-Disconnects from the current repository and releases all resources.
 
 ### Connect-work-disconnect workflow
 
-Connect-PSDataRepository -Disk -Path "C:\Data"
-Set-PSDataRepositoryItem -Name "backup.json" -InputObject $data
-Disconnect-PSDataRepository
 
-Typical connect-work-disconnect workflow.
 
 ## PARAMETERS
 
@@ -119,5 +113,6 @@ Safe to call multiple times or when no session is active.
 
 ## RELATED LINKS
 
+- [Online Version]()
 - [Connect-PSDataRepository]()
 - [Get-PSDataRepositorySession]()

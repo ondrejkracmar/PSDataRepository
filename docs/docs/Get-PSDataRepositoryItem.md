@@ -4,25 +4,31 @@ external help file: PSDataRepository.dll-Help.xml
 HelpUri: ''
 Locale: en-US
 Module Name: PSDataRepository
-ms.date: 04.12.2026
+ms.date: 04/12/2026
 PlatyPS schema version: 2024-05-01
-title: Compress-PSDataRepositoryItem
+title: Get-PSDataRepositoryItem
 ---
 
-# Compress-PSDataRepositoryItem
+# Get-PSDataRepositoryItem
 
 ## SYNOPSIS
 
-Compresses and optionally encrypts items in persistent storage.
+Retrieves items from persistent storage (Blob, Disk).
 
 ## SYNTAX
 
-### Default (Default)
+### ByName (Default)
 
 ```
-Compress-PSDataRepositoryItem [-Name] <string> [[-DestinationName] <string>]
- [-Password <securestring>] [-CompressionLevel <CompressionLevel>] [-KeepOriginal] [-Force]
- [-PassThru] [-WhatIf] [-Confirm] [<CommonParameters>]
+Get-PSDataRepositoryItem [-Name] <string[]> [-Format <FormatType>] [-Encoding <Encoding>] [-Raw]
+ [-AsByteArray] [-IncludeMetadata] [-ContinueOnError] [<CommonParameters>]
+```
+
+### ListAll
+
+```
+Get-PSDataRepositoryItem -ListAll [-Format <FormatType>] [-Encoding <Encoding>] [-Raw]
+ [-AsByteArray] [-IncludeMetadata] [-ContinueOnError] [<CommonParameters>]
 ```
 
 ## ALIASES
@@ -32,100 +38,34 @@ This cmdlet has the following aliases,
 
 ## DESCRIPTION
 
-Compresses stored items using GZip compression to reduce storage size.
-Optionally encrypts compressed data using AES-256 encryption with PBKDF2 key derivation (100,000 iterations, SHA-256).
-The compressed item is saved with `.gz` extension (or `.gz.enc` if encrypted).
-Supports in-place compression or creating a new compressed copy.
-Ideal for archiving large datasets or reducing storage costs with security.
+Loads and deserializes items from the connected repository (Azure Blob Storage, Disk).
+Supports retrieving single items, multiple items by pattern, or listing all items.
+Items are automatically deserialized based on format (JSON, XML, CSV) or content detection.
+Ideal for loading configuration, datasets, or processing results.
 
 ## EXAMPLES
 
-### Simple compression
+### Retrieve single item
 
 
 
-### Compress and encrypt
+### Pattern matching
 
 
 
-### Keep original
+### Explicit format
 
 
 
-### Custom destination
+### Raw content
 
 
 
 ## PARAMETERS
 
-### -CompressionLevel
+### -AsByteArray
 
-Compression level: Optimal (default), Fastest, or NoCompression.
-
-```yaml
-Type: System.IO.Compression.CompressionLevel
-DefaultValue: ''
-SupportsWildcards: false
-Aliases: []
-ParameterSets:
-- Name: (All)
-  Position: Named
-  IsRequired: false
-  ValueFromPipeline: false
-  ValueFromPipelineByPropertyName: false
-  ValueFromRemainingArguments: false
-DontShow: false
-AcceptedValues: []
-HelpMessage: ''
-```
-
-### -Confirm
-
-Prompts you for confirmation before running the cmdlet.
-
-```yaml
-Type: System.Management.Automation.SwitchParameter
-DefaultValue: ''
-SupportsWildcards: false
-Aliases:
-- cf
-ParameterSets:
-- Name: (All)
-  Position: Named
-  IsRequired: false
-  ValueFromPipeline: false
-  ValueFromPipelineByPropertyName: false
-  ValueFromRemainingArguments: false
-DontShow: false
-AcceptedValues: []
-HelpMessage: ''
-```
-
-### -DestinationName
-
-Destination name for compressed item.
-If not specified, adds `.gz` extension (or `.gz.enc` if encrypted).
-
-```yaml
-Type: System.String
-DefaultValue: ''
-SupportsWildcards: false
-Aliases: []
-ParameterSets:
-- Name: (All)
-  Position: 1
-  IsRequired: false
-  ValueFromPipeline: false
-  ValueFromPipelineByPropertyName: false
-  ValueFromRemainingArguments: false
-DontShow: false
-AcceptedValues: []
-HelpMessage: ''
-```
-
-### -Force
-
-If specified, overwrites existing compressed item without confirmation.
+If specified, returns content as byte array (binary mode).
 
 ```yaml
 Type: System.Management.Automation.SwitchParameter
@@ -144,9 +84,9 @@ AcceptedValues: []
 HelpMessage: ''
 ```
 
-### -KeepOriginal
+### -ContinueOnError
 
-If specified, keeps the original item after compression.
+If specified, continues processing even if individual object retrieval fails.
 
 ```yaml
 Type: System.Management.Automation.SwitchParameter
@@ -157,6 +97,92 @@ ParameterSets:
 - Name: (All)
   Position: Named
   IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
+
+### -Encoding
+
+Text encoding for reading.
+Default: UTF-8.
+
+```yaml
+Type: System.Text.Encoding
+DefaultValue: ''
+SupportsWildcards: false
+Aliases: []
+ParameterSets:
+- Name: (All)
+  Position: Named
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
+
+### -Format
+
+Expected deserialization format.
+If not specified, auto-detects from content or file extension.
+
+```yaml
+Type: System.Nullable`1[PSDataRepository.Serialization.FormatType]
+DefaultValue: ''
+SupportsWildcards: false
+Aliases: []
+ParameterSets:
+- Name: (All)
+  Position: Named
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
+
+### -IncludeMetadata
+
+If specified, includes metadata (Name, Path, Format) as properties on output objects (` _Name`, ` Path`, ` _Format`).
+
+```yaml
+Type: System.Management.Automation.SwitchParameter
+DefaultValue: ''
+SupportsWildcards: false
+Aliases: []
+ParameterSets:
+- Name: (All)
+  Position: Named
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
+
+### -ListAll
+
+If specified, lists all available objects in the repository.
+
+```yaml
+Type: System.Management.Automation.SwitchParameter
+DefaultValue: ''
+SupportsWildcards: false
+Aliases: []
+ParameterSets:
+- Name: ListAll
+  Position: Named
+  IsRequired: true
   ValueFromPipeline: false
   ValueFromPipelineByPropertyName: false
   ValueFromRemainingArguments: false
@@ -167,80 +193,37 @@ HelpMessage: ''
 
 ### -Name
 
-The name/key of the item to compress.
+The name/key or pattern of the object(s) to retrieve.
+Supports wildcards (* and ?) depending on provider.
 
 ```yaml
-Type: System.String
-DefaultValue: ''
-SupportsWildcards: false
-Aliases: []
-ParameterSets:
-- Name: (All)
-  Position: 0
-  IsRequired: true
-  ValueFromPipeline: true
-  ValueFromPipelineByPropertyName: false
-  ValueFromRemainingArguments: false
-DontShow: false
-AcceptedValues: []
-HelpMessage: ''
-```
-
-### -PassThru
-
-If specified, returns compression statistics (SourceName, DestinationName, OriginalSize, CompressedSize, FinalSize, CompressionRatio, IsEncrypted).
-
-```yaml
-Type: System.Management.Automation.SwitchParameter
-DefaultValue: ''
-SupportsWildcards: false
-Aliases: []
-ParameterSets:
-- Name: (All)
-  Position: Named
-  IsRequired: false
-  ValueFromPipeline: false
-  ValueFromPipelineByPropertyName: false
-  ValueFromRemainingArguments: false
-DontShow: false
-AcceptedValues: []
-HelpMessage: ''
-```
-
-### -Password
-
-Password for AES-256 encryption.
-If specified, compressed data will be encrypted.
-Use `Read-Host -AsSecureString` to securely prompt for password.
-
-```yaml
-Type: System.Security.SecureString
-DefaultValue: ''
-SupportsWildcards: false
-Aliases: []
-ParameterSets:
-- Name: (All)
-  Position: Named
-  IsRequired: false
-  ValueFromPipeline: false
-  ValueFromPipelineByPropertyName: false
-  ValueFromRemainingArguments: false
-DontShow: false
-AcceptedValues: []
-HelpMessage: ''
-```
-
-### -WhatIf
-
-Shows what would happen if the cmdlet runs.
-The cmdlet is not run.
-
-```yaml
-Type: System.Management.Automation.SwitchParameter
+Type: System.String[]
 DefaultValue: ''
 SupportsWildcards: false
 Aliases:
-- wi
+- Key
+- Path
+ParameterSets:
+- Name: ByName
+  Position: 0
+  IsRequired: true
+  ValueFromPipeline: true
+  ValueFromPipelineByPropertyName: true
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
+
+### -Raw
+
+If specified, returns raw content as string without deserialization.
+
+```yaml
+Type: System.Management.Automation.SwitchParameter
+DefaultValue: ''
+SupportsWildcards: false
+Aliases: []
 ParameterSets:
 - Name: (All)
   Position: Named
@@ -264,23 +247,27 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ### System.String
 
-Item name to compress.
+Item names can be piped to this cmdlet.
+
+### System.String[]
+
+{{ Fill in the Description }}
 
 ## OUTPUTS
 
 ### System.Management.Automation.PSObject
 
-When `-PassThru` is specified, returns an object with compression statistics.
+Deserialized object(s).
+The output type depends on the stored content and format.
 
 ## NOTES
 
-Encryption uses AES-256-CBC with PBKDF2 key derivation (100,000 iterations, SHA-256, 32-byte salt).
-Binary format: `[Magic Header 11B][Salt 32B][IV 16B][Encrypted Data]`.
-Use `Expand-PSDataRepositoryItem` with the same password to decrypt.
+Format auto-detection uses file extension first, then content analysis (JSON: `{`/`[`, XML: `<`, CSV: header row).
 
 
 ## RELATED LINKS
 
 - [Online Version]()
-- [Expand-PSDataRepositoryItem]()
-- [Get-PSDataRepositoryItem]()
+- [Set-PSDataRepositoryItem]()
+- [Remove-PSDataRepositoryItem]()
+- [Test-PSDataRepositoryItem]()

@@ -4,23 +4,23 @@ external help file: PSDataRepository.dll-Help.xml
 HelpUri: ''
 Locale: en-US
 Module Name: PSDataRepository
-ms.date: 04.12.2026
+ms.date: 04/12/2026
 PlatyPS schema version: 2024-05-01
-title: Get-PSDataRepositorySecret
+title: Test-PSDataRepositoryItem
 ---
 
-# Get-PSDataRepositorySecret
+# Test-PSDataRepositoryItem
 
 ## SYNOPSIS
 
-Retrieves a secret value from the connected repository.
+Tests if an object exists in the repository.
 
 ## SYNTAX
 
 ### __AllParameterSets
 
 ```
-Get-PSDataRepositorySecret [-Name] <string> [<CommonParameters>]
+Test-PSDataRepositoryItem [-Name] <string[]> [<CommonParameters>]
 ```
 
 ## ALIASES
@@ -30,12 +30,17 @@ This cmdlet has the following aliases,
 
 ## DESCRIPTION
 
-Gets the value of a secret from the connected repository (typically Azure Key Vault or FileSystem).
-Fails if the repository type does not support secrets or is not connected.
+Checks whether one or more objects exist in the connected repository (Azure Blob Storage, Disk).
+Returns `$true` if the item exists, `$false` otherwise.
+Requires an active session established by `Connect-PSDataRepository`.
 
 ## EXAMPLES
 
-### Retrieve a secret
+### Test single item
+
+
+
+### Conditional execution
 
 
 
@@ -43,10 +48,10 @@ Fails if the repository type does not support secrets or is not connected.
 
 ### -Name
 
-The name of the secret to retrieve.
+The name/key of the object(s) to test for existence.
 
 ```yaml
-Type: System.String
+Type: System.String[]
 DefaultValue: ''
 SupportsWildcards: false
 Aliases: []
@@ -73,25 +78,28 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ### System.String
 
+Item names can be piped to this cmdlet.
+
+### System.String[]
+
 {{ Fill in the Description }}
 
 ## OUTPUTS
 
-### System.String
+### System.Boolean
 
-The secret value as a plain text string.
-
-### System.Management.Automation.PSObject
-
-{{ Fill in the Description }}
+`$true` if the item exists, `$false` otherwise.
+One boolean per input name.
 
 ## NOTES
 
-Requires an active session to a provider that supports secrets (e.g., AzureKeyVault).
+Requires an active session.
+Use `Connect-PSDataRepository` first.
 
 
 ## RELATED LINKS
 
 - [Online Version]()
-- [Set-PSDataRepositorySecret]()
-- [Remove-PSDataRepositorySecret]()
+- [Get-PSDataRepositoryItem]()
+- [Set-PSDataRepositoryItem]()
+- [Remove-PSDataRepositoryItem]()

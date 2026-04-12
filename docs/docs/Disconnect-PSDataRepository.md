@@ -4,23 +4,23 @@ external help file: PSDataRepository.dll-Help.xml
 HelpUri: ''
 Locale: en-US
 Module Name: PSDataRepository
-ms.date: 04.12.2026
+ms.date: 04/12/2026
 PlatyPS schema version: 2024-05-01
-title: Get-PSDataRepositoryProvider
+title: Disconnect-PSDataRepository
 ---
 
-# Get-PSDataRepositoryProvider
+# Disconnect-PSDataRepository
 
 ## SYNOPSIS
 
-Lists all supported PSDataRepository providers and their capabilities.
+Disconnects from the current data repository session.
 
 ## SYNTAX
 
 ### __AllParameterSets
 
 ```
-Get-PSDataRepositoryProvider [[-Name] <string>] [-Capability <string>] [<CommonParameters>]
+Disconnect-PSDataRepository [-WhatIf] [-Confirm] [<CommonParameters>]
 ```
 
 ## ALIASES
@@ -30,34 +30,33 @@ This cmdlet has the following aliases,
 
 ## DESCRIPTION
 
-Displays information about each data repository provider the module can work with, including provider type, supported capabilities (Storage, Queue, Secrets), authentication methods, and connection examples.
-Does not require an active session.
+Closes the active repository connection established by `Connect-PSDataRepository`.
+Disposes all underlying resources (storage clients, queue clients, cached connections) and clears the session state.
+Returns `$true` on success, `$false` if an error occurred during cleanup.
+Safe to call even when no session is active.
 
 ## EXAMPLES
 
-### List all providers
+### Simple disconnect
 
 
 
-### Filter by name
-
-
-
-### Filter by capability
+### Connect-work-disconnect workflow
 
 
 
 ## PARAMETERS
 
-### -Capability
+### -Confirm
 
-Filter providers by capability.
+Prompts you for confirmation before running the cmdlet.
 
 ```yaml
-Type: System.String
+Type: System.Management.Automation.SwitchParameter
 DefaultValue: ''
 SupportsWildcards: false
-Aliases: []
+Aliases:
+- cf
 ParameterSets:
 - Name: (All)
   Position: Named
@@ -70,19 +69,19 @@ AcceptedValues: []
 HelpMessage: ''
 ```
 
-### -Name
+### -WhatIf
 
-Filter by provider name.
-If not specified, all providers are listed.
+Runs the command in a mode that only reports what would happen without performing the actions.
 
 ```yaml
-Type: System.String
+Type: System.Management.Automation.SwitchParameter
 DefaultValue: ''
 SupportsWildcards: false
-Aliases: []
+Aliases:
+- wi
 ParameterSets:
 - Name: (All)
-  Position: 0
+  Position: Named
   IsRequired: false
   ValueFromPipeline: false
   ValueFromPipelineByPropertyName: false
@@ -103,15 +102,13 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ## OUTPUTS
 
-### System.Management.Automation.PSObject
+### System.Boolean
 
-One object per provider with properties:
-
-| Property | Type | Description | |---|---|---| | Name | String | Provider name | | Description | String | Human-readable description | | Capabilities | String[] | Storage, Queue, and/or Secrets | | AuthMethods | String[] | Supported authentication methods | | RequiresAzure | Boolean | Whether Azure subscription is needed | | Example | String | Example connection command |
+Returns `$true` on successful disconnect, `$false` if cleanup encountered an error.
 
 ## NOTES
 
-This cmdlet does not require an active session.
+Safe to call multiple times or when no session is active.
 
 
 ## RELATED LINKS
