@@ -5,7 +5,7 @@ HelpInfoUri:
 Locale: en-US
 Module Guid: d2e7fbb1-9f84-4e12-9cb7-bf604e12b8b4
 Module Name: PSDataRepository
-ms.date: 04/12/2026
+ms.date: 05/14/2026
 PlatyPS schema version: 2024-05-01
 title: PSDataRepository Module
 ---
@@ -20,15 +20,15 @@ A PowerShell module for working with data repositories (FileSystem, AzureBlob, A
 
 ### [Compress-PSDataRepositoryItem](Compress-PSDataRepositoryItem.md)
 
-Compresses and optionally encrypts items in persistent storage.
+{{ Fill in the Synopsis }}
 
 ### [Connect-PSDataRepository](Connect-PSDataRepository.md)
 
-Connects to a data repository (Azure Blob, Queue, Service Bus, Key Vault, Disk, or InMemory).
+{{ Fill in the Synopsis }}
 
 ### [ConvertFrom-PSDataRepositoryMessage](ConvertFrom-PSDataRepositoryMessage.md)
 
-Deserializes a raw message string into a PowerShell object.
+{{ Fill in the Synopsis }}
 
 ### [Copy-PSDataRepositoryItem](Copy-PSDataRepositoryItem.md)
 
@@ -36,65 +36,81 @@ Deserializes a raw message string into a PowerShell object.
 
 ### [Disconnect-PSDataRepository](Disconnect-PSDataRepository.md)
 
-Disconnects from the current data repository session.
+{{ Fill in the Synopsis }}
 
 ### [Expand-PSDataRepositoryItem](Expand-PSDataRepositoryItem.md)
 
-Decompresses and optionally decrypts items in persistent storage.
+{{ Fill in the Synopsis }}
 
 ### [Get-PSDataRepositoryChildItem](Get-PSDataRepositoryChildItem.md)
 
 {{ Fill in the Synopsis }}
 
+### [Get-PSDataRepositoryExtensionToken](Get-PSDataRepositoryExtensionToken.md)
+
+{{ Fill in the Synopsis }}
+
 ### [Get-PSDataRepositoryItem](Get-PSDataRepositoryItem.md)
 
-Retrieves items from persistent storage (Blob, Disk).
+{{ Fill in the Synopsis }}
 
 ### [Get-PSDataRepositoryProvider](Get-PSDataRepositoryProvider.md)
 
-Lists all supported PSDataRepository providers and their capabilities.
+{{ Fill in the Synopsis }}
 
 ### [Get-PSDataRepositorySecret](Get-PSDataRepositorySecret.md)
 
-Retrieves a secret value from the connected repository.
+{{ Fill in the Synopsis }}
 
 ### [Get-PSDataRepositorySession](Get-PSDataRepositorySession.md)
 
-Retrieves information about the current repository session.
+{{ Fill in the Synopsis }}
+
+### [Move-PSDataRepositoryItem](Move-PSDataRepositoryItem.md)
+
+{{ Fill in the Synopsis }}
 
 ### [Receive-PSDataRepositoryMessage](Receive-PSDataRepositoryMessage.md)
 
-Receives and deserializes messages from the connected queue repository.
+{{ Fill in the Synopsis }}
 
 ### [Remove-PSDataRepositoryItem](Remove-PSDataRepositoryItem.md)
 
-Removes items from persistent storage (Blob, Disk).
+{{ Fill in the Synopsis }}
 
 ### [Remove-PSDataRepositoryMessage](Remove-PSDataRepositoryMessage.md)
 
-Removes/deletes messages from the queue.
+{{ Fill in the Synopsis }}
 
 ### [Remove-PSDataRepositorySecret](Remove-PSDataRepositorySecret.md)
 
-Deletes a secret from the connected repository.
+{{ Fill in the Synopsis }}
+
+### [Save-PSDataRepositoryItem](Save-PSDataRepositoryItem.md)
+
+{{ Fill in the Synopsis }}
 
 ### [Send-PSDataRepositoryMessage](Send-PSDataRepositoryMessage.md)
 
-Sends objects to the connected queue repository.
+{{ Fill in the Synopsis }}
 
 ### [Set-PSDataRepositoryItem](Set-PSDataRepositoryItem.md)
 
-Saves items to persistent storage (Blob, Disk).
+{{ Fill in the Synopsis }}
 
 ### [Set-PSDataRepositorySecret](Set-PSDataRepositorySecret.md)
 
-Creates or updates a secret in the connected repository (Key Vault, FileSystem).
+{{ Fill in the Synopsis }}
 
 ### [Test-PSDataRepositoryConnection](Test-PSDataRepositoryConnection.md)
 
-Tests the connectivity to the current PSDataRepository provider.
+{{ Fill in the Synopsis }}
 
 ### [Test-PSDataRepositoryItem](Test-PSDataRepositoryItem.md)
 
-Tests if an object exists in the repository.
+{{ Fill in the Synopsis }}
+
+### [Update-PSDataRepositoryMasterPassphrase](Update-PSDataRepositoryMasterPassphrase.md)
+
+{{ Fill in the Synopsis }}
 

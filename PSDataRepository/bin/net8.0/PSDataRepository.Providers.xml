@@ -1,0 +1,235 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>PSDataRepository.Providers</name>
+    </assembly>
+    <members>
+        <member name="T:PSDataRepository.Providers.BaseProviderSession">
+            <summary>
+            Base class for provider sessions. Provides common metadata properties
+            and a default <see cref="M:PSDataRepository.Providers.BaseProviderSession.TestConnectionAsync(System.Int32,System.Threading.CancellationToken)"/> implementation.
+            Concrete provider sessions override <see cref="M:PSDataRepository.Providers.BaseProviderSession.GetRepository``1"/> and optionally
+            <see cref="M:PSDataRepository.Providers.BaseProviderSession.TestConnectionAsync(System.Int32,System.Threading.CancellationToken)"/> and <see cref="M:PSDataRepository.Providers.BaseProviderSession.Dispose(System.Boolean)"/>.
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Providers.BaseProviderSession.#ctor(System.String,System.String,System.String,PSDataRepository.Providers.ProviderCapabilities)">
+            <summary>
+            Initializes a new <see cref="T:PSDataRepository.Providers.BaseProviderSession"/>.
+            </summary>
+            <param name="providerName">Canonical provider name.</param>
+            <param name="repositoryIdentity">Logical identity (account, path, host).</param>
+            <param name="repositoryNamespace">Logical namespace (container, queue, vault).</param>
+            <param name="capabilities">Provider capabilities for this session.</param>
+        </member>
+        <member name="P:PSDataRepository.Providers.BaseProviderSession.ProviderName">
+            <inheritdoc />
+        </member>
+        <member name="P:PSDataRepository.Providers.BaseProviderSession.RepositoryIdentity">
+            <inheritdoc />
+        </member>
+        <member name="P:PSDataRepository.Providers.BaseProviderSession.RepositoryNamespace">
+            <inheritdoc />
+        </member>
+        <member name="P:PSDataRepository.Providers.BaseProviderSession.Capabilities">
+            <inheritdoc />
+        </member>
+        <member name="M:PSDataRepository.Providers.BaseProviderSession.GetRepository``1">
+            <inheritdoc />
+        </member>
+        <member name="M:PSDataRepository.Providers.BaseProviderSession.TestConnectionAsync(System.Int32,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:PSDataRepository.Providers.BaseProviderSession.Dispose(System.Boolean)">
+            <summary>
+            Releases managed resources. Override in derived classes to dispose provider-specific resources.
+            </summary>
+            <param name="disposing">True if called from <see cref="M:PSDataRepository.Providers.BaseProviderSession.Dispose"/>.</param>
+        </member>
+        <member name="M:PSDataRepository.Providers.BaseProviderSession.Dispose">
+            <inheritdoc />
+        </member>
+        <member name="M:PSDataRepository.Providers.BaseProviderSession.DisposeAsync">
+            <inheritdoc />
+        </member>
+        <member name="T:PSDataRepository.Providers.IProviderDefinition">
+            <summary>
+            Defines a data repository provider. Each provider assembly implements this interface
+            to describe its capabilities, connect parameters, and how to create sessions.
+            Discovered automatically at module load time via assembly scanning.
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Providers.IProviderDefinition.Name">
+            <summary>
+            Canonical provider name used in <c>Connect-PSDataRepository -Provider</c>.
+            Must be unique across all loaded providers. Examples: "AzureBlob", "Disk", "Scp".
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Providers.IProviderDefinition.DisplayName">
+            <summary>
+            Human-readable display name shown in help and diagnostics.
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Providers.IProviderDefinition.Capabilities">
+            <summary>
+            Describes what this provider can do (storage, queue, secrets, etc.).
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Providers.IProviderDefinition.SupportedAuthModes">
+            <summary>
+            Authentication modes supported by this provider.
+            <c>Connect-PSDataRepository</c> will only expose auth parameters applicable to this set.
+            Use constants from <see cref="T:PSDataRepository.Abstractions.AuthModes"/> or cloud-specific mode classes.
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Providers.IProviderDefinition.GetConnectParameters">
+            <summary>
+            Defines the dynamic parameters this provider needs for <c>Connect-PSDataRepository</c>.
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Providers.IProviderDefinition.Connect(PSDataRepository.Abstractions.IConnectContext)">
+            <summary>
+            Creates a provider session (repository instance) from the given connect context.
+            </summary>
+            <param name="context">Contains resolved parameter values and authentication info.</param>
+            <returns>A connected provider session.</returns>
+        </member>
+        <member name="T:PSDataRepository.Providers.IProviderRegistry">
+            <summary>
+            Registry for discovered provider definitions.
+            Core loads provider assemblies and registers them here.
+            Cmdlets query the registry to find providers by name.
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Providers.IProviderRegistry.Register(PSDataRepository.Providers.IProviderDefinition)">
+            <summary>Registers a provider definition.</summary>
+            <param name="provider">The provider to register.</param>
+        </member>
+        <member name="M:PSDataRepository.Providers.IProviderRegistry.GetProvider(System.String)">
+            <summary>Gets a provider by its canonical name (case-insensitive).</summary>
+            <param name="name">Provider name (e.g. "AzureBlob", "Disk").</param>
+            <returns>The provider definition, or null if not found.</returns>
+        </member>
+        <member name="M:PSDataRepository.Providers.IProviderRegistry.GetAll">
+            <summary>Gets all registered provider definitions.</summary>
+        </member>
+        <member name="M:PSDataRepository.Providers.IProviderRegistry.GetProviderNames">
+            <summary>Gets all registered provider names (for ValidateSet, tab completion).</summary>
+        </member>
+        <member name="M:PSDataRepository.Providers.IProviderRegistry.Clear">
+            <summary>Removes all registered providers. Used during module reload/testing.</summary>
+        </member>
+        <member name="T:PSDataRepository.Providers.IProviderSession">
+            <summary>
+            Represents an active provider session returned by <see cref="M:PSDataRepository.Providers.IProviderDefinition.Connect(PSDataRepository.Abstractions.IConnectContext)"/>.
+            Wraps one or more repository instances and provides access to provider metadata.
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Providers.IProviderSession.ProviderName">
+            <summary>Provider name that created this session.</summary>
+        </member>
+        <member name="P:PSDataRepository.Providers.IProviderSession.RepositoryIdentity">
+            <summary>Logical identity of the connected repository (account, path, host, etc.).</summary>
+        </member>
+        <member name="P:PSDataRepository.Providers.IProviderSession.RepositoryNamespace">
+            <summary>Logical namespace (container, queue, vault, folder).</summary>
+        </member>
+        <member name="P:PSDataRepository.Providers.IProviderSession.Capabilities">
+            <summary>Capabilities available in this session.</summary>
+        </member>
+        <member name="M:PSDataRepository.Providers.IProviderSession.GetRepository``1">
+            <summary>
+            Gets the repository instance for the given capability interface.
+            Returns null if the capability is not supported.
+            </summary>
+            <typeparam name="T">Repository interface type (e.g. IStorageRepository, IQueueRepository).</typeparam>
+        </member>
+        <member name="M:PSDataRepository.Providers.IProviderSession.TestConnectionAsync(System.Int32,System.Threading.CancellationToken)">
+            <summary>
+            Tests the connection to the underlying resource.
+            </summary>
+            <param name="timeoutSeconds">Timeout in seconds.</param>
+            <param name="ct">Cancellation token.</param>
+            <returns>True if the connection is healthy.</returns>
+        </member>
+        <member name="T:PSDataRepository.Providers.ProviderCapabilities">
+            <summary>
+            Flags describing the capabilities a provider supports.
+            Used by cmdlets to determine which operations are valid for a given session.
+            </summary>
+        </member>
+        <member name="F:PSDataRepository.Providers.ProviderCapabilities.None">
+            <summary>No capabilities.</summary>
+        </member>
+        <member name="F:PSDataRepository.Providers.ProviderCapabilities.Storage">
+            <summary>Supports read/write/delete of named items (blobs, files).</summary>
+        </member>
+        <member name="F:PSDataRepository.Providers.ProviderCapabilities.Queue">
+            <summary>Supports message queue operations (send, receive, delete).</summary>
+        </member>
+        <member name="F:PSDataRepository.Providers.ProviderCapabilities.Secrets">
+            <summary>Supports secret storage operations (get, set, delete secrets).</summary>
+        </member>
+        <member name="F:PSDataRepository.Providers.ProviderCapabilities.Metadata">
+            <summary>Supports rich item metadata listing (size, timestamps, content type).</summary>
+        </member>
+        <member name="F:PSDataRepository.Providers.ProviderCapabilities.Filesystem">
+            <summary>Supports stream-based file system operations.</summary>
+        </member>
+        <member name="T:PSDataRepository.Providers.ProviderNames">
+            <summary>
+            Canonical provider names used by built-in PSDataRepository plugins.
+            Plugins and consumers should reference these constants instead of string literals
+            to avoid typos and to enable IDE refactoring.
+            </summary>
+        </member>
+        <member name="F:PSDataRepository.Providers.ProviderNames.InMemory">
+            <summary>In-memory queue provider (test/dev).</summary>
+        </member>
+        <member name="F:PSDataRepository.Providers.ProviderNames.Disk">
+            <summary>Local disk provider (filesystem).</summary>
+        </member>
+        <member name="F:PSDataRepository.Providers.ProviderNames.Scp">
+            <summary>SCP/SFTP provider.</summary>
+        </member>
+        <member name="F:PSDataRepository.Providers.ProviderNames.Ftp">
+            <summary>FTP/FTPS provider.</summary>
+        </member>
+        <member name="F:PSDataRepository.Providers.ProviderNames.AzureBlob">
+            <summary>Azure Blob Storage provider.</summary>
+        </member>
+        <member name="F:PSDataRepository.Providers.ProviderNames.AzureQueue">
+            <summary>Azure Storage Queue provider.</summary>
+        </member>
+        <member name="F:PSDataRepository.Providers.ProviderNames.AzureServiceBus">
+            <summary>Azure Service Bus provider.</summary>
+        </member>
+        <member name="F:PSDataRepository.Providers.ProviderNames.AzureKeyVault">
+            <summary>Azure Key Vault provider.</summary>
+        </member>
+        <member name="T:PSDataRepository.Providers.ProviderRegistry">
+            <summary>
+            Default in-memory provider registry. Thread-safe for concurrent reads after initial registration.
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Providers.ProviderRegistry.Instance">
+            <summary>
+            Singleton instance shared across the module lifetime.
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Providers.ProviderRegistry.Register(PSDataRepository.Providers.IProviderDefinition)">
+            <inheritdoc />
+        </member>
+        <member name="M:PSDataRepository.Providers.ProviderRegistry.GetProvider(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="M:PSDataRepository.Providers.ProviderRegistry.GetAll">
+            <inheritdoc />
+        </member>
+        <member name="M:PSDataRepository.Providers.ProviderRegistry.GetProviderNames">
+            <inheritdoc />
+        </member>
+        <member name="M:PSDataRepository.Providers.ProviderRegistry.Clear">
+            <inheritdoc />
+        </member>
+    </members>
+</doc>

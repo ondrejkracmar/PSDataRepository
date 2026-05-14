@@ -1,0 +1,118 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>PSDataRepository.Authentications</name>
+    </assembly>
+    <members>
+        <member name="T:PSDataRepository.Authentications.AuthenticationInfo">
+            <summary>
+            Default dictionary-backed implementation of <see cref="T:PSDataRepository.Abstractions.IAuthenticationInfo"/>.
+            Used by authentication plugins to build auth bags, and by the framework
+            for <c>None</c>-mode connections.
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Authentications.AuthenticationInfo.#ctor(System.String)">
+            <summary>
+            Creates a new instance with the specified mode.
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Authentications.AuthenticationInfo.Mode">
+            <inheritdoc />
+        </member>
+        <member name="M:PSDataRepository.Authentications.AuthenticationInfo.Get``1(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="M:PSDataRepository.Authentications.AuthenticationInfo.Set``1(System.String,``0)">
+            <inheritdoc />
+        </member>
+        <member name="T:PSDataRepository.Authentications.AuthenticationRegistry">
+            <summary>
+            Default in-memory authentication provider registry.
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Authentications.AuthenticationRegistry.Instance">
+            <summary>Singleton instance shared across the module lifetime.</summary>
+        </member>
+        <member name="M:PSDataRepository.Authentications.AuthenticationRegistry.Register(PSDataRepository.Authentications.IAuthenticationProvider)">
+            <inheritdoc />
+        </member>
+        <member name="M:PSDataRepository.Authentications.AuthenticationRegistry.GetProvider(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="M:PSDataRepository.Authentications.AuthenticationRegistry.GetAll">
+            <inheritdoc />
+        </member>
+        <member name="M:PSDataRepository.Authentications.AuthenticationRegistry.FindByMode(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="M:PSDataRepository.Authentications.AuthenticationRegistry.Clear">
+            <inheritdoc />
+        </member>
+        <member name="T:PSDataRepository.Authentications.IAuthenticationProvider">
+            <summary>
+            Defines an authentication provider plugin.
+            Each authentication system (Azure, AWS, GCP) implements this interface
+            to describe its supported auth modes and provide credential resolution.
+            Discovered automatically at module load time via assembly scanning.
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Authentications.IAuthenticationProvider.Name">
+            <summary>
+            Unique name of this authentication provider (e.g. "AzAuth", "AwsAuth", "GcpAuth").
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Authentications.IAuthenticationProvider.DisplayName">
+            <summary>
+            Human-readable display name.
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Authentications.IAuthenticationProvider.SupportedModes">
+            <summary>
+            Authentication modes this provider supports.
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Authentications.IAuthenticationProvider.GetAuthParameters">
+            <summary>
+            Dynamic parameters this provider needs for authentication
+            (e.g. TenantId, ClientId, ConnectionString, AccessKeyId).
+            Added to <c>Connect-PSDataRepository</c> when a provider declares
+            supported auth modes that intersect with this auth provider.
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Authentications.IAuthenticationProvider.Resolve(PSDataRepository.Abstractions.IConnectContext)">
+            <summary>
+            Creates an <see cref="T:PSDataRepository.Abstractions.IAuthenticationInfo"/> from the connect context.
+            Called by <c>Connect-PSDataRepository</c> after the user provides auth parameters.
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Authentications.IAuthenticationProvider.DetectMode(PSDataRepository.Abstractions.IConnectContext)">
+            <summary>
+            Detects which authentication mode (if any) the user has provided parameters for.
+            Returns null if no mode can be detected from the given context.
+            </summary>
+        </member>
+        <member name="T:PSDataRepository.Authentications.IAuthenticationRegistry">
+            <summary>
+            Registry for discovered authentication providers.
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Authentications.IAuthenticationRegistry.Register(PSDataRepository.Authentications.IAuthenticationProvider)">
+            <summary>Registers an authentication provider.</summary>
+        </member>
+        <member name="M:PSDataRepository.Authentications.IAuthenticationRegistry.GetProvider(System.String)">
+            <summary>Gets an auth provider by name (case-insensitive).</summary>
+        </member>
+        <member name="M:PSDataRepository.Authentications.IAuthenticationRegistry.GetAll">
+            <summary>Gets all registered authentication providers.</summary>
+        </member>
+        <member name="M:PSDataRepository.Authentications.IAuthenticationRegistry.FindByMode(System.String)">
+            <summary>
+            Finds the best authentication provider for the given auth mode.
+            Returns the first provider that supports the mode, or null.
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Authentications.IAuthenticationRegistry.Clear">
+            <summary>Removes all registered authentication providers. Used during module reload/testing.</summary>
+        </member>
+    </members>
+</doc>

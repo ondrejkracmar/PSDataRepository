@@ -1,10 +1,10 @@
 ---
 document type: cmdlet
-external help file: PSDataRepository.dll-Help.xml
+external help file: PSDataRepository.Commands.dll-Help.xml
 HelpUri: ''
 Locale: en-US
 Module Name: PSDataRepository
-ms.date: 04/12/2026
+ms.date: 05/14/2026
 PlatyPS schema version: 2024-05-01
 title: Set-PSDataRepositoryItem
 ---
@@ -13,14 +13,14 @@ title: Set-PSDataRepositoryItem
 
 ## SYNOPSIS
 
-Saves items to persistent storage (Blob, Disk).
+{{ Fill in the Synopsis }}
 
 ## SYNTAX
 
 ### SingleObject (Default)
 
 ```
-Set-PSDataRepositoryItem [-InputObject] <psobject> [-Name] <string> [-Format <FormatType>]
+Set-PSDataRepositoryItem [-InputObject] <psobject> [-Name] <string> [-Format <string>]
  [-Encoding <Encoding>] [-MaxDepth <int>] [-CsvDelimiter <char>] [-XmlRootName <string>] [-Force]
  [-PassThru] [-Accumulate] [-WhatIf] [-Confirm] [<CommonParameters>]
 ```
@@ -29,7 +29,7 @@ Set-PSDataRepositoryItem [-InputObject] <psobject> [-Name] <string> [-Format <Fo
 
 ```
 Set-PSDataRepositoryItem [-InputObject] <psobject> -NameProperty <string> [-NamePrefix <string>]
- [-NameSuffix <string>] [-Format <FormatType>] [-Encoding <Encoding>] [-MaxDepth <int>]
+ [-NameSuffix <string>] [-Format <string>] [-Encoding <Encoding>] [-MaxDepth <int>]
  [-CsvDelimiter <char>] [-XmlRootName <string>] [-Force] [-PassThru] [-Accumulate] [-WhatIf]
  [-Confirm] [<CommonParameters>]
 ```
@@ -41,34 +41,19 @@ This cmdlet has the following aliases,
 
 ## DESCRIPTION
 
-Serializes and stores items in the connected repository (Azure Blob Storage, Disk).
-Supports pipeline input for batch processing and multiple serialization formats.
-Items are stored as individual files/blobs with specified names.
-Ideal for saving configuration, datasets, or processing results.
-
-When receiving pipeline input with a fixed name (no `{0}` placeholder), automatically accumulates all objects and saves them as a single collection (array).
-Use `{0}` in `-Name` for per-object naming, or `-NameProperty` for property-based naming.
+{{ Fill in the Description }}
 
 ## EXAMPLES
 
-### Save pipeline objects as collection
+### Example 1
 
-
-
-### Save hashtable
-
-
-
-### Property-based naming
-
-
+{{ Add example description here }}
 
 ## PARAMETERS
 
 ### -Accumulate
 
-If specified, accumulates all pipeline objects and saves them as a collection (array).
-Useful for creating a single JSON/XML/CSV file from multiple pipeline objects.
+Accumulate all pipeline objects and save as collection.
 
 ```yaml
 Type: System.Management.Automation.SwitchParameter
@@ -111,9 +96,7 @@ HelpMessage: ''
 
 ### -CsvDelimiter
 
-CSV delimiter character.
-Only used when Format = Csv.
-Default: comma (`,`).
+CSV delimiter character (only for CSV format). Default: ','
 
 ```yaml
 Type: System.Char
@@ -134,8 +117,7 @@ HelpMessage: ''
 
 ### -Encoding
 
-Text encoding for writing.
-Default: UTF-8.
+Text encoding. Default: UTF8
 
 ```yaml
 Type: System.Text.Encoding
@@ -156,7 +138,7 @@ HelpMessage: ''
 
 ### -Force
 
-If specified, overwrites existing objects without confirmation.
+Overwrite existing objects without confirmation.
 
 ```yaml
 Type: System.Management.Automation.SwitchParameter
@@ -177,10 +159,10 @@ HelpMessage: ''
 
 ### -Format
 
-Serialization format: Json (default), Xml, or Csv.
+Serialization format. Default: Json
 
 ```yaml
-Type: PSDataRepository.Serialization.FormatType
+Type: System.String
 DefaultValue: ''
 SupportsWildcards: false
 Aliases: []
@@ -198,8 +180,7 @@ HelpMessage: ''
 
 ### -InputObject
 
-The object to save.
-Accepts pipeline input.
+The object to serialize and save.
 
 ```yaml
 Type: System.Management.Automation.PSObject
@@ -220,8 +201,7 @@ HelpMessage: ''
 
 ### -MaxDepth
 
-Maximum serialization depth.
-Default: 10.
+Maximum object graph depth. Default: 10
 
 ```yaml
 Type: System.Int32
@@ -242,9 +222,7 @@ HelpMessage: ''
 
 ### -Name
 
-The name/key for storing the object.
-Can include `{0}` placeholder for pipeline index.
-Examples: `"data.json"`, `"item-{0}.json"`, `"backup/{0}.xml"`
+Storage name/key. Use {0} for pipeline index (e.g., 'item-{0}.json').
 
 ```yaml
 Type: System.String
@@ -265,7 +243,7 @@ HelpMessage: ''
 
 ### -NamePrefix
 
-Prefix to add before generated names (used with `-NameProperty`).
+Prefix for generated names.
 
 ```yaml
 Type: System.String
@@ -286,8 +264,7 @@ HelpMessage: ''
 
 ### -NameProperty
 
-Property name to use for generating unique names from pipeline objects.
-Example: `-NameProperty "Id"` uses each object's Id property as the name.
+Property name to use for generating unique storage names.
 
 ```yaml
 Type: System.String
@@ -308,7 +285,7 @@ HelpMessage: ''
 
 ### -NameSuffix
 
-Suffix/extension to add after generated names (used with `-NameProperty`).
+Suffix/extension for generated names (e.g., '.json').
 
 ```yaml
 Type: System.String
@@ -329,7 +306,7 @@ HelpMessage: ''
 
 ### -PassThru
 
-If specified, returns storage path/URI after saving.
+Return storage path/URI after saving.
 
 ```yaml
 Type: System.Management.Automation.SwitchParameter
@@ -350,8 +327,7 @@ HelpMessage: ''
 
 ### -WhatIf
 
-Shows what would happen if the cmdlet runs.
-The cmdlet is not run.
+Runs the command in a mode that only reports what would happen without performing the actions.
 
 ```yaml
 Type: System.Management.Automation.SwitchParameter
@@ -373,9 +349,7 @@ HelpMessage: ''
 
 ### -XmlRootName
 
-XML root element name.
-Only used when Format = Xml.
-If not specified, automatically inferred from object type.
+XML root element name (only for XML format). Leave empty for auto-detection from object type.
 
 ```yaml
 Type: System.String
@@ -405,24 +379,19 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ### System.Management.Automation.PSObject
 
-Any PowerShell object.
-Accepts pipeline input.
+{{ Fill in the Description }}
 
 ## OUTPUTS
 
-### System.Management.Automation.PSObject
+### System.Object
 
-When `-PassThru` is specified, returns an object with Name, Path, Size, Format (and ObjectCount for accumulated saves).
+{{ Fill in the Description }}
 
 ## NOTES
 
-Auto-accumulate mode is activated when Name does not contain `{0}` and `-NameProperty` is not used.
-In this mode, all pipeline objects are collected and saved as a single array.
-
+{{ Fill in the Notes }}
 
 ## RELATED LINKS
 
-- [Online Version]()
-- [Get-PSDataRepositoryItem]()
-- [Remove-PSDataRepositoryItem]()
-- [Test-PSDataRepositoryItem]()
+{{ Fill in the related links here }}
+

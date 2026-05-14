@@ -1,10 +1,10 @@
 ---
 document type: cmdlet
-external help file: PSDataRepository.dll-Help.xml
+external help file: PSDataRepository.Commands.dll-Help.xml
 HelpUri: ''
 Locale: en-US
 Module Name: PSDataRepository
-ms.date: 04/12/2026
+ms.date: 05/14/2026
 PlatyPS schema version: 2024-05-01
 title: Copy-PSDataRepositoryItem
 ---
@@ -187,7 +187,7 @@ HelpMessage: ''
 Repository item from Get-PSDataRepositoryChildItem.
 
 ```yaml
-Type: PSDataRepository.Storage.RepositoryItemInfo
+Type: PSDataRepository.Abstractions.RepositoryItemInfo
 DefaultValue: ''
 SupportsWildcards: false
 Aliases: []
@@ -331,7 +331,7 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 {{ Fill in the Description }}
 
-### PSDataRepository.Storage.RepositoryItemInfo
+### PSDataRepository.Abstractions.RepositoryItemInfo
 
 {{ Fill in the Description }}
 

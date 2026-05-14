@@ -1,0 +1,4 @@
+{
+  "_comment": "Administrator-managed trust list for 3rd-party PSDataRepository extensions. Each entry is the lowercase hex public key token (16 hex chars) of an SNK trusted to author plugins. The Core PSDataRepository SNK token is always implicitly trusted; this file only adds further tokens. Extract a token via: [Reflection.AssemblyName]::GetAssemblyName('Plugin.dll').GetPublicKeyToken() | ForEach-Object { '{0:x2}' -f $_ } -join ''. Restart pwsh after editing.",
+  "trustedPublicKeyTokens": []
+}

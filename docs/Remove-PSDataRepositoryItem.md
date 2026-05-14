@@ -1,10 +1,10 @@
 ---
 document type: cmdlet
-external help file: PSDataRepository.dll-Help.xml
+external help file: PSDataRepository.Commands.dll-Help.xml
 HelpUri: ''
 Locale: en-US
 Module Name: PSDataRepository
-ms.date: 04/12/2026
+ms.date: 05/14/2026
 PlatyPS schema version: 2024-05-01
 title: Remove-PSDataRepositoryItem
 ---
@@ -13,7 +13,7 @@ title: Remove-PSDataRepositoryItem
 
 ## SYNOPSIS
 
-Removes items from persistent storage (Blob, Disk).
+{{ Fill in the Synopsis }}
 
 ## SYNTAX
 
@@ -38,19 +38,13 @@ This cmdlet has the following aliases,
 
 ## DESCRIPTION
 
-Deletes items from the connected repository (Azure Blob Storage, Disk).
-Supports removing single or multiple items by name.
-Prompts for confirmation before deleting unless `-Force` is specified.
+{{ Fill in the Description }}
 
 ## EXAMPLES
 
-### Remove single item
+### Example 1
 
-
-
-### Force removal without confirmation
-
-
+{{ Add example description here }}
 
 ## PARAMETERS
 
@@ -78,7 +72,7 @@ HelpMessage: ''
 
 ### -ContinueOnError
 
-If specified, continues processing even if individual object deletion fails.
+Continue on errors.
 
 ```yaml
 Type: System.Management.Automation.SwitchParameter
@@ -99,7 +93,7 @@ HelpMessage: ''
 
 ### -Force
 
-If specified, skips confirmation prompts.
+Skip confirmation prompts.
 
 ```yaml
 Type: System.Management.Automation.SwitchParameter
@@ -123,7 +117,7 @@ HelpMessage: ''
 Repository item from Get-PSDataRepositoryChildItem.
 
 ```yaml
-Type: PSDataRepository.Storage.RepositoryItemInfo
+Type: PSDataRepository.Abstractions.RepositoryItemInfo
 DefaultValue: ''
 SupportsWildcards: false
 Aliases: []
@@ -141,7 +135,7 @@ HelpMessage: ''
 
 ### -Name
 
-The name/key of the item(s) to remove.
+Item name/key to remove.
 
 ```yaml
 Type: System.String[]
@@ -162,8 +156,7 @@ HelpMessage: ''
 
 ### -WhatIf
 
-Shows what would happen if the cmdlet runs.
-The cmdlet is not run.
+Runs the command in a mode that only reports what would happen without performing the actions.
 
 ```yaml
 Type: System.Management.Automation.SwitchParameter
@@ -194,27 +187,27 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ### System.String
 
-Item names can be piped to this cmdlet.
+{{ Fill in the Description }}
+
+### PSDataRepository.Abstractions.RepositoryItemInfo
+
+{{ Fill in the Description }}
 
 ### System.String[]
 
 {{ Fill in the Description }}
 
-### PSDataRepository.Storage.RepositoryItemInfo
+## OUTPUTS
+
+### System.Object
 
 {{ Fill in the Description }}
 
-## OUTPUTS
-
 ## NOTES
 
-Requires an active session to a storage provider.
-Uses `ConfirmImpact = High`.
-
+{{ Fill in the Notes }}
 
 ## RELATED LINKS
 
-- [Online Version]()
-- [Get-PSDataRepositoryItem]()
-- [Set-PSDataRepositoryItem]()
-- [Test-PSDataRepositoryItem]()
+{{ Fill in the related links here }}
+

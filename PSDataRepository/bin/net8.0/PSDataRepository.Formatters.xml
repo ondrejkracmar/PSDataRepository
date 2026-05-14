@@ -1,0 +1,211 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>PSDataRepository.Formatters</name>
+    </assembly>
+    <members>
+        <member name="T:PSDataRepository.Formatters.FormatterHelper">
+            <summary>
+            Shared helpers for formatter plugins: cycle detection, object cleaning, type checks.
+            All formatters reference this library to reuse common serialization infrastructure.
+            </summary>
+        </member>
+        <member name="F:PSDataRepository.Formatters.FormatterHelper.DefaultMaxDepth">
+            <summary>
+            The default maximum depth if not otherwise specified.
+            </summary>
+        </member>
+        <member name="F:PSDataRepository.Formatters.FormatterHelper.TypeNameKey">
+            <summary>
+            Internal special key for storing the real .NET type name in a dictionary for XML element naming.
+            </summary>
+        </member>
+        <member name="F:PSDataRepository.Formatters.FormatterHelper.JsonOptions">
+            <summary>
+            JSON serializer options (indented, ignoring null).
+            </summary>
+        </member>
+        <member name="F:PSDataRepository.Formatters.FormatterHelper.ReferenceEqualityComparerInstance">
+            <summary>
+            Reference equality comparer for cycle detection in object graphs.
+            Uses the built-in <see cref="T:System.Collections.Generic.ReferenceEqualityComparer"/> on .NET 5+.
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Formatters.FormatterHelper.IsPrimitiveOrString(System.Object)">
+            <summary>
+            Checks if the given object is a primitive/string/enum/decimal/datetime, etc.
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Formatters.FormatterHelper.IsSerializableType(System.Type)">
+            <summary>
+            Checks if a Type can be safely serialized.
+            Returns false for types that cannot be serialized (IntPtr, SafeHandle, Delegate, etc.).
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Formatters.FormatterHelper.CleanObjectForJson(System.Object,System.Int32,System.Int32,System.Collections.Generic.HashSet{System.Object})">
+            <summary>
+            Recursively cleans an object for JSON/YAML serialization. Removes cycles, limits depth, ignores PS* props.
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Formatters.FormatterHelper.CleanObjectForXml(System.Object,System.Int32,System.Int32,System.Collections.Generic.HashSet{System.Object})">
+            <summary>
+            Recursively cleans an object for XML serialization with __PSDR_TypeName for element naming.
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Formatters.FormatterHelper.InferXmlRootName(System.Object)">
+            <summary>
+            Infers an intelligent XML root element name based on object type.
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Formatters.FormatterHelper.GetSimpleTypeName(System.Object)">
+            <summary>
+            Gets a simple, clean type name from an object.
+            </summary>
+        </member>
+        <member name="T:PSDataRepository.Formatters.FormatterOptions">
+            <summary>
+            Options passed to formatter Serialize/Deserialize methods.
+            Formatters use only the options relevant to them and ignore the rest.
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Formatters.FormatterOptions.MaxDepth">
+            <summary>
+            Maximum recursion depth for serialization (default 10).
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Formatters.FormatterOptions.CsvDelimiter">
+            <summary>
+            CSV column delimiter (default ',').
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Formatters.FormatterOptions.XmlRootName">
+            <summary>
+            XML root element name. Null means auto-detect from object type.
+            </summary>
+        </member>
+        <member name="T:PSDataRepository.Formatters.FormatterRegistry">
+            <summary>
+            Default in-memory formatter registry. Thread-safe for concurrent reads after initial registration.
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Formatters.FormatterRegistry.Instance">
+            <summary>
+            Singleton instance shared across the module lifetime.
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Formatters.FormatterRegistry.Register(PSDataRepository.Formatters.IFormatterDefinition)">
+            <inheritdoc />
+        </member>
+        <member name="M:PSDataRepository.Formatters.FormatterRegistry.GetFormatter(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="M:PSDataRepository.Formatters.FormatterRegistry.GetAll">
+            <inheritdoc />
+        </member>
+        <member name="M:PSDataRepository.Formatters.FormatterRegistry.GetFormatterNames">
+            <inheritdoc />
+        </member>
+        <member name="M:PSDataRepository.Formatters.FormatterRegistry.DetectFromFileName(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="M:PSDataRepository.Formatters.FormatterRegistry.DetectFromContent(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="M:PSDataRepository.Formatters.FormatterRegistry.DetectFromNameAndContent(System.String,System.String)">
+            <inheritdoc />
+        </member>
+        <member name="M:PSDataRepository.Formatters.FormatterRegistry.Clear">
+            <inheritdoc />
+        </member>
+        <member name="T:PSDataRepository.Formatters.IFormatterDefinition">
+            <summary>
+            Defines a serialization formatter plugin. Each formatter assembly implements this interface
+            to provide serialize/deserialize for a specific format (JSON, XML, CSV, YAML, etc.).
+            Discovered automatically at module load time via assembly scanning.
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Formatters.IFormatterDefinition.Name">
+            <summary>
+            Canonical formatter name (e.g., "Json", "Xml", "Csv", "Yml").
+            Must be unique across all loaded formatters.
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Formatters.IFormatterDefinition.FileExtensions">
+            <summary>
+            File extensions this formatter handles, including the leading dot (e.g., ".json", ".yml", ".yaml").
+            Used for automatic format detection from file names.
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Formatters.IFormatterDefinition.CanDeserializeContent(System.String)">
+            <summary>
+            Determines whether this formatter can handle the given content string
+            based on heuristics (e.g., starts with '{' for JSON, '&lt;' for XML).
+            Used as fallback when file extension is not available.
+            </summary>
+            <param name="content">The content to analyze.</param>
+            <returns>True if this formatter can likely handle the content.</returns>
+        </member>
+        <member name="M:PSDataRepository.Formatters.IFormatterDefinition.Serialize(System.Object,PSDataRepository.Formatters.FormatterOptions)">
+            <summary>
+            Serializes an object to a string in this formatter's format.
+            </summary>
+            <param name="input">The object to serialize.</param>
+            <param name="options">Serialization options (maxDepth, delimiter, root name, etc.).</param>
+            <returns>The serialized string.</returns>
+        </member>
+        <member name="M:PSDataRepository.Formatters.IFormatterDefinition.Deserialize(System.String,PSDataRepository.Formatters.FormatterOptions)">
+            <summary>
+            Deserializes a string back into an object (PSObject, array, scalar, etc.).
+            </summary>
+            <param name="input">The serialized string.</param>
+            <param name="options">Deserialization options.</param>
+            <returns>The deserialized object.</returns>
+        </member>
+        <member name="T:PSDataRepository.Formatters.IFormatterRegistry">
+            <summary>
+            Registry for formatter plugins. Provides lookup by name and by file extension/content.
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Formatters.IFormatterRegistry.Register(PSDataRepository.Formatters.IFormatterDefinition)">
+            <summary>
+            Registers a formatter definition.
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Formatters.IFormatterRegistry.GetFormatter(System.String)">
+            <summary>
+            Gets a formatter by its canonical name (e.g., "Json").
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Formatters.IFormatterRegistry.GetAll">
+            <summary>
+            Gets all registered formatters.
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Formatters.IFormatterRegistry.GetFormatterNames">
+            <summary>
+            Gets all registered formatter names.
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Formatters.IFormatterRegistry.DetectFromFileName(System.String)">
+            <summary>
+            Detects the appropriate formatter from a file name (extension-based).
+            Returns null if no formatter matches.
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Formatters.IFormatterRegistry.DetectFromContent(System.String)">
+            <summary>
+            Detects the appropriate formatter from content heuristics.
+            Returns null if no formatter matches.
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Formatters.IFormatterRegistry.DetectFromNameAndContent(System.String,System.String)">
+            <summary>
+            Detects formatter from file name first, then falls back to content heuristics.
+            Returns null if no formatter matches.
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Formatters.IFormatterRegistry.Clear">
+            <summary>Removes all registered formatters. Used during module reload/testing.</summary>
+        </member>
+    </members>
+</doc>

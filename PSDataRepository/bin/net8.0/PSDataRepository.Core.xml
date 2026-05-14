@@ -1,0 +1,476 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>PSDataRepository.Core</name>
+    </assembly>
+    <members>
+        <member name="T:PSDataRepository.Core.Common.AsyncHelper">
+            <summary>
+            Provides helper methods for safely executing async operations synchronously
+            in PowerShell binary cmdlet context.
+            <para>
+            PowerShell 7+ runs cmdlets without a <see cref="T:System.Threading.SynchronizationContext"/>, so blocking
+            on a task here cannot deadlock the way it would in a UI/ASP.NET classic context.
+            We deliberately do <b>not</b> use <c>Task.Run</c> to keep the call on the cmdlet's
+            own thread — this preserves <see cref="T:System.Threading.AsyncLocal`1"/> flow
+            (the <see cref="T:PSDataRepository.Core.Session.RepositorySession"/> ambient slot
+            in particular) and avoids an unnecessary thread-pool hop per await.
+            </para>
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Core.Common.AsyncHelper.RunSync``1(System.Func{System.Threading.Tasks.Task{``0}})">
+            <summary>Safely executes an async operation synchronously and returns the result.</summary>
+        </member>
+        <member name="M:PSDataRepository.Core.Common.AsyncHelper.RunSync(System.Func{System.Threading.Tasks.Task})">
+            <summary>Safely executes an async operation synchronously (no return value).</summary>
+        </member>
+        <member name="M:PSDataRepository.Core.Common.AsyncHelper.RunSync``1(System.Func{System.Threading.CancellationToken,System.Threading.Tasks.Task{``0}},System.Threading.CancellationToken)">
+            <summary>
+            Safely executes an async operation that accepts a <see cref="T:System.Threading.CancellationToken"/>
+            synchronously and returns the result.
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Core.Common.AsyncHelper.RunSync(System.Func{System.Threading.CancellationToken,System.Threading.Tasks.Task},System.Threading.CancellationToken)">
+            <summary>
+            Safely executes an async operation that accepts a <see cref="T:System.Threading.CancellationToken"/>
+            synchronously (no return value).
+            </summary>
+        </member>
+        <member name="T:PSDataRepository.Core.Common.EncodingCompleter">
+            <summary>
+            Provides tab-completion for common encoding names used in cmdlet parameters.
+            </summary>
+        </member>
+        <member name="T:PSDataRepository.Core.Common.EncodingTransformationAttribute">
+            <summary>
+            Transforms string encoding names (e.g., "UTF8", "ASCII") into <see cref="T:System.Text.Encoding"/> instances.
+            Allows users to pass friendly encoding names instead of <c>[System.Text.Encoding]::UTF8</c>.
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Core.Common.EncodingTransformationAttribute.Transform(System.Management.Automation.EngineIntrinsics,System.Object)">
+            <inheritdoc/>
+        </member>
+        <member name="T:PSDataRepository.Core.Common.RetryHelper">
+            <summary>
+            Provides retry logic for transient failures in Azure operations.
+            Implements exponential backoff strategy with optional ILogger support.
+            </summary>
+        </member>
+        <member name="F:PSDataRepository.Core.Common.RetryHelper._transientClassifiers">
+            <summary>
+            Pluggable transient exception classifiers. Providers register their own
+            (e.g., Azure <c>RequestFailedException</c>, SSH.NET, FluentFTP).
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Core.Common.RetryHelper.RegisterTransientClassifier(System.Func{System.Exception,System.Boolean})">
+            <summary>
+            Registers a provider-specific transient exception classifier.
+            Called by provider assemblies during initialization.
+            Returns an <see cref="T:System.IDisposable"/> that unregisters the classifier when disposed.
+            </summary>
+        </member>
+        <member name="F:PSDataRepository.Core.Common.RetryHelper.DefaultMaxRetries">
+            <summary>
+            Default maximum number of retry attempts.
+            </summary>
+        </member>
+        <member name="F:PSDataRepository.Core.Common.RetryHelper.DefaultInitialDelayMs">
+            <summary>
+            Default initial delay between retries (in milliseconds).
+            </summary>
+        </member>
+        <member name="F:PSDataRepository.Core.Common.RetryHelper.DefaultMaxDelayMs">
+            <summary>
+            Default maximum delay between retries (in milliseconds).
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Core.Common.RetryHelper.ExecuteWithRetryAsync``1(System.Func{System.Threading.Tasks.Task{``0}},System.Int32,System.Int32,System.Int32,Microsoft.Extensions.Logging.ILogger,System.Threading.CancellationToken,System.Action{System.String})">
+            <summary>
+            Executes an async operation with retry logic for transient failures.
+            Uses exponential backoff strategy.
+            </summary>
+            <typeparam name="T">Return type of the operation.</typeparam>
+            <param name="operation">The async operation to execute.</param>
+            <param name="maxRetries">
+            Maximum number of total attempts (initial call + retries). Must be &gt;= 1.
+            A value of 1 disables retries — the operation is invoked once and any transient
+            failure surfaces directly.
+            </param>
+            <param name="initialDelayMs">Initial delay between retries in milliseconds.</param>
+            <param name="maxDelayMs">Maximum delay between retries in milliseconds.</param>
+            <param name="logger">Optional logger for retry diagnostics.</param>
+            <param name="cancellationToken">Cancellation token.</param>
+            <param name="onRetry">Optional callback invoked on each retry attempt with diagnostic message.</param>
+            <returns>Result of the operation.</returns>
+        </member>
+        <member name="M:PSDataRepository.Core.Common.RetryHelper.ExecuteWithRetryAsync(System.Func{System.Threading.Tasks.Task},System.Int32,System.Int32,System.Int32,Microsoft.Extensions.Logging.ILogger,System.Threading.CancellationToken,System.Action{System.String})">
+            <summary>
+            Executes an async operation with retry logic (void return).
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Core.Common.RetryHelper.IsTransientException(System.Exception)">
+            <summary>
+            Determines if an exception is transient and should be retried.
+            </summary>
+            <param name="exception">The exception to check.</param>
+            <returns>True if the exception is transient and can be retried.</returns>
+        </member>
+        <member name="T:PSDataRepository.Core.Common.RetryHelper.RetryPolicy">
+            <summary>
+            Creates a retry policy configuration.
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Core.Common.RetryHelper.RetryPolicy.ExecuteAsync``1(System.Func{System.Threading.Tasks.Task{``0}},System.Threading.CancellationToken)">
+            <summary>
+            Executes an operation using this policy.
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Core.Common.RetryHelper.RetryPolicy.ExecuteAsync(System.Func{System.Threading.Tasks.Task},System.Threading.CancellationToken)">
+            <summary>
+            Executes an operation using this policy (void return).
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Core.Common.RetryHelper.RetryPolicy.Default">
+            <summary>
+            Default retry policy for Azure operations.
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Core.Common.RetryHelper.RetryPolicy.Aggressive">
+            <summary>
+            Aggressive retry policy for critical operations.
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Core.Common.RetryHelper.RetryPolicy.None">
+            <summary>
+            No retry policy.
+            </summary>
+        </member>
+        <member name="T:PSDataRepository.Core.Exceptions.PSDataRepositoryException">
+            <summary>
+            Base exception for all PSDataRepository-related errors.
+            </summary>
+        </member>
+        <member name="T:PSDataRepository.Core.Exceptions.ConnectionException">
+            <summary>
+            Exception thrown when connection to a repository fails.
+            </summary>
+        </member>
+        <member name="T:PSDataRepository.Core.Exceptions.AuthenticationException">
+            <summary>
+            Exception thrown when authentication or authorization fails.
+            </summary>
+        </member>
+        <member name="T:PSDataRepository.Core.Exceptions.TransientException">
+            <summary>
+            Exception thrown when a repository operation fails due to transient errors (can be retried).
+            </summary>
+        </member>
+        <member name="T:PSDataRepository.Core.Exceptions.SessionNotFoundException">
+            <summary>
+            Exception thrown when a session/connection is required but not established.
+            </summary>
+        </member>
+        <member name="T:PSDataRepository.Core.Exceptions.UnsupportedProviderOperationException">
+            <summary>
+            Exception thrown when attempting to perform unsupported operations on a provider.
+            </summary>
+        </member>
+        <member name="T:PSDataRepository.Core.Exceptions.SerializationException">
+            <summary>
+            Exception thrown when serialization/deserialization fails.
+            </summary>
+        </member>
+        <member name="T:PSDataRepository.Core.Extensions.ConnectContext">
+            <summary>
+            Concrete implementation of <see cref="T:PSDataRepository.Abstractions.IConnectContext"/> that wraps
+            PowerShell <see cref="T:System.Management.Automation.RuntimeDefinedParameterDictionary"/> dynamic parameters.
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Core.Extensions.ConnectContext.From(System.Collections.Generic.IDictionary{System.String,System.Object},PSDataRepository.Abstractions.IAuthenticationInfo,System.String)">
+            <summary>
+            Creates a <see cref="T:PSDataRepository.Core.Extensions.ConnectContext"/> from a generic property bag for non-PowerShell
+            callers (e.g. the MCP host or unit tests) where no <see cref="T:System.Management.Automation.RuntimeDefinedParameterDictionary"/>
+            is available. Keys are matched case-insensitively, mirroring PowerShell parameter binding.
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Core.Extensions.ConnectContext.AuthenticationMode">
+            <inheritdoc />
+        </member>
+        <member name="P:PSDataRepository.Core.Extensions.ConnectContext.Authentication">
+            <inheritdoc />
+        </member>
+        <member name="M:PSDataRepository.Core.Extensions.ConnectContext.GetParameter``1(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="M:PSDataRepository.Core.Extensions.ConnectContext.GetString(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="M:PSDataRepository.Core.Extensions.ConnectContext.GetInt(System.String,System.Int32)">
+            <inheritdoc />
+        </member>
+        <member name="M:PSDataRepository.Core.Extensions.ConnectContext.GetSwitch(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="M:PSDataRepository.Core.Extensions.ConnectContext.GetSecureString(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="T:PSDataRepository.Core.Extensions.DynamicParameterBuilder">
+            <summary>
+            Converts <see cref="T:PSDataRepository.Abstractions.ProviderParameterDefinition"/> metadata into PowerShell
+            <see cref="T:System.Management.Automation.RuntimeDefinedParameter"/> instances for dynamic parameter support.
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Core.Extensions.DynamicParameterBuilder.AddProviderParameters(System.Management.Automation.RuntimeDefinedParameterDictionary,System.Collections.Generic.IReadOnlyList{PSDataRepository.Abstractions.ProviderParameterDefinition},System.Action{System.String})">
+            <summary>
+            Builds a <see cref="T:System.Management.Automation.RuntimeDefinedParameterDictionary"/> from provider parameter definitions.
+            </summary>
+        </member>
+        <member name="T:PSDataRepository.Core.Extensions.ExtensionLoader">
+            <summary>
+            Discovers and loads plugin assemblies from subdirectories next to the module DLL.
+            Scans for <see cref="T:PSDataRepository.Providers.IProviderDefinition"/>, <see cref="T:PSDataRepository.Authentications.IAuthenticationProvider"/>,
+            and <see cref="T:PSDataRepository.Formatters.IFormatterDefinition"/> implementations.
+            </summary>
+        </member>
+        <member name="F:PSDataRepository.Core.Extensions.ExtensionLoader.SharedAssemblyPrefixes">
+            <summary>
+            Assembly-name prefixes that are always resolved through the Default load context
+            so that contract types (interfaces) have a single identity across all plugin ALCs.
+            Without this, an <c>IProviderDefinition</c> loaded into a plugin ALC would not be
+            assignable to the same interface type loaded into the host ALC.
+            </summary>
+        </member>
+        <member name="F:PSDataRepository.Core.Extensions.ExtensionLoader.ExpectedPublicKeyToken">
+            <summary>
+            Expected public key token for trusted plugin assemblies.
+            Derived from the same SNK used to sign all PSDataRepository assemblies.
+            <para>
+            If this token is empty (i.e. Core itself is not strong-named), plugin loading is
+            disabled completely — fail-closed. Without a known good token there is no way to
+            distinguish a legitimate plugin from a maliciously dropped DLL in the module folder.
+            </para>
+            </summary>
+        </member>
+        <member name="F:PSDataRepository.Core.Extensions.ExtensionLoader._trustedTokens">
+            <summary>
+            Additional public key tokens trusted by the host administrator.
+            Populated from the sidecar <c>extensions.trust.json</c> file (see
+            <see cref="M:PSDataRepository.Core.Extensions.ExtensionLoader.LoadTrustedTokensFromFile(System.String,System.Action{System.String})"/>) before <see cref="M:PSDataRepository.Core.Extensions.ExtensionLoader.LoadAll(PSDataRepository.Providers.IProviderRegistry,PSDataRepository.Authentications.IAuthenticationRegistry,PSDataRepository.Formatters.IFormatterRegistry,System.Action{System.String})"/>
+            runs. The Core SNK token is always implicitly trusted; this list
+            extends trust to 3rd-party plugins signed with their own SNK.
+            </summary>
+        </member>
+        <member name="F:PSDataRepository.Core.Extensions.ExtensionLoader.TrustListFileName">
+            <summary>
+            Name of the optional sidecar JSON file located next to the module
+            manifest that lists additional trusted public key tokens.
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Core.Extensions.ExtensionLoader.AddTrustedToken(System.String)">
+            <summary>
+            Adds a public key token to the runtime trust list. Token must be a
+            16-character lowercase hex string (8 bytes). Duplicates are ignored.
+            </summary>
+            <param name="hexToken">Hex-encoded 8-byte public key token.</param>
+            <returns><c>true</c> when the token was added, <c>false</c> when invalid or duplicate.</returns>
+        </member>
+        <member name="M:PSDataRepository.Core.Extensions.ExtensionLoader.LoadTrustedTokensFromFile(System.String,System.Action{System.String})">
+            <summary>
+            Loads additional trusted public key tokens from
+            <c>{moduleDir}/extensions.trust.json</c> if it exists. Missing or
+            malformed file is treated as "no extra trust" — fail-closed.
+            </summary>
+            <param name="moduleDir">Directory containing the module manifest.</param>
+            <param name="diagnosticLog">Optional diagnostic sink.</param>
+            <returns>Number of tokens added.</returns>
+        </member>
+        <member name="M:PSDataRepository.Core.Extensions.ExtensionLoader.IsTokenTrusted(System.Byte[])">
+            <summary>
+            Returns <c>true</c> if <paramref name="publicKeyToken"/> matches the
+            Core SNK token or any administrator-trusted token.
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Core.Extensions.ExtensionLoader.LoadAll(PSDataRepository.Providers.IProviderRegistry,PSDataRepository.Authentications.IAuthenticationRegistry,PSDataRepository.Formatters.IFormatterRegistry,System.Action{System.String})">
+            <summary>
+            Scans the module directory for plugin assemblies and registers discovered
+            providers, authentication providers, and formatters. Safe to call multiple times.
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Core.Extensions.ExtensionLoader.LoadAll(System.String,PSDataRepository.Providers.IProviderRegistry,PSDataRepository.Authentications.IAuthenticationRegistry,PSDataRepository.Formatters.IFormatterRegistry,System.Action{System.String})">
+            <summary>
+            Test-friendly overload that scans <paramref name="moduleDirOverride"/> instead of
+            the directory containing <c>PSDataRepository.Core.dll</c>. All trust-check rules
+            (S-1 strong-name token, S-2 path-containment) still apply against the override.
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Core.Extensions.ExtensionLoader.TryReadPublicKeyToken(System.String,System.Byte[]@)">
+            <summary>
+            Reads the public key token from a .NET assembly without loading it for execution.
+            Uses <see cref="T:System.Reflection.PortableExecutable.PEReader"/> + <see cref="T:System.Reflection.Metadata.MetadataReader"/> so no static constructors
+            or module initializers in the candidate file are triggered.
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Core.Extensions.ExtensionLoader.Reload">
+            <summary>
+            Resets the loaded state and discards all plugin <see cref="T:System.Runtime.Loader.AssemblyLoadContext"/>s.
+            Useful in tests or when a full plugin re-scan is desired. Note that the underlying
+            assemblies cannot be unloaded while still referenced; this only clears the loader's
+            own bookkeeping so that <c>LoadAll</c> will rescan and rebuild on next call.
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Core.Extensions.ExtensionLoader.Reset">
+            <summary>
+            Resets the loaded state (for testing only).
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Core.Extensions.ExtensionLoader.EnsureDefaultAlcResolverInstalled(System.String,System.Action{System.String})">
+            <summary>
+            Installs (idempotently) a <see cref="E:System.Runtime.Loader.AssemblyLoadContext.Resolving"/> handler on
+            the <see cref="P:System.Runtime.Loader.AssemblyLoadContext.Default"/> context that probes
+            <paramref name="moduleDir"/> for assemblies the runtime cannot otherwise locate.
+            Required because shared third-party libs (Azure.Core, Azure.Identity, ...) are
+            delegated to the Default ALC, but their transitive dependencies in the module
+            root (e.g. <c>System.ClientModel.dll</c>) are not on PowerShell's default probe path.
+            </summary>
+        </member>
+        <member name="T:PSDataRepository.Core.Extensions.ExtensionLoader.ExtensionLoadContext">
+            <summary>
+            Per-plugin-folder <see cref="T:System.Runtime.Loader.AssemblyLoadContext"/>. Plugin DLLs and their private
+            dependencies are loaded into this context. Shared contract assemblies
+            (<see cref="F:PSDataRepository.Core.Extensions.ExtensionLoader.SharedAssemblyPrefixes"/>) are delegated to the Default context so type
+            identity is preserved across boundaries.
+            </summary>
+        </member>
+        <member name="T:PSDataRepository.Core.Resources.Strings">
+            <summary>
+              A strongly-typed resource class, for looking up localized strings, etc.
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Core.Resources.Strings.ResourceManager">
+            <summary>
+              Returns the cached ResourceManager instance used by this class.
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Core.Resources.Strings.Culture">
+            <summary>
+              Overrides the current thread's CurrentUICulture property for all
+              resource lookups using this strongly typed resource class.
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Core.Resources.Strings.Conn_NoActiveSession">
+            <summary>
+              Looks up a localized string similar to No active PSDataRepository session. Use Connect-PSDataRepository first..
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Core.Resources.Strings.Err_UnsupportedEncoding">
+            <summary>
+              Looks up a localized string similar to Cannot convert &apos;{0}&apos; to System.Text.Encoding. Supported values: ASCII, BigEndianUnicode, Latin1, Unicode, UTF7, UTF8, UTF8BOM, UTF8NoBOM, UTF32..
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Core.Resources.Strings.Prov_UnsupportedOperation">
+            <summary>
+              Looks up a localized string similar to Provider &apos;{0}&apos; does not support operation &apos;{1}&apos;..
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Core.Resources.Strings.Retry_MaxAttemptsExceeded">
+            <summary>
+              Looks up a localized string similar to Operation failed after {0} attempts..
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Core.Resources.Strings.Retry_TransientError">
+            <summary>
+              Looks up a localized string similar to Transient error on attempt {0}/{1}: {2}. Retrying in {3}ms....
+            </summary>
+        </member>
+        <member name="T:PSDataRepository.Core.Session.ISessionManager">
+            <summary>
+            Abstraction over session management for testability.
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Core.Session.ISessionManager.IsConnected">
+            <summary>Whether a session is currently active.</summary>
+        </member>
+        <member name="M:PSDataRepository.Core.Session.ISessionManager.GetSession">
+            <summary>Gets the current provider session.</summary>
+        </member>
+        <member name="M:PSDataRepository.Core.Session.ISessionManager.SetSession(PSDataRepository.Providers.IProviderSession)">
+            <summary>Sets the active provider session.</summary>
+        </member>
+        <member name="M:PSDataRepository.Core.Session.ISessionManager.ClearSession">
+            <summary>Disposes and clears the current session.</summary>
+        </member>
+        <member name="M:PSDataRepository.Core.Session.ISessionManager.GetRepository``1">
+            <summary>
+            Gets a repository for the requested capability from the current session.
+            Returns null if the session doesn't support that capability.
+            </summary>
+        </member>
+        <member name="T:PSDataRepository.Core.Session.RepositorySessionContext">
+            <summary>
+            Encapsulates a single repository session context.
+            Holds the active <see cref="T:PSDataRepository.Providers.IProviderSession"/> and nothing else.
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Core.Session.RepositorySessionContext.CurrentSession">
+            <summary>Active provider session (set by <see cref="T:PSDataRepository.Core.Session.SessionManager"/>).</summary>
+        </member>
+        <member name="P:PSDataRepository.Core.Session.RepositorySessionContext.IsConnected">
+            <summary>True when a provider session is active.</summary>
+        </member>
+        <member name="M:PSDataRepository.Core.Session.RepositorySessionContext.Clear">
+            <summary>Disposes and clears the current session.</summary>
+        </member>
+        <member name="T:PSDataRepository.Core.Session.RepositorySession">
+            <summary>
+            Ambient session holder backed by <see cref="T:System.Threading.AsyncLocal`1"/>.
+            <para>
+            AsyncLocal flows across <c>Task.Run</c> / <c>await</c> boundaries via
+            <see cref="T:System.Threading.ExecutionContext"/>, so the session stays consistent when
+            synchronous PowerShell cmdlets bridge to async repository code via
+            <c>AsyncHelper.RunSync</c>. Each PowerShell runspace / pipeline
+            invocation gets its own execution context and therefore its own
+            session slot — no cross-pipeline bleed.
+            </para>
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Core.Session.RepositorySession.Current">
+            <summary>Gets the active provider session, or null.</summary>
+        </member>
+        <member name="P:PSDataRepository.Core.Session.RepositorySession.IsConnected">
+            <summary>True when a provider session is active.</summary>
+        </member>
+        <member name="M:PSDataRepository.Core.Session.RepositorySession.Clear">
+            <summary>Disposes the current session and clears state.</summary>
+        </member>
+        <member name="T:PSDataRepository.Core.Session.SessionManager">
+            <summary>
+            Manages the lifecycle of repository sessions.
+            Purely delegates to <see cref="T:PSDataRepository.Providers.IProviderSession"/> — knows nothing about
+            concrete providers, Azure SDKs, or authentication.
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Core.Session.SessionManager.Instance">
+            <summary>
+            Singleton <see cref="T:PSDataRepository.Core.Session.ISessionManager"/> adapter backed by this static class.
+            Enables dependency injection and unit testing.
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Core.Session.SessionManager.SetSession(PSDataRepository.Providers.IProviderSession)">
+            <summary>Sets (connects) the active session.</summary>
+        </member>
+        <member name="M:PSDataRepository.Core.Session.SessionManager.ClearSession">
+            <summary>Disposes and clears the current session.</summary>
+        </member>
+        <member name="P:PSDataRepository.Core.Session.SessionManager.IsConnected">
+            <summary>Whether a session is active.</summary>
+        </member>
+        <member name="M:PSDataRepository.Core.Session.SessionManager.GetSession">
+            <summary>Gets the current provider session.</summary>
+        </member>
+        <member name="M:PSDataRepository.Core.Session.SessionManager.GetRepository``1">
+            <summary>
+            Gets a repository for the requested capability from the current session.
+            </summary>
+        </member>
+    </members>
+</doc>

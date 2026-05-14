@@ -1,0 +1,1373 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>PSDataRepository.Commands</name>
+    </assembly>
+    <members>
+        <member name="T:PSDataRepository.Commands.Common.CryptoHelper">
+            <summary>
+            Provides AES-256 encryption and decryption with PBKDF2 key derivation.
+            Shared by Compress-PSDataRepositoryItem and Expand-PSDataRepositoryItem cmdlets.
+            <para>
+            V4 format (AES-GCM, PBKDF2-SHA512, 210k iterations, default): <c>[PSDR-ENC-V4 11B][Salt 32B][Nonce 12B][Tag 16B][Ciphertext]</c>
+            </para>
+            <para>
+            V3 format (AES-GCM, PBKDF2-SHA256, 600k iterations, legacy read): <c>[PSDR-ENC-V3 11B][Salt 32B][Nonce 12B][Tag 16B][Ciphertext]</c>
+            </para>
+            <para>
+            V2 format (AES-GCM, PBKDF2-SHA256, 100k iterations, legacy read): <c>[PSDR-ENC-V2 11B][Salt 32B][Nonce 12B][Tag 16B][Ciphertext]</c>
+            </para>
+            <para>
+            V1 format (AES-CBC, legacy read-only): <c>[PSDR-ENC-V1 11B][Salt 32B][IV 16B][Ciphertext]</c>
+            </para>
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Commands.Common.CryptoHelper.HasEncryptionHeader(System.Byte[])">
+            <summary>
+            Checks whether the data starts with any known encryption header (V1–V4).
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Commands.Common.CryptoHelper.Encrypt(System.Byte[],System.Security.SecureString)">
+            <summary>
+            Encrypts data using AES-256-GCM (V4) with a PBKDF2-SHA512-derived key (210k iterations).
+            Provides authenticated encryption — ciphertext integrity is verified on decryption.
+            </summary>
+            <param name="data">
+            Plaintext bytes to encrypt. The caller is responsible for clearing this buffer
+            after the call (e.g. via <see cref="M:System.Security.Cryptography.CryptographicOperations.ZeroMemory(System.Span{System.Byte})"/>);
+            because <c>byte[]</c> is passed by reference, this method does not own the buffer
+            and cannot decide when it is safe to wipe.
+            </param>
+            <param name="password">Password used for key derivation.</param>
+            <returns>Encrypted payload including V4 header, salt, nonce, tag, and ciphertext.</returns>
+        </member>
+        <member name="M:PSDataRepository.Commands.Common.CryptoHelper.Decrypt(System.Byte[],System.Security.SecureString)">
+            <summary>
+            Decrypts data encrypted by <see cref="M:PSDataRepository.Commands.Common.CryptoHelper.Encrypt(System.Byte[],System.Security.SecureString)"/>.
+            Supports V4 (AES-GCM, PBKDF2-SHA512 210k), V3 (AES-GCM, PBKDF2-SHA256 600k),
+            V2 (AES-GCM, PBKDF2-SHA256 100k) and V1 (AES-CBC, legacy) formats.
+            </summary>
+            <param name="encryptedData">Encrypted payload including header, salt, and ciphertext.</param>
+            <param name="password">Password used for key derivation (must match encryption).</param>
+            <returns>Decrypted plaintext bytes.</returns>
+        </member>
+        <member name="M:PSDataRepository.Commands.Common.CryptoHelper.DecryptGcm(System.Byte[],System.Security.SecureString,System.ReadOnlySpan{System.Byte},System.Int32,System.Security.Cryptography.HashAlgorithmName)">
+            <summary>
+            Decrypts AES-GCM payload (V2, V3 or V4).
+            Format: [Header 11B][Salt 32B][Nonce 12B][Tag 16B][Ciphertext]
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Commands.Common.CryptoHelper.DecryptV1(System.Byte[],System.Security.SecureString)">
+            <summary>
+            Decrypts V1 (AES-CBC) payload. Retained for backward compatibility with existing encrypted data.
+            Format: [PSDR-ENC-V1 11B][Salt 32B][IV 16B][Ciphertext]
+            </summary>
+        </member>
+        <member name="T:PSDataRepository.Commands.Common.EncryptionConstants">
+            <summary>
+            Shared encryption constants used by Compress and Expand cmdlets.
+            Centralizing these ensures Compress and Expand always use matching parameters,
+            preventing data loss from accidental desynchronization.
+            </summary>
+        </member>
+        <member name="F:PSDataRepository.Commands.Common.EncryptionConstants.AesKeySize">
+            <summary>AES key size in bits (256-bit / 32 bytes).</summary>
+        </member>
+        <member name="F:PSDataRepository.Commands.Common.EncryptionConstants.AesBlockSize">
+            <summary>AES block size in bits (128-bit / 16 bytes).</summary>
+        </member>
+        <member name="F:PSDataRepository.Commands.Common.EncryptionConstants.SaltSize">
+            <summary>Salt size in bytes for PBKDF2 key derivation (256 bits).</summary>
+        </member>
+        <member name="F:PSDataRepository.Commands.Common.EncryptionConstants.IVSize">
+            <summary>IV size in bytes for AES-CBC mode (V1 only).</summary>
+        </member>
+        <member name="F:PSDataRepository.Commands.Common.EncryptionConstants.Pbkdf2IterationsLegacy">
+            <summary>
+            Number of PBKDF2 iterations for key derivation (V1 and V2 data).
+            Retained for backward-compatible decryption of existing encrypted data.
+            </summary>
+        </member>
+        <member name="F:PSDataRepository.Commands.Common.EncryptionConstants.Pbkdf2Iterations">
+            <summary>
+            Number of PBKDF2 iterations for key derivation (V3+).
+            OWASP 2023 recommends 600,000 for SHA-256.
+            </summary>
+        </member>
+        <member name="F:PSDataRepository.Commands.Common.EncryptionConstants.Pbkdf2IterationsV4">
+            <summary>
+            Number of PBKDF2 iterations for key derivation with SHA-512 (V4).
+            OWASP 2023 recommends 210,000 for SHA-512 (lower than SHA-256 because each
+            SHA-512 iteration is more expensive on a defender CPU but proportionally faster
+            on a 64-bit attacker GPU/ASIC, so iteration counts are not directly comparable).
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Commands.Common.EncryptionConstants.EncryptionMagicHeader">
+            <summary>Magic header bytes for V1 (AES-CBC) encrypted files. Immutable via ReadOnlySpan.</summary>
+        </member>
+        <member name="P:PSDataRepository.Commands.Common.EncryptionConstants.EncryptionMagicHeaderV2">
+            <summary>Magic header bytes for V2 (AES-GCM, 100k iterations) encrypted files. Immutable via ReadOnlySpan.</summary>
+        </member>
+        <member name="P:PSDataRepository.Commands.Common.EncryptionConstants.EncryptionMagicHeaderV3">
+            <summary>Magic header bytes for V3 (AES-GCM, 600k iterations) encrypted files. Immutable via ReadOnlySpan.</summary>
+        </member>
+        <member name="P:PSDataRepository.Commands.Common.EncryptionConstants.EncryptionMagicHeaderV4">
+            <summary>Magic header bytes for V4 (AES-GCM, PBKDF2-SHA512, 210k iterations) encrypted files. Immutable via ReadOnlySpan.</summary>
+        </member>
+        <member name="F:PSDataRepository.Commands.Common.EncryptionConstants.GcmNonceSize">
+            <summary>AES-GCM nonce size in bytes (96 bits, NIST recommendation).</summary>
+        </member>
+        <member name="F:PSDataRepository.Commands.Common.EncryptionConstants.GcmTagSize">
+            <summary>AES-GCM authentication tag size in bytes (128 bits).</summary>
+        </member>
+        <member name="T:PSDataRepository.Commands.Common.ErrorIds">
+            <summary>
+            Centralized error ID constants used by all PSDataRepository cmdlets.
+            <para>
+            Error IDs are part of the public contract surfaced via PowerShell's
+            <c>$Error[0].FullyQualifiedErrorId</c>, so callers (CI scripts, monitoring,
+            other modules) can switch on them. Centralising the strings here prevents
+            typos and ensures the same logical condition raises the same ID across cmdlets.
+            </para>
+            </summary>
+        </member>
+        <member name="T:PSDataRepository.Commands.Common.FormatterNameCompleter">
+            <summary>
+            Provides tab-completion for formatter names (Json, Xml, Csv, Yml, etc.)
+            by querying the <see cref="T:PSDataRepository.Formatters.FormatterRegistry"/> at runtime.
+            </summary>
+        </member>
+        <member name="T:PSDataRepository.Commands.Common.ProviderNameCompleter">
+            <summary>
+            Provides tab-completion for provider names (Disk, AzureBlob, AzureKeyVault, ...)
+            by querying the <see cref="T:PSDataRepository.Providers.ProviderRegistry"/> at runtime.
+            </summary>
+        </member>
+        <member name="T:PSDataRepository.Commands.Common.PSDataRepositoryCmdletBase">
+            <summary>
+            Base class for PSDataRepository cmdlets that want cooperative cancellation
+            via Ctrl-C / PowerShell pipeline stop. Derived cmdlets should pass
+            <see cref="P:PSDataRepository.Commands.Common.PSDataRepositoryCmdletBase.CancellationToken"/> to async operations (typically through
+            <c>AsyncHelper.RunSync(..., CancellationToken)</c>).
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Commands.Common.PSDataRepositoryCmdletBase.CancellationToken">
+            <summary>
+            Cancellation token that is signaled when the pipeline is stopped (Ctrl-C).
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Commands.Common.PSDataRepositoryCmdletBase.StopProcessing">
+            <inheritdoc />
+        </member>
+        <member name="M:PSDataRepository.Commands.Common.PSDataRepositoryCmdletBase.Dispose">
+            <inheritdoc />
+        </member>
+        <member name="M:PSDataRepository.Commands.Common.PSDataRepositoryCmdletBase.Dispose(System.Boolean)">
+            <summary>Releases managed resources (the cancellation source).</summary>
+        </member>
+        <member name="T:PSDataRepository.Commands.CompressPSDataRepositoryItemCommand">
+            <summary>
+            <para type="synopsis">Compresses and optionally encrypts items in persistent storage.</para>
+            <para type="description">
+            Compresses stored items using GZip compression to reduce storage size.
+            Optionally encrypts compressed data using AES-256 encryption with PBKDF2 key derivation.
+            The compressed item is saved with .gz extension (or .gz.enc if encrypted).
+            Supports in-place compression or creating a new compressed copy.
+            Ideal for archiving large datasets or reducing storage costs with security.
+            </para>
+            <example>
+              <code>Compress-PSDataRepositoryItem -Name "largefile.json"</code>
+              <para>Compresses largefile.json to largefile.json.gz and removes original.</para>
+            </example>
+            <example>
+              <code>$pwd = Read-Host -AsSecureString "Password"; Compress-PSDataRepositoryItem -Name "sensitive.json" -Password $pwd</code>
+              <para>Compresses and encrypts sensitive.json with password protection.</para>
+            </example>
+            <example>
+              <code>Compress-PSDataRepositoryItem -Name "logs/*.txt" -KeepOriginal</code>
+              <para>Compresses all log files, keeping originals.</para>
+            </example>
+            <example>
+              <code>Compress-PSDataRepositoryItem -Name "data.json" -DestinationName "archive/data.gz"</code>
+              <para>Compresses data.json to specific destination.</para>
+            </example>
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Commands.CompressPSDataRepositoryItemCommand.Name">
+            <summary>
+            The name/key of the item to compress.
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Commands.CompressPSDataRepositoryItemCommand.DestinationName">
+            <summary>
+            Destination name for compressed item. If not specified, adds .gz extension to original name.
+            If password is used, adds .gz.enc extension.
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Commands.CompressPSDataRepositoryItemCommand.Password">
+            <summary>
+            Password for AES-256 encryption. If specified, compressed data will be encrypted.
+            Use Read-Host -AsSecureString to securely prompt for password.
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Commands.CompressPSDataRepositoryItemCommand.CompressionLevel">
+            <summary>
+            Compression level: Optimal (default), Fastest, or NoCompression.
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Commands.CompressPSDataRepositoryItemCommand.KeepOriginal">
+            <summary>
+            If specified, keeps the original item after compression.
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Commands.CompressPSDataRepositoryItemCommand.Force">
+            <summary>
+            If specified, overwrites existing compressed item without confirmation.
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Commands.CompressPSDataRepositoryItemCommand.PassThru">
+            <summary>
+            If specified, returns information about the compressed item.
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Commands.CompressPSDataRepositoryItemCommand.DetermineDestinationName">
+            <summary>
+            Determines the destination name based on parameters and encryption status.
+            </summary>
+        </member>
+        <member name="T:PSDataRepository.Commands.ConnectPSDataRepositoryCommand">
+            <summary>
+            <para type="synopsis">Connects to a data repository provider.</para>
+            <para type="description">
+            Establishes a session to a data repository provider. The Provider parameter selects
+            which provider to use. Available providers and their parameters are discovered
+            dynamically from registered plugins. Authentication parameters are added automatically
+            based on the provider's supported auth modes and the loaded authentication plugins.
+            </para>
+            <example>
+              <code>Connect-PSDataRepository -Provider Disk -Path "C:\Data\MyRepo"</code>
+              <para>Connects to a local disk-based repository.</para>
+            </example>
+            <example>
+              <code>Connect-PSDataRepository -Provider AzureBlob -ConnectionString $connStr -ContainerName "mydata"</code>
+              <para>Connects to Azure Blob Storage using a connection string.</para>
+            </example>
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Commands.ConnectPSDataRepositoryCommand.Provider">
+            <summary>
+            <para type="description">
+            The data repository provider type to connect to.
+            Available providers are discovered from loaded plugins.
+            </para>
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Commands.ConnectPSDataRepositoryCommand.GetDynamicParameters">
+            <summary>
+            Returns dynamic parameters based on the selected Provider.
+            Parameters come from the provider definition and authentication plugins.
+            </summary>
+        </member>
+        <member name="T:PSDataRepository.Commands.ConvertFromPSDataRepositoryMessageCommand">
+            <summary>
+            <para type="synopsis">Deserializes a raw message string into a PowerShell object.</para>
+            <para type="description">
+            Converts a raw message string (e.g. received from an Azure Function Queue trigger)
+            into a deserialized object using the module's Formatter.
+            Does not require an active session or queue connection.
+            Automatically detects the serialization format (JSON, XML, CSV) unless -Format is specified.
+            If the message was sent with -IncludeMetadata, the metadata envelope is automatically
+            unwrapped and the inner content is deserialized. Use -IncludeMetadata to attach
+            the envelope metadata as note properties on the output object.
+            </para>
+            <example>
+              <code>ConvertFrom-PSDataRepositoryMessage -InputObject $QueueItem</code>
+              <para>Deserializes a message received from an Azure Function Queue trigger.</para>
+            </example>
+            <example>
+              <code>$TriggerMetadata.MessageText | ConvertFrom-PSDataRepositoryMessage -Format Json</code>
+              <para>Explicitly deserializes a JSON message from pipeline input.</para>
+            </example>
+            <example>
+              <code>ConvertFrom-PSDataRepositoryMessage -InputObject $QueueItem -IncludeMetadata</code>
+              <para>Deserializes a message and includes envelope metadata (TypeName, Timestamp, etc.) as note properties.</para>
+            </example>
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Commands.ConvertFromPSDataRepositoryMessageCommand.InputObject">
+            <summary>
+            The raw message string to deserialize. Accepts pipeline input.
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Commands.ConvertFromPSDataRepositoryMessageCommand.Format">
+            <summary>
+            Deserialization format. If not specified, attempts auto-detection based on content.
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Commands.ConvertFromPSDataRepositoryMessageCommand.IncludeMetadata">
+            <summary>
+            If specified, includes metadata properties from the envelope (TypeName, Timestamp, etc.)
+            as note properties on the deserialized object.
+            Only applies when the message contains a metadata envelope (sent with -IncludeMetadata).
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Commands.ConvertFromPSDataRepositoryMessageCommand.TryUnwrapEnvelope(System.String,System.String@,System.Nullable{System.Text.Json.JsonElement}@,System.String@)">
+            <summary>
+            Attempts to detect and unwrap a metadata envelope created by Send-PSDataRepositoryMessage -IncludeMetadata.
+            </summary>
+        </member>
+        <member name="T:PSDataRepository.Commands.CopyPSDataRepositoryItemCommand">
+            <summary>
+            <para type="synopsis">Copies local files or repository items to the connected repository.</para>
+            <para type="description">
+            Uploads local files (from disk) to the connected repository (Azure Blob Storage, Disk).
+            Supports pipeline input from <c>Get-ChildItem</c> (binds via <c>FullName</c> property)
+            and from <c>Get-PSDataRepositoryChildItem</c> (intra-repository copy).
+            When copying from the local filesystem, the cmdlet reads each file as binary and stores it
+            under the original file name (or a custom <c>-Destination</c> prefix).
+            Supports <c>-Recurse</c> for directory traversal, <c>-Filter</c> for wildcard matching,
+            and <c>-Flatten</c> to discard folder structure.
+            </para>
+            <example>
+              <code>Copy-PSDataRepositoryItem -Path "C:\Data\config.json"</code>
+              <para>Copies a single file to the repository root.</para>
+            </example>
+            <example>
+              <code>Copy-PSDataRepositoryItem -Path "C:\Data\" -Recurse</code>
+              <para>Recursively copies all files from the directory to the repository.</para>
+            </example>
+            <example>
+              <code>Get-ChildItem C:\Data -Recurse -File | Copy-PSDataRepositoryItem</code>
+              <para>Pipes local files into the repository (binds FullName automatically).</para>
+            </example>
+            <example>
+              <code>Get-ChildItem C:\Logs -Filter "*.log" | Copy-PSDataRepositoryItem -Destination "logs/"</code>
+              <para>Copies filtered files to a subfolder in the repository.</para>
+            </example>
+            <example>
+              <code>Get-PSDataRepositoryChildItem -Path "source/" | Copy-PSDataRepositoryItem -Destination "archive/"</code>
+              <para>Copies items within the repository from one prefix to another.</para>
+            </example>
+            <example>
+              <code>Get-ChildItem C:\Export -Recurse -File | Copy-PSDataRepositoryItem -Destination "backup/" -Flatten</code>
+              <para>Copies all files without preserving directory structure.</para>
+            </example>
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Commands.CopyPSDataRepositoryItemCommand.Path">
+            <summary>
+            Local file or directory path(s) to copy to the repository.
+            Accepts pipeline input from <c>Get-ChildItem</c> via the <c>FullName</c> property.
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Commands.CopyPSDataRepositoryItemCommand.LiteralPath">
+            <summary>
+            Literal local path(s) without wildcard expansion.
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Commands.CopyPSDataRepositoryItemCommand.InputObject">
+            <summary>
+            Repository item received from <c>Get-PSDataRepositoryChildItem</c>.
+            Performs intra-repository copy to the specified <c>-Destination</c>.
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Commands.CopyPSDataRepositoryItemCommand.Destination">
+            <summary>
+            Destination prefix or folder in the repository.
+            If omitted, items are copied to the repository root preserving their relative names.
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Commands.CopyPSDataRepositoryItemCommand.Recurse">
+            <summary>
+            Recursively copy files from directories.
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Commands.CopyPSDataRepositoryItemCommand.Filter">
+            <summary>
+            Wildcard filter pattern applied to file names (e.g. "*.json").
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Commands.CopyPSDataRepositoryItemCommand.Force">
+            <summary>
+            Overwrite existing items in the repository without confirmation.
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Commands.CopyPSDataRepositoryItemCommand.PassThru">
+            <summary>
+            Return information about each copied item.
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Commands.CopyPSDataRepositoryItemCommand.Flatten">
+            <summary>
+            Discard directory structure and use only leaf file names as destination names.
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Commands.CopyPSDataRepositoryItemCommand.ContinueOnError">
+            <summary>
+            Continue processing when individual copy operations fail.
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Commands.CopyPSDataRepositoryItemCommand.BeginProcessing">
+            <inheritdoc />
+        </member>
+        <member name="M:PSDataRepository.Commands.CopyPSDataRepositoryItemCommand.ProcessRecord">
+            <inheritdoc />
+        </member>
+        <member name="M:PSDataRepository.Commands.CopyPSDataRepositoryItemCommand.EndProcessing">
+            <inheritdoc />
+        </member>
+        <member name="M:PSDataRepository.Commands.CopyPSDataRepositoryItemCommand.CopyLocalPath(System.String)">
+            <summary>
+            Resolves a local path and copies the file(s) to the repository.
+            Handles single files, directories, and wildcard patterns.
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Commands.CopyPSDataRepositoryItemCommand.CopyDirectory(System.String,System.String,System.IO.SearchOption)">
+            <summary>
+            Enumerates files in a directory and copies each to the repository.
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Commands.CopyPSDataRepositoryItemCommand.CopyLocalFile(System.String,System.String)">
+            <summary>
+            Copies a single local file to the repository.
+            Uses streaming via <see cref="T:PSDataRepository.Abstractions.IFilesystemStorageRepository"/> when supported
+            to avoid loading large files entirely into memory.
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Commands.CopyPSDataRepositoryItemCommand.CopyRepositoryItem(PSDataRepository.Abstractions.RepositoryItemInfo)">
+            <summary>
+            Copies a repository item to a new destination within the same repository.
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Commands.CopyPSDataRepositoryItemCommand.DetermineDestinationName(System.String,System.String)">
+            <summary>
+            Determines the destination name in the repository for a local file.
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Commands.CopyPSDataRepositoryItemCommand.DetermineRepositoryDestinationName(PSDataRepository.Abstractions.RepositoryItemInfo)">
+            <summary>
+            Determines the destination name for an intra-repository copy.
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Commands.CopyPSDataRepositoryItemCommand.GetLeafName(System.String)">
+            <summary>
+            Returns the leaf (file) name from a path. For "data/config.json" returns "config.json".
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Commands.CopyPSDataRepositoryItemCommand.ApplyFilter(System.String)">
+            <summary>
+            Applies the <c>-Filter</c> wildcard pattern to a file path.
+            Returns <c>true</c> when the file should be included.
+            </summary>
+        </member>
+        <member name="T:PSDataRepository.Commands.DisconnectPSDataRepositoryCommand">
+            <summary>
+            <para type="synopsis">Disconnects from the current data repository session.</para>
+            <para type="description">
+            Closes the active repository connection established by Connect-PSDataRepository.
+            Disposes all underlying resources (storage clients, queue clients, cached connections)
+            and clears the session state. Returns $true on success, $false if an error occurred during cleanup.
+            Safe to call even when no session is active.
+            </para>
+            <example>
+              <code>Disconnect-PSDataRepository</code>
+              <para>Disconnects from the current repository and releases all resources.</para>
+            </example>
+            <example>
+              <code>
+              Connect-PSDataRepository -Disk -Path "C:\Data"
+              Set-PSDataRepositoryItem -Name "backup.json" -InputObject $data
+              Disconnect-PSDataRepository
+              </code>
+              <para>Typical connect-work-disconnect workflow.</para>
+            </example>
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Commands.DisconnectPSDataRepositoryCommand.ProcessRecord">
+            <summary>
+            Disconnects from the currently active repository and clears the session.
+            </summary>
+        </member>
+        <member name="T:PSDataRepository.Commands.ExpandPSDataRepositoryItemCommand">
+            <summary>
+            <para type="synopsis">Decompresses and optionally decrypts items in persistent storage.</para>
+            <para type="description">
+            Decompresses GZip-compressed items stored in the repository.
+            Automatically decrypts items encrypted with Compress-PSDataRepositoryItem if password is provided.
+            Automatically detects .gz extension and removes it from decompressed item name.
+            Supports in-place decompression or creating a new decompressed copy.
+            Ideal for restoring archived datasets or processing compressed/encrypted data.
+            </para>
+            <example>
+              <code>Expand-PSDataRepositoryItem -Name "largefile.json.gz"</code>
+              <para>Decompresses largefile.json.gz to largefile.json and removes compressed file.</para>
+            </example>
+            <example>
+              <code>$pwd = Read-Host -AsSecureString "Password"; Expand-PSDataRepositoryItem -Name "sensitive.json.gz.enc" -Password $pwd</code>
+              <para>Decrypts and decompresses encrypted file with password.</para>
+            </example>
+            <example>
+              <code>Expand-PSDataRepositoryItem -Name "archive/*.gz" -KeepOriginal</code>
+              <para>Decompresses all .gz files, keeping compressed originals.</para>
+            </example>
+            <example>
+              <code>Expand-PSDataRepositoryItem -Name "data.gz" -DestinationName "restored/data.json"</code>
+              <para>Decompresses to specific destination.</para>
+            </example>
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Commands.ExpandPSDataRepositoryItemCommand.Name">
+            <summary>
+            The name/key of the compressed item to expand.
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Commands.ExpandPSDataRepositoryItemCommand.DestinationName">
+            <summary>
+            Destination name for decompressed item. If not specified, removes .gz extension from original name.
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Commands.ExpandPSDataRepositoryItemCommand.Password">
+            <summary>
+            Password for AES-256 decryption. Required if item was encrypted with Compress-PSDataRepositoryItem.
+            Use Read-Host -AsSecureString to securely prompt for password.
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Commands.ExpandPSDataRepositoryItemCommand.KeepOriginal">
+            <summary>
+            If specified, keeps the compressed item after decompression.
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Commands.ExpandPSDataRepositoryItemCommand.Force">
+            <summary>
+            If specified, overwrites existing decompressed item without confirmation.
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Commands.ExpandPSDataRepositoryItemCommand.PassThru">
+            <summary>
+            If specified, returns information about the decompressed item.
+            </summary>
+        </member>
+        <member name="T:PSDataRepository.Commands.GetPSDataRepositoryChildItemCommand">
+            <summary>
+            <para type="synopsis">Lists child items (metadata only) from the connected repository.</para>
+            <para type="description">
+            Returns strongly-typed <see cref="T:PSDataRepository.Abstractions.RepositoryItemInfo"/> objects describing files,
+            blobs, or virtual directories in the connected repository. Unlike
+            <c>Get-PSDataRepositoryItem</c>, this cmdlet does NOT download or deserialize content —
+            it returns metadata such as Name, Size, LastModified, ContentType, and Extension.
+            Supports <c>-Recurse</c> for recursive listing and <c>-Filter</c> for wildcard matching.
+            </para>
+            <example>
+              <code>Get-PSDataRepositoryChildItem</code>
+              <para>Lists all items at the root of the connected repository.</para>
+            </example>
+            <example>
+              <code>Get-PSDataRepositoryChildItem -Path "data/"</code>
+              <para>Lists items in the 'data' subfolder.</para>
+            </example>
+            <example>
+              <code>Get-PSDataRepositoryChildItem -Recurse</code>
+              <para>Lists all items recursively from the root.</para>
+            </example>
+            <example>
+              <code>Get-PSDataRepositoryChildItem -Filter "*.json"</code>
+              <para>Lists only items matching the wildcard pattern.</para>
+            </example>
+            <example>
+              <code>Get-PSDataRepositoryChildItem -Directory</code>
+              <para>Lists only directories/virtual folders.</para>
+            </example>
+            <example>
+              <code>Get-PSDataRepositoryChildItem -File -Recurse</code>
+              <para>Lists only files recursively.</para>
+            </example>
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Commands.GetPSDataRepositoryChildItemCommand.Path">
+            <summary>
+            Subfolder or prefix to scope the listing. Defaults to the repository root.
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Commands.GetPSDataRepositoryChildItemCommand.Filter">
+            <summary>
+            Wildcard filter applied to item names (e.g. "*.json").
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Commands.GetPSDataRepositoryChildItemCommand.Recurse">
+            <summary>
+            When specified, includes items from all nested subdirectories.
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Commands.GetPSDataRepositoryChildItemCommand.Directory">
+            <summary>
+            When specified, returns only directories (virtual folders).
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Commands.GetPSDataRepositoryChildItemCommand.File">
+            <summary>
+            When specified, returns only files (non-directory items).
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Commands.GetPSDataRepositoryChildItemCommand.Depth">
+            <summary>
+            Maximum directory depth for recursive listing (0 = only direct children).
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Commands.GetPSDataRepositoryChildItemCommand.BeginProcessing">
+            <inheritdoc />
+        </member>
+        <member name="M:PSDataRepository.Commands.GetPSDataRepositoryChildItemCommand.ProcessRecord">
+            <inheritdoc />
+        </member>
+        <member name="M:PSDataRepository.Commands.GetPSDataRepositoryChildItemCommand.GetLeafName(System.String)">
+            <summary>
+            Returns the leaf (file/folder) name from a relative path.
+            For "data/config.json" returns "config.json". For "data/" returns "data".
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Commands.GetPSDataRepositoryChildItemCommand.CountDepth(System.String,System.String)">
+            <summary>
+            Counts the directory depth of <paramref name="itemName"/> relative to <paramref name="basePath"/>.
+            </summary>
+        </member>
+        <member name="T:PSDataRepository.Commands.GetPSDataRepositoryExtensionTokenCommand">
+            <summary>
+            <para type="synopsis">Reads the strong-name public key token from a .NET assembly in the format used by <c>extensions.trust.json</c>.</para>
+            <para type="description">
+            Helper for administrators who need to add a 3rd-party PSDataRepository extension
+            to the trust list. Reads the assembly metadata without loading it for execution
+            and returns the lowercase 16-character hex public key token, suitable for pasting
+            into <c>extensions.trust.json</c> under <c>trustedPublicKeyTokens</c>.
+            </para>
+            <example>
+              <code>Get-PSDataRepositoryExtensionToken -Path .\Contoso.PSDataRepository.MyProvider.dll</code>
+              <para>Prints the assembly's public key token (e.g. <c>a1b2c3d4e5f60708</c>).</para>
+            </example>
+            <example>
+              <code>Get-ChildItem .\Plugins\*.dll | Get-PSDataRepositoryExtensionToken</code>
+              <para>Pipeline-friendly: emits one record per assembly with Path, Name and Token.</para>
+            </example>
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Commands.GetPSDataRepositoryExtensionTokenCommand.Path">
+            <summary>
+            Path to the assembly file to inspect. Accepts pipeline input by value or
+            by property name (e.g. from <c>Get-ChildItem</c>).
+            </summary>
+        </member>
+        <member name="T:PSDataRepository.Commands.GetPSDataRepositoryItemCommand">
+            <summary>
+            <para type="synopsis">Retrieves items from persistent storage (Blob, Disk).</para>
+            <para type="description">
+            Loads and deserializes items from the connected repository (Azure Blob Storage, Disk).
+            Supports retrieving single items, multiple items by pattern, or listing all items.
+            Items are automatically deserialized based on format (JSON, XML, CSV) or content detection.
+            Ideal for loading configuration, datasets, or processing results.
+            </para>
+            <example>
+              <code>Get-PSDataRepositoryItem -Name "config.json"</code>
+              <para>Retrieves and deserializes config.json.</para>
+            </example>
+            <example>
+              <code>Get-PSDataRepositoryItem -Name "data/*.json"</code>
+              <para>Retrieves all JSON files from the data folder.</para>
+            </example>
+            <example>
+              <code>Get-PSDataRepositoryItem -Name "backup.xml" -Format Xml</code>
+              <para>Explicitly deserializes as XML.</para>
+            </example>
+            <example>
+              <code>Get-PSDataRepositoryItem -Name "export.csv" -Raw</code>
+              <para>Returns raw content without deserialization.</para>
+            </example>
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Commands.GetPSDataRepositoryItemCommand.Name">
+            <summary>
+            The name/key or pattern of the object(s) to retrieve.
+            Supports wildcards (* and ?) depending on provider.
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Commands.GetPSDataRepositoryItemCommand.ListAll">
+            <summary>
+            If specified, lists all available objects in the repository.
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Commands.GetPSDataRepositoryItemCommand.Format">
+            <summary>
+            Expected deserialization format. If not specified, auto-detects from content or file extension.
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Commands.GetPSDataRepositoryItemCommand.Encoding">
+            <summary>
+            Text encoding for reading. Default: UTF-8.
+            Accepts encoding names (UTF8, ASCII, Unicode, etc.) with tab-completion.
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Commands.GetPSDataRepositoryItemCommand.Raw">
+            <summary>
+            If specified, returns raw content as string without deserialization.
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Commands.GetPSDataRepositoryItemCommand.AsByteArray">
+            <summary>
+            If specified, returns content as byte array (binary mode).
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Commands.GetPSDataRepositoryItemCommand.IncludeMetadata">
+            <summary>
+            If specified, includes metadata (Name, Path, Size) as properties on output objects.
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Commands.GetPSDataRepositoryItemCommand.ContinueOnError">
+            <summary>
+            If specified, continues processing even if individual object retrieval fails.
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Commands.GetPSDataRepositoryItemCommand.ListAllObjects">
+            <summary>
+            Lists all objects in the repository.
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Commands.GetPSDataRepositoryItemCommand.RetrieveObject(System.String)">
+            <summary>
+            Retrieves a single object by name.
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Commands.GetPSDataRepositoryItemCommand.ApplyDefaultDisplayPropertySet(System.Management.Automation.PSObject,System.String)">
+            <summary>
+            Hides the synthetic <paramref name="excluded"/> property from default <c>Format-*</c>
+            output by attaching a <c>PSStandardMembers.DefaultDisplayPropertySet</c> containing
+            only the object's own (non-excluded, non-PS*) properties. The excluded property
+            remains accessible by name (so pipeline binding by property name still works).
+            </summary>
+        </member>
+        <member name="T:PSDataRepository.Commands.GetPSDataRepositoryProviderCommand">
+            <summary>
+            <para type="synopsis">Lists all supported PSDataRepository providers and their capabilities.</para>
+            <para type="description">
+            Displays information about each data repository provider the module can work with,
+            including provider type, supported capabilities (Storage, Queue, Secrets),
+            authentication methods, and connection examples.
+            Does not require an active session.
+            </para>
+            <example>
+              <code>Get-PSDataRepositoryProvider</code>
+              <para>Lists all available providers with their capabilities.</para>
+            </example>
+            <example>
+              <code>Get-PSDataRepositoryProvider -Name AzureBlob</code>
+              <para>Shows details for a specific provider.</para>
+            </example>
+            <example>
+              <code>Get-PSDataRepositoryProvider -Capability Queue</code>
+              <para>Lists only providers that support queue messaging.</para>
+            </example>
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Commands.GetPSDataRepositoryProviderCommand.Name">
+            <summary>
+            Filter by provider name. If not specified, all providers are listed.
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Commands.GetPSDataRepositoryProviderCommand.Capability">
+            <summary>
+            Filter by capability (Storage, Queue, Secrets).
+            </summary>
+        </member>
+        <member name="T:PSDataRepository.Commands.GetPSDataRepositorySecretCommand">
+            <summary>
+            <para type="synopsis">Retrieves a secret value from the connected repository.</para>
+            <para type="description">
+            Gets the value of a secret from the connected repository (typically Azure Key Vault or FileSystem).
+            Fails if the repository type does not support secrets or is not connected.
+            </para>
+            <example>
+              <code>Get-PSDataRepositorySecret -Name "ApiKey"</code>
+            </example>
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Commands.GetPSDataRepositorySecretCommand.Name">
+            <summary>
+            The name of the secret to retrieve.
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Commands.GetPSDataRepositorySecretCommand.ProcessRecord">
+            <summary>
+            Processes the cmdlet and retrieves the specified secret from the repository.
+            </summary>
+        </member>
+        <member name="T:PSDataRepository.Commands.GetPSDataRepositorySessionCommand">
+            <summary>
+            <para type="synopsis">Retrieves information about the current repository session.</para>
+            <para type="description">
+            Displays details about the active PSDataRepository session including connection status,
+            provider type, capabilities, and repository identity.
+            </para>
+            <example>
+              <code>Get-PSDataRepositorySession</code>
+              <para>Displays current session information.</para>
+            </example>
+            </summary>
+        </member>
+        <member name="T:PSDataRepository.Commands.ModuleInitializer">
+            <summary>
+            Module initializer that runs when the module assembly is loaded into PowerShell.
+            Discovers and registers provider, authentication, and formatter plugins.
+            </summary>
+            <remarks>
+            This class must live in the assembly loaded via <c>Import-Module</c> (Commands.dll),
+            because PowerShell only invokes <see cref="T:System.Management.Automation.IModuleAssemblyInitializer"/> on the
+            directly imported assembly, not on transitive dependencies.
+            </remarks>
+        </member>
+        <member name="M:PSDataRepository.Commands.ModuleInitializer.OnImport">
+            <inheritdoc />
+        </member>
+        <member name="M:PSDataRepository.Commands.ModuleInitializer.OnRemove(System.Management.Automation.PSModuleInfo)">
+            <inheritdoc />
+            <remarks>
+            Invoked by PowerShell on <c>Remove-Module</c>. Mirrors the cleanup performed
+            by the <c>OnRemove</c> handler in <c>PSDataRepository.psm1</c> so the module
+            is also tidy when imported directly via the binary path (tests, MCP host).
+            </remarks>
+        </member>
+        <member name="T:PSDataRepository.Commands.MovePSDataRepositoryItemCommand">
+            <summary>
+            <para type="synopsis">Moves local files into the repository or moves repository items within the repository.</para>
+            <para type="description">
+            Supports pipeline input from <c>Get-ChildItem</c> for local files and from
+            <c>Get-PSDataRepositoryChildItem</c> for intra-repository moves.
+            </para>
+            </summary>
+        </member>
+        <member name="T:PSDataRepository.Commands.ReceivePSDataRepositoryMessageCommand">
+            <summary>
+            <para type="synopsis">Receives and deserializes messages from the connected queue repository.</para>
+            <para type="description">
+            Retrieves messages from the active queue repository and deserializes them back to objects.
+            Supports batching for efficient retrieval of large message volumes.
+            Can operate in single-message mode, batch mode, or continuous polling mode.
+            Messages are automatically acknowledged/deleted after successful deserialization by default.
+            </para>
+            <example>
+              <code>Receive-PSDataRepositoryMessage -MaxMessages 10</code>
+              <para>Receives up to 10 messages and returns them as objects.</para>
+            </example>
+            <example>
+              <code>Receive-PSDataRepositoryMessage -Continuous -MaxMessages 100 -DelaySeconds 5</code>
+              <para>Continuously polls for messages, retrieving up to 100 per batch with 5-second delay between polls.</para>
+            </example>
+            <example>
+              <code>Receive-PSDataRepositoryMessage -Peek</code>
+              <para>Peeks at messages without removing them from the queue.</para>
+            </example>
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Commands.ReceivePSDataRepositoryMessageCommand.MaxMessages">
+            <summary>
+            Maximum number of messages to receive in one call. Default: 1.
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Commands.ReceivePSDataRepositoryMessageCommand.VisibilityTimeoutSeconds">
+            <summary>
+            Visibility timeout for received messages (how long they remain invisible to other consumers).
+            Default: 30 seconds.
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Commands.ReceivePSDataRepositoryMessageCommand.Format">
+            <summary>
+            Deserialization format. If not specified, attempts auto-detection based on content.
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Commands.ReceivePSDataRepositoryMessageCommand.Peek">
+            <summary>
+            If specified, peeks messages without removing them from the queue (read-only).
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Commands.ReceivePSDataRepositoryMessageCommand.Raw">
+            <summary>
+            If specified, returns raw message content without deserialization.
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Commands.ReceivePSDataRepositoryMessageCommand.NoAutoDelete">
+            <summary>
+            If specified, does not automatically delete/acknowledge messages after processing.
+            Useful for manual acknowledgement scenarios or debugging.
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Commands.ReceivePSDataRepositoryMessageCommand.Continuous">
+            <summary>
+            If specified, continues polling continuously until interrupted (Ctrl+C).
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Commands.ReceivePSDataRepositoryMessageCommand.DelaySeconds">
+            <summary>
+            Delay in seconds between continuous polling attempts. Default: 5 seconds.
+            Only used with -Continuous.
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Commands.ReceivePSDataRepositoryMessageCommand.MaxIterations">
+            <summary>
+            Maximum number of continuous polling iterations. Default: unlimited (until Ctrl+C).
+            Only used with -Continuous.
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Commands.ReceivePSDataRepositoryMessageCommand.ContinueOnError">
+            <summary>
+            If specified, continues processing even if individual message deserialization fails.
+            Failed messages are written as errors but don't stop processing.
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Commands.ReceivePSDataRepositoryMessageCommand.MessageId">
+            <summary>
+            The ID of a specific message to retrieve. When specified, only the message
+            with the matching ID is returned (using peek, without removing from queue).
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Commands.ReceivePSDataRepositoryMessageCommand.IncludeMetadata">
+            <summary>
+            If specified, includes message metadata (Id, Receipt, DequeueCount, timestamps) as properties on output objects.
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Commands.ReceivePSDataRepositoryMessageCommand.ReceiveById">
+            <summary>
+            Receives a single message by its ID using peek (non-destructive).
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Commands.ReceivePSDataRepositoryMessageCommand.ReceiveContinuous">
+            <summary>
+            Receives messages in continuous polling mode.
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Commands.ReceivePSDataRepositoryMessageCommand.ReceiveBatch">
+            <summary>
+            Receives a single batch of messages.
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Commands.ReceivePSDataRepositoryMessageCommand.ProcessMessage(PSDataRepository.Abstractions.QueueMessage)">
+            <summary>
+            Processes a single message: deserialize, output, and optionally delete.
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Commands.ReceivePSDataRepositoryMessageCommand.DeserializeMessage(System.String)">
+            <summary>
+            Deserializes message content to an object.
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Commands.ReceivePSDataRepositoryMessageCommand.WaitInterruptible(System.TimeSpan)">
+            <summary>
+            Waits for the specified duration but returns immediately when Ctrl+C
+            triggers <see cref="M:PSDataRepository.Commands.ReceivePSDataRepositoryMessageCommand.StopProcessing"/>.
+            </summary>
+        </member>
+        <member name="T:PSDataRepository.Commands.RemovePSDataRepositoryItemCommand">
+            <summary>
+            <para type="synopsis">Removes items from persistent storage (Blob, Disk).</para>
+            <para type="description">
+            Deletes items from the connected repository (Azure Blob Storage, Disk).
+            Supports removing single or multiple items by name.
+            </para>
+            <example>
+              <code>Remove-PSDataRepositoryItem -Name "temp.json"</code>
+              <para>Removes temp.json from storage.</para>
+            </example>
+            <example>
+              <code>Remove-PSDataRepositoryItem -Name "backup/*.json" -Force</code>
+              <para>Removes all JSON files in backup folder without confirmation.</para>
+            </example>
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Commands.RemovePSDataRepositoryItemCommand.Name">
+            <summary>
+            The name/key of the item(s) to remove.
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Commands.RemovePSDataRepositoryItemCommand.InputObject">
+            <summary>
+            Repository item received from <c>Get-PSDataRepositoryChildItem</c>.
+            Directories are automatically skipped.
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Commands.RemovePSDataRepositoryItemCommand.Force">
+            <summary>
+            If specified, skips confirmation prompts.
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Commands.RemovePSDataRepositoryItemCommand.ContinueOnError">
+            <summary>
+            If specified, continues processing even if individual object deletion fails.
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Commands.RemovePSDataRepositoryItemCommand.RemoveItem(System.String)">
+            <summary>
+            Removes a single item by name with existence check, ShouldProcess, and ShouldContinue logic.
+            </summary>
+        </member>
+        <member name="T:PSDataRepository.Commands.RemovePSDataRepositoryMessageCommand">
+            <summary>
+            <para type="synopsis">Removes/deletes messages from the queue.</para>
+            <para type="description">
+            Deletes messages from the connected queue repository (InMemory, Disk, Azure Queue, Service Bus).
+            Typically used after successful message processing to prevent reprocessing.
+            Messages must have been received first (to obtain receipt handles).
+            For Azure providers, uses receipt handle for deletion. For Disk/InMemory, uses message ID.
+            </para>
+            <example>
+              <code>$msg = Receive-PSDataRepositoryMessage; Remove-PSDataRepositoryMessage -Message $msg</code>
+              <para>Receives and then deletes a message.</para>
+            </example>
+            <example>
+              <code>Receive-PSDataRepositoryMessage -MaxMessages 10 | Remove-PSDataRepositoryMessage</code>
+              <para>Receives and deletes multiple messages via pipeline.</para>
+            </example>
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Commands.RemovePSDataRepositoryMessageCommand.Message">
+            <summary>
+            The message object(s) to delete. Typically obtained from Receive-PSDataRepositoryMessage.
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Commands.RemovePSDataRepositoryMessageCommand.InputObject">
+            <summary>
+            Pipeline input from Receive-PSDataRepositoryMessage (PSObject with __QueueMessage property).
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Commands.RemovePSDataRepositoryMessageCommand.Force">
+            <summary>
+            If specified, suppresses confirmation prompts.
+            </summary>
+        </member>
+        <member name="T:PSDataRepository.Commands.RemovePSDataRepositorySecretCommand">
+            <summary>
+            <para type="synopsis">Deletes a secret from the connected repository.</para>
+            <para type="description">
+            Removes (deletes) a secret from the connected repository (typically Azure Key Vault or FileSystem).
+            Fails if the repository type does not support secrets or is not connected.
+            </para>
+            <example>
+              <code>Remove-PSDataRepositorySecret -Name "ApiKey"</code>
+            </example>
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Commands.RemovePSDataRepositorySecretCommand.Name">
+            <summary>
+            Gets or sets the name of the secret to remove.
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Commands.RemovePSDataRepositorySecretCommand.Force">
+            <summary>
+            If specified, skips confirmation prompts.
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Commands.RemovePSDataRepositorySecretCommand.ProcessRecord">
+            <summary>
+            Removes the specified secret from the connected repository.
+            </summary>
+        </member>
+        <member name="T:PSDataRepository.Commands.SavePSDataRepositoryItemCommand">
+            <summary>
+            <para type="synopsis">Saves repository items to the local file system.</para>
+            <para type="description">
+            Downloads items from the connected repository and writes them to the local file system.
+            Supports pipeline input from <c>Get-PSDataRepositoryChildItem</c> and preserves repository
+            folder structure by default.
+            </para>
+            </summary>
+        </member>
+        <member name="T:PSDataRepository.Commands.SendPSDataRepositoryMessageCommand">
+            <summary>
+            <para type="synopsis">Sends objects to the connected queue repository.</para>
+            <para type="description">
+            Serializes and sends objects to the active queue repository (InMemory, Disk, Azure Queue, Service Bus).
+            Supports pipeline input for processing large volumes of objects efficiently.
+            Objects are serialized to JSON by default, with configurable format (XML, CSV).
+            Uses batching for optimal performance (default batch size: 100 messages).
+            </para>
+            <example>
+              <code>$tasks = @([PSCustomObject]@{ Id = 1; Action = "Backup"; Target = "DB01" }; [PSCustomObject]@{ Id = 2; Action = "Restart"; Target = "App02" })
+              $tasks | Send-PSDataRepositoryMessage</code>
+              <para>Sends a collection of objects to the queue.</para>
+            </example>
+            <example>
+              <code>1..100000 | ForEach-Object { [PSCustomObject]@{Id=$_; Data="Item$_"} } | Send-PSDataRepositoryMessage -Format Json -BatchSize 500</code>
+              <para>Sends 100,000 custom objects with batching of 500 messages.</para>
+            </example>
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Commands.SendPSDataRepositoryMessageCommand.InputObject">
+            <summary>
+            The object(s) to send. Accepts pipeline input.
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Commands.SendPSDataRepositoryMessageCommand.Format">
+            <summary>
+            Serialization format: Json (default), Xml, or Csv.
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Commands.SendPSDataRepositoryMessageCommand.BatchSize">
+            <summary>
+            Batch size for sending messages. Default: 100.
+            Larger batches improve throughput but use more memory.
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Commands.SendPSDataRepositoryMessageCommand.MaxDepth">
+            <summary>
+            Maximum serialization depth to prevent infinite recursion. Default: 10.
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Commands.SendPSDataRepositoryMessageCommand.CsvDelimiter">
+            <summary>
+            CSV delimiter (only used if Format = Csv). Default: comma (,).
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Commands.SendPSDataRepositoryMessageCommand.XmlRootName">
+            <summary>
+            XML root element name (only used if Format = Xml).
+            If not specified (null), automatically inferred from object type:
+            - Single object: type name (e.g., 'Process')
+            - Collection: type name + 'List' (e.g., 'ProcessList')
+            Default: null (auto-detect).
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Commands.SendPSDataRepositoryMessageCommand.Force">
+            <summary>
+            If specified, skips confirmation prompts.
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Commands.SendPSDataRepositoryMessageCommand.IncludeMetadata">
+            <summary>
+            If specified, includes metadata envelope with type information and timestamp.
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Commands.SendPSDataRepositoryMessageCommand.IncludeMachineInfo">
+            <summary>
+            If specified, includes machine name and user name in the metadata envelope.
+            Only used with -IncludeMetadata. Disabled by default to prevent information disclosure.
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Commands.SendPSDataRepositoryMessageCommand.ContinueOnError">
+            <summary>
+            If specified, continues processing even if individual message serialization fails.
+            Failed messages are written as errors but don't stop the pipeline.
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Commands.SendPSDataRepositoryMessageCommand.SerializeObject(System.Management.Automation.PSObject)">
+            <summary>
+            Serializes an object using the configured format.
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Commands.SendPSDataRepositoryMessageCommand.CreateMetadataEnvelope(System.Management.Automation.PSObject,System.String)">
+            <summary>
+            Creates a metadata envelope around the serialized content.
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Commands.SendPSDataRepositoryMessageCommand.FlushBatch">
+            <summary>
+            Flushes the current batch buffer to the queue repository.
+            </summary>
+        </member>
+        <member name="T:PSDataRepository.Commands.SetPSDataRepositoryItemCommand">
+            <summary>
+            <para type="synopsis">Saves items to persistent storage (Blob, Disk).</para>
+            <para type="description">
+            Serializes and stores items in the connected repository (Azure Blob Storage, Disk).
+            Supports pipeline input for batch processing and multiple serialization formats.
+            Items are stored as individual files/blobs with specified names.
+            Ideal for saving configuration, datasets, or processing results.
+            </para>
+            <example>
+              <code>$data = @([PSCustomObject]@{ Id = 1; Name = "Server01"; Status = "Running" }; [PSCustomObject]@{ Id = 2; Name = "Server02"; Status = "Stopped" })
+              $data | Set-PSDataRepositoryItem -Name "servers.json"</code>
+              <para>Saves a collection of objects as JSON to storage.</para>
+            </example>
+            <example>
+              <code>$config = @{ApiKey="xxx"; Endpoint="https://..."} | Set-PSDataRepositoryItem -Name "config.json"</code>
+              <para>Saves configuration hashtable as JSON.</para>
+            </example>
+            <example>
+              <code>Get-ChildItem | Set-PSDataRepositoryItem -Name "files-{0}.json" -NameProperty FullName -Format Json</code>
+              <para>Saves each file item with unique name based on FullName property.</para>
+            </example>
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Commands.SetPSDataRepositoryItemCommand.InputObject">
+            <summary>
+            The object to save. Accepts pipeline input.
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Commands.SetPSDataRepositoryItemCommand.Name">
+            <summary>
+            The name/key for storing the object. Can include {0} placeholder for pipeline index.
+            Examples: "data.json", "item-{0}.json", "backup/{0}.xml"
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Commands.SetPSDataRepositoryItemCommand.NameProperty">
+            <summary>
+            Property name to use for generating unique names from pipeline objects.
+            Example: -NameProperty "Id" uses each object's Id property as the name.
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Commands.SetPSDataRepositoryItemCommand.NamePrefix">
+            <summary>
+            Prefix to add before generated names (used with -NameProperty).
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Commands.SetPSDataRepositoryItemCommand.NameSuffix">
+            <summary>
+            Suffix/extension to add after generated names (used with -NameProperty).
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Commands.SetPSDataRepositoryItemCommand.Format">
+            <summary>
+            Serialization format: Json (default), Xml, Csv, or Yml.
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Commands.SetPSDataRepositoryItemCommand.Encoding">
+            <summary>
+            Text encoding for writing. Default: UTF-8.
+            Accepts encoding names (UTF8, ASCII, Unicode, etc.) with tab-completion.
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Commands.SetPSDataRepositoryItemCommand.MaxDepth">
+            <summary>
+            Maximum serialization depth. Default: 10.
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Commands.SetPSDataRepositoryItemCommand.CsvDelimiter">
+            <summary>
+            CSV delimiter character. Only used when Format = Csv. Default: comma (,).
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Commands.SetPSDataRepositoryItemCommand.XmlRootName">
+            <summary>
+            XML root element name. Only used when Format = Xml.
+            If not specified (null), automatically inferred from object type:
+            - Single object: type name (e.g., 'Process')
+            - Collection: type name + 'List' (e.g., 'ProcessList')
+            Default: null (auto-detect).
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Commands.SetPSDataRepositoryItemCommand.Force">
+            <summary>
+            If specified, overwrites existing objects without confirmation.
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Commands.SetPSDataRepositoryItemCommand.PassThru">
+            <summary>
+            If specified, returns the storage path/URI after saving.
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Commands.SetPSDataRepositoryItemCommand.Accumulate">
+            <summary>
+            If specified, accumulates all pipeline objects and saves them as a collection (array).
+            Useful for creating single JSON/XML/CSV file from multiple pipeline objects.
+            Without this, each pipeline object is saved separately (potentially overwriting the same file).
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Commands.SetPSDataRepositoryItemCommand.DetermineStorageName(System.Management.Automation.PSObject)">
+            <summary>
+            Determines the storage name based on parameter set.
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Commands.SetPSDataRepositoryItemCommand.SerializeObject(System.Object)">
+            <summary>
+            Serializes an object using the configured format.
+            Supports both single objects and arrays.
+            </summary>
+        </member>
+        <member name="T:PSDataRepository.Commands.SetPSDataRepositorySecretCommand">
+            <summary>
+            <para type="synopsis">Creates or updates a secret in the connected repository (Key Vault, FileSystem).</para>
+            <para type="description">
+            Sets (creates or updates) a secret in the connected repository.
+            Supports either plain text or secure string as the secret value.
+            Supported repositories: AzureKeyVault, FileSystem.
+            </para>
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Commands.SetPSDataRepositorySecretCommand.Name">
+            <summary>
+            The name of the secret to set.
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Commands.SetPSDataRepositorySecretCommand.Value">
+            <summary>
+            The plain text value to store as the secret (alternative to SecureValue).
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Commands.SetPSDataRepositorySecretCommand.SecureValue">
+            <summary>
+            The secure string value to store as the secret (alternative to Value).
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Commands.SetPSDataRepositorySecretCommand.Force">
+            <summary>
+            If specified, skips confirmation prompts.
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Commands.SetPSDataRepositorySecretCommand.ProcessRecord">
+            <inheritdoc />
+        </member>
+        <member name="T:PSDataRepository.Commands.TestPSDataRepositoryConnectionCommand">
+            <summary>
+            <para type="synopsis">Tests the connectivity of the current repository session.</para>
+            <para type="description">
+            Performs a lightweight connectivity check against the active repository.
+            Returns $true if the connection is healthy, $false otherwise.
+            </para>
+            <example>
+              <code>Test-PSDataRepositoryConnection</code>
+              <para>Tests whether the current session is connected and responsive.</para>
+            </example>
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Commands.TestPSDataRepositoryConnectionCommand.TimeoutSeconds">
+            <summary>Timeout in seconds for the connection test.</summary>
+        </member>
+        <member name="T:PSDataRepository.Commands.TestPSDataRepositoryItemCommand">
+            <summary>
+            <para type="synopsis">Tests if an object exists in the repository.</para>
+            <para type="description">
+            Checks whether one or more objects exist in the connected repository (Azure Blob Storage, Disk).
+            Returns $true if exists, $false otherwise.
+            </para>
+            <example>
+              <code>Test-PSDataRepositoryItem -Name "config.json"</code>
+              <para>Returns $true if config.json exists, $false otherwise.</para>
+            </example>
+            <example>
+              <code>if (Test-PSDataRepositoryItem -Name "backup.json") { "File exists!" }</code>
+              <para>Conditional execution based on existence.</para>
+            </example>
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Commands.TestPSDataRepositoryItemCommand.Name">
+            <summary>
+            The name/key of the object to test.
+            </summary>
+        </member>
+        <member name="T:PSDataRepository.Commands.UpdatePSDataRepositoryMasterPassphraseCommand">
+            <summary>
+            <para type="synopsis">Rotates the master passphrase of the connected secret repository.</para>
+            <para type="description">
+            Re-encrypts every secret stored in the connected repository under a fresh master key
+            derived from the supplied <see cref="P:PSDataRepository.Commands.UpdatePSDataRepositoryMasterPassphraseCommand.NewPassphrase"/>. Currently supported only by the
+            Disk provider (file-system secret store).
+            </para>
+            <example>
+              <code>Update-PSDataRepositoryMasterPassphrase -NewPassphrase $secure</code>
+            </example>
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Commands.UpdatePSDataRepositoryMasterPassphraseCommand.NewPassphrase">
+            <summary>The new passphrase used to derive the master key.</summary>
+        </member>
+        <member name="P:PSDataRepository.Commands.UpdatePSDataRepositoryMasterPassphraseCommand.Force">
+            <summary>Skip confirmation prompts.</summary>
+        </member>
+        <member name="M:PSDataRepository.Commands.UpdatePSDataRepositoryMasterPassphraseCommand.ProcessRecord">
+            <inheritdoc />
+        </member>
+    </members>
+</doc>

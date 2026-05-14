@@ -1,10 +1,10 @@
 ---
 document type: cmdlet
-external help file: PSDataRepository.dll-Help.xml
+external help file: PSDataRepository.Commands.dll-Help.xml
 HelpUri: ''
 Locale: en-US
 Module Name: PSDataRepository
-ms.date: 04/12/2026
+ms.date: 05/14/2026
 PlatyPS schema version: 2024-05-01
 title: Get-PSDataRepositoryProvider
 ---
@@ -13,7 +13,7 @@ title: Get-PSDataRepositoryProvider
 
 ## SYNOPSIS
 
-Lists all supported PSDataRepository providers and their capabilities.
+{{ Fill in the Synopsis }}
 
 ## SYNTAX
 
@@ -30,28 +30,19 @@ This cmdlet has the following aliases,
 
 ## DESCRIPTION
 
-Displays information about each data repository provider the module can work with, including provider type, supported capabilities (Storage, Queue, Secrets), authentication methods, and connection examples.
-Does not require an active session.
+{{ Fill in the Description }}
 
 ## EXAMPLES
 
-### List all providers
+### Example 1
 
-
-
-### Filter by name
-
-
-
-### Filter by capability
-
-
+{{ Add example description here }}
 
 ## PARAMETERS
 
 ### -Capability
 
-Filter providers by capability.
+Filter providers by capability (Storage, Queue, Secrets).
 
 ```yaml
 Type: System.String
@@ -72,8 +63,7 @@ HelpMessage: ''
 
 ### -Name
 
-Filter by provider name.
-If not specified, all providers are listed.
+Filter by provider name (e.g. AzureBlob, AzureQueue, Disk).
 
 ```yaml
 Type: System.String
@@ -105,17 +95,13 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ### System.Management.Automation.PSObject
 
-One object per provider with properties:
-
-| Property | Type | Description | |---|---|---| | Name | String | Provider name | | Description | String | Human-readable description | | Capabilities | String[] | Storage, Queue, and/or Secrets | | AuthMethods | String[] | Supported authentication methods | | RequiresAzure | Boolean | Whether Azure subscription is needed | | Example | String | Example connection command |
+{{ Fill in the Description }}
 
 ## NOTES
 
-This cmdlet does not require an active session.
-
+{{ Fill in the Notes }}
 
 ## RELATED LINKS
 
-- [Online Version]()
-- [Connect-PSDataRepository]()
-- [Get-PSDataRepositorySession]()
+{{ Fill in the related links here }}
+

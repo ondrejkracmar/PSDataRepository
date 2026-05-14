@@ -1,10 +1,10 @@
 ---
 document type: cmdlet
-external help file: PSDataRepository.dll-Help.xml
+external help file: PSDataRepository.Commands.dll-Help.xml
 HelpUri: ''
 Locale: en-US
 Module Name: PSDataRepository
-ms.date: 04/12/2026
+ms.date: 05/14/2026
 PlatyPS schema version: 2024-05-01
 title: Disconnect-PSDataRepository
 ---
@@ -13,7 +13,7 @@ title: Disconnect-PSDataRepository
 
 ## SYNOPSIS
 
-Disconnects from the current data repository session.
+{{ Fill in the Synopsis }}
 
 ## SYNTAX
 
@@ -30,20 +30,13 @@ This cmdlet has the following aliases,
 
 ## DESCRIPTION
 
-Closes the active repository connection established by `Connect-PSDataRepository`.
-Disposes all underlying resources (storage clients, queue clients, cached connections) and clears the session state.
-Returns `$true` on success, `$false` if an error occurred during cleanup.
-Safe to call even when no session is active.
+{{ Fill in the Description }}
 
 ## EXAMPLES
 
-### Simple disconnect
+### Example 1
 
-
-
-### Connect-work-disconnect workflow
-
-
+{{ Add example description here }}
 
 ## PARAMETERS
 
@@ -104,15 +97,13 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ### System.Boolean
 
-Returns `$true` on successful disconnect, `$false` if cleanup encountered an error.
+{{ Fill in the Description }}
 
 ## NOTES
 
-Safe to call multiple times or when no session is active.
-
+{{ Fill in the Notes }}
 
 ## RELATED LINKS
 
-- [Online Version]()
-- [Connect-PSDataRepository]()
-- [Get-PSDataRepositorySession]()
+{{ Fill in the related links here }}
+

@@ -1,10 +1,10 @@
 ---
 document type: cmdlet
-external help file: PSDataRepository.dll-Help.xml
+external help file: PSDataRepository.Commands.dll-Help.xml
 HelpUri: ''
 Locale: en-US
 Module Name: PSDataRepository
-ms.date: 04/12/2026
+ms.date: 05/14/2026
 PlatyPS schema version: 2024-05-01
 title: Get-PSDataRepositorySecret
 ---
@@ -13,7 +13,7 @@ title: Get-PSDataRepositorySecret
 
 ## SYNOPSIS
 
-Retrieves a secret value from the connected repository.
+{{ Fill in the Synopsis }}
 
 ## SYNTAX
 
@@ -30,20 +30,19 @@ This cmdlet has the following aliases,
 
 ## DESCRIPTION
 
-Gets the value of a secret from the connected repository (typically Azure Key Vault or FileSystem).
-Fails if the repository type does not support secrets or is not connected.
+{{ Fill in the Description }}
 
 ## EXAMPLES
 
-### Retrieve a secret
+### Example 1
 
-
+{{ Add example description here }}
 
 ## PARAMETERS
 
 ### -Name
 
-The name of the secret to retrieve.
+The secret name to retrieve.
 
 ```yaml
 Type: System.String
@@ -77,21 +76,15 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ## OUTPUTS
 
-### System.String
-
-The secret value as a plain text string.
-
 ### System.Management.Automation.PSObject
 
 {{ Fill in the Description }}
 
 ## NOTES
 
-Requires an active session to a provider that supports secrets (e.g., AzureKeyVault).
-
+{{ Fill in the Notes }}
 
 ## RELATED LINKS
 
-- [Online Version]()
-- [Set-PSDataRepositorySecret]()
-- [Remove-PSDataRepositorySecret]()
+{{ Fill in the related links here }}
+

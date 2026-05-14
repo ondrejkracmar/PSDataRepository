@@ -1,10 +1,10 @@
 ---
 document type: cmdlet
-external help file: PSDataRepository.dll-Help.xml
+external help file: PSDataRepository.Commands.dll-Help.xml
 HelpUri: ''
 Locale: en-US
 Module Name: PSDataRepository
-ms.date: 04/12/2026
+ms.date: 05/14/2026
 PlatyPS schema version: 2024-05-01
 title: Remove-PSDataRepositoryMessage
 ---
@@ -13,7 +13,7 @@ title: Remove-PSDataRepositoryMessage
 
 ## SYNOPSIS
 
-Removes/deletes messages from the queue.
+{{ Fill in the Synopsis }}
 
 ## SYNTAX
 
@@ -38,21 +38,13 @@ This cmdlet has the following aliases,
 
 ## DESCRIPTION
 
-Deletes messages from the connected queue repository (InMemory, Disk, Azure Queue, Service Bus).
-Typically used after successful message processing to prevent reprocessing.
-Messages must have been received first (to obtain receipt handles).
-For Azure providers, uses receipt handle for deletion.
-For Disk/InMemory, uses message ID.
+{{ Fill in the Description }}
 
 ## EXAMPLES
 
-### Receive and delete a message
+### Example 1
 
-
-
-### Pipeline deletion
-
-
+{{ Add example description here }}
 
 ## PARAMETERS
 
@@ -80,7 +72,7 @@ HelpMessage: ''
 
 ### -Force
 
-If specified, suppresses confirmation prompts.
+Suppress confirmation prompts.
 
 ```yaml
 Type: System.Management.Automation.SwitchParameter
@@ -122,11 +114,10 @@ HelpMessage: ''
 
 ### -Message
 
-The message object(s) to delete.
-Typically obtained from `Receive-PSDataRepositoryMessage`.
+The message(s) to delete.
 
 ```yaml
-Type: PSDataRepository.Messaging.QueueMessage[]
+Type: PSDataRepository.Abstractions.QueueMessage[]
 DefaultValue: ''
 SupportsWildcards: false
 Aliases: []
@@ -144,8 +135,7 @@ HelpMessage: ''
 
 ### -WhatIf
 
-Shows what would happen if the cmdlet runs.
-The cmdlet is not run.
+Runs the command in a mode that only reports what would happen without performing the actions.
 
 ```yaml
 Type: System.Management.Automation.SwitchParameter
@@ -174,28 +164,29 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ## INPUTS
 
-### PSDataRepository.Messaging.QueueMessage
+### PSDataRepository.Abstractions.QueueMessage
 
-Message objects from `Receive-PSDataRepositoryMessage`.
+{{ Fill in the Description }}
 
 ### System.Management.Automation.PSObject
 
 {{ Fill in the Description }}
 
-### PSDataRepository.Messaging.QueueMessage[]
+### PSDataRepository.Abstractions.QueueMessage[]
 
 {{ Fill in the Description }}
 
 ## OUTPUTS
 
+### System.Object
+
+{{ Fill in the Description }}
+
 ## NOTES
 
-If using `Receive-PSDataRepositoryMessage` without `-NoAutoDelete`, messages are automatically deleted after successful processing.
-This cmdlet is needed only when `-NoAutoDelete` is used.
-
+{{ Fill in the Notes }}
 
 ## RELATED LINKS
 
-- [Online Version]()
-- [Receive-PSDataRepositoryMessage]()
-- [Send-PSDataRepositoryMessage]()
+{{ Fill in the related links here }}
+

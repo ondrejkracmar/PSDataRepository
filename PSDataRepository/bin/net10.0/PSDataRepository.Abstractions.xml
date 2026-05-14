@@ -1,0 +1,381 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>PSDataRepository.Abstractions</name>
+    </assembly>
+    <members>
+        <member name="T:PSDataRepository.Abstractions.AuthModes">
+            <summary>
+            Well-known authentication mode constants shared across all plugins.
+            Cloud-specific modes (Azure, AWS, GCP) are defined by their respective
+            authentication plugins (e.g. <c>AzAuthModes</c> in <c>PSDataRepository.Authentications.AzAuth</c>).
+            </summary>
+        </member>
+        <member name="F:PSDataRepository.Abstractions.AuthModes.None">
+            <summary>No authentication required (e.g. local Disk, InMemory).</summary>
+        </member>
+        <member name="T:PSDataRepository.Abstractions.IAuthenticationInfo">
+            <summary>
+            Generic, cloud-agnostic bag of authentication information passed to providers.
+            Each authentication plugin populates this with the values it needs.
+            Providers retrieve values via <see cref="M:PSDataRepository.Abstractions.IAuthenticationInfo.Get``1(System.String)"/> or the well-known <see cref="P:PSDataRepository.Abstractions.IAuthenticationInfo.Mode"/> key.
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Abstractions.IAuthenticationInfo.Mode">
+            <summary>Authentication mode string selected by the user (e.g. "None", "ClientSecret").</summary>
+        </member>
+        <member name="M:PSDataRepository.Abstractions.IAuthenticationInfo.Get``1(System.String)">
+            <summary>
+            Retrieves an authentication value by key.
+            Returns <c>default</c> if the key was not set.
+            </summary>
+            <typeparam name="T">Expected type of the value.</typeparam>
+            <param name="key">Case-insensitive key name (e.g. "TenantId", "ConnectionString", "Token").</param>
+        </member>
+        <member name="M:PSDataRepository.Abstractions.IAuthenticationInfo.Set``1(System.String,``0)">
+            <summary>
+            Sets an authentication value by key.
+            </summary>
+        </member>
+        <member name="T:PSDataRepository.Abstractions.IConnectContext">
+            <summary>
+            Provides the provider's Connect method with
+            resolved parameter values and authentication information.
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Abstractions.IConnectContext.GetParameter``1(System.String)">
+            <summary>
+            Gets a parameter value by name, as supplied by the user via dynamic parameters.
+            Returns <c>default</c> if the parameter was not provided.
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Abstractions.IConnectContext.GetString(System.String)">
+            <summary>
+            Gets a string parameter value, or null if not provided.
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Abstractions.IConnectContext.GetInt(System.String,System.Int32)">
+            <summary>
+            Gets an integer parameter value, or the specified default if not provided.
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Abstractions.IConnectContext.GetSwitch(System.String)">
+            <summary>
+            Gets a switch parameter value (true if present).
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Abstractions.IConnectContext.GetSecureString(System.String)">
+            <summary>
+            Gets a SecureString parameter value, or null if not provided.
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Abstractions.IConnectContext.AuthenticationMode">
+            <summary>
+            The resolved authentication mode for this connection.
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Abstractions.IConnectContext.Authentication">
+            <summary>
+            The full authentication option bag. Provider implementations use this
+            to obtain tokens, connection strings, certificates, etc.
+            </summary>
+        </member>
+        <member name="T:PSDataRepository.Abstractions.IQueueRepository">
+            <summary>
+            Storage-agnostic abstraction over a message queue.
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Abstractions.IQueueRepository.SendAsync(System.String,System.Threading.CancellationToken)">
+            <summary>Sends a single message to the queue.</summary>
+        </member>
+        <member name="M:PSDataRepository.Abstractions.IQueueRepository.SendBatchAsync(System.Collections.Generic.IEnumerable{System.String},System.Threading.CancellationToken)">
+            <summary>Sends multiple messages. Providers MAY batch internally for efficiency.</summary>
+        </member>
+        <member name="M:PSDataRepository.Abstractions.IQueueRepository.ReceiveAsync(System.Nullable{System.TimeSpan},System.Threading.CancellationToken)">
+            <summary>Receives a single message and hides it for <paramref name="visibilityTimeout"/>; returns <c>null</c> when the queue is empty.</summary>
+        </member>
+        <member name="M:PSDataRepository.Abstractions.IQueueRepository.ReceiveBatchAsync(System.Int32,System.Nullable{System.TimeSpan},System.Threading.CancellationToken)">
+            <summary>Receives up to <paramref name="maxMessages"/> messages.</summary>
+        </member>
+        <member name="M:PSDataRepository.Abstractions.IQueueRepository.DeleteAsync(PSDataRepository.Abstractions.QueueMessage,System.Threading.CancellationToken)">
+            <summary>Acknowledges and removes a received message using its <see cref="P:PSDataRepository.Abstractions.QueueMessage.Receipt"/>.</summary>
+        </member>
+        <member name="M:PSDataRepository.Abstractions.IQueueRepository.GetMessageCountAsync(System.Threading.CancellationToken)">
+            <summary>Returns the approximate message count, or <c>-1</c> if unknown.</summary>
+        </member>
+        <member name="M:PSDataRepository.Abstractions.IQueueRepository.PeekAsync(System.Int32,System.Threading.CancellationToken)">
+            <summary>Peeks messages without affecting their visibility.</summary>
+        </member>
+        <member name="M:PSDataRepository.Abstractions.IQueueRepository.PeekByIdAsync(System.String,System.Threading.CancellationToken)">
+            <summary>Peeks a single message by its ID without removing it from the queue.</summary>
+        </member>
+        <member name="T:PSDataRepository.Abstractions.IRepository">
+            <summary>
+            Marker interface for all repository types.
+            Provides type safety for session management.
+            </summary>
+        </member>
+        <member name="T:PSDataRepository.Abstractions.IStorageRepository">
+            <summary>
+            Defines basic operations for repositories that store text and binary data by name.
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Abstractions.IStorageRepository.ListAsync(System.String,System.Threading.CancellationToken)">
+            <summary>Lists item names, optionally filtered by a prefix.</summary>
+        </member>
+        <member name="M:PSDataRepository.Abstractions.IStorageRepository.WriteAsync(System.String,System.String,System.Threading.CancellationToken)">
+            <summary>Writes a UTF-8 text content to the named item, overwriting if it exists.</summary>
+        </member>
+        <member name="M:PSDataRepository.Abstractions.IStorageRepository.WriteAsync(System.String,System.String,System.Text.Encoding,System.Threading.CancellationToken)">
+            <summary>Writes text content using the specified encoding, overwriting if it exists.</summary>
+        </member>
+        <member name="M:PSDataRepository.Abstractions.IStorageRepository.WriteAsync(System.String,System.Byte[],System.Threading.CancellationToken)">
+            <summary>Writes binary content to the named item, overwriting if it exists.</summary>
+        </member>
+        <member name="M:PSDataRepository.Abstractions.IStorageRepository.ExistsAsync(System.String,System.Threading.CancellationToken)">
+            <summary>Returns <c>true</c> if the named item exists.</summary>
+        </member>
+        <member name="M:PSDataRepository.Abstractions.IStorageRepository.ReadAsync(System.String,System.Threading.CancellationToken)">
+            <summary>Reads text content (UTF-8 by default) for the named item.</summary>
+        </member>
+        <member name="M:PSDataRepository.Abstractions.IStorageRepository.ReadAsync(System.String,System.Text.Encoding,System.Threading.CancellationToken)">
+            <summary>Reads text content using the specified encoding for the named item.</summary>
+        </member>
+        <member name="M:PSDataRepository.Abstractions.IStorageRepository.ReadBinaryAsync(System.String,System.Threading.CancellationToken)">
+            <summary>Reads the raw bytes of the named item.</summary>
+        </member>
+        <member name="M:PSDataRepository.Abstractions.IStorageRepository.DeleteAsync(System.String,System.Threading.CancellationToken)">
+            <summary>Deletes the named item. No-op if it does not exist.</summary>
+        </member>
+        <member name="M:PSDataRepository.Abstractions.IStorageRepository.GetItemPath(System.String)">
+            <summary>
+            Gets the full path or URI of a storage item.
+            </summary>
+        </member>
+        <member name="T:PSDataRepository.Abstractions.IFilesystemStorageRepository">
+            <summary>
+            Specialized file system repository with stream support.
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Abstractions.IFilesystemStorageRepository.WriteAsync(System.String,System.IO.Stream,System.Threading.CancellationToken)">
+            <summary>Writes the contents of <paramref name="data"/> to the named item using streaming I/O.</summary>
+        </member>
+        <member name="M:PSDataRepository.Abstractions.IFilesystemStorageRepository.OpenReadAsync(System.String,System.Threading.CancellationToken)">
+            <summary>Opens the named item for streaming read. The caller owns the returned <see cref="T:System.IO.Stream"/>.</summary>
+        </member>
+        <member name="T:PSDataRepository.Abstractions.ISecretRepository">
+            <summary>
+            Secret storage operations (e.g. Azure Key Vault, encrypted disk).
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Abstractions.ISecretRepository.GetSecretAsync(System.String,System.Threading.CancellationToken)">
+            <summary>Returns the secret value, or <c>null</c> when it does not exist.</summary>
+        </member>
+        <member name="M:PSDataRepository.Abstractions.ISecretRepository.SetSecretAsync(System.String,System.String,System.Threading.CancellationToken)">
+            <summary>Creates or updates a secret.</summary>
+        </member>
+        <member name="M:PSDataRepository.Abstractions.ISecretRepository.DeleteSecretAsync(System.String,System.Threading.CancellationToken)">
+            <summary>Deletes a secret. No-op if it does not exist.</summary>
+        </member>
+        <member name="T:PSDataRepository.Abstractions.IMetadataStorageRepository">
+            <summary>
+            Rich item metadata listing.
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Abstractions.IMetadataStorageRepository.ListItemsAsync(System.String,System.Boolean,System.Threading.CancellationToken)">
+            <summary>Lists items with metadata (size, timestamps, content type), optionally recursively.</summary>
+        </member>
+        <member name="T:PSDataRepository.Abstractions.ProviderParameterDefinition">
+            <summary>
+            Describes a single dynamic parameter that a provider needs for connection.
+            Used by <c>Connect-PSDataRepository</c> to build <c>RuntimeDefinedParameter</c> instances.
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Abstractions.ProviderParameterDefinition.Name">
+            <summary>Parameter name as seen in PowerShell (e.g. "ContainerName", "Host").</summary>
+        </member>
+        <member name="P:PSDataRepository.Abstractions.ProviderParameterDefinition.ParameterType">
+            <summary>CLR type of the parameter (e.g. typeof(string), typeof(int), typeof(SecureString)).</summary>
+        </member>
+        <member name="P:PSDataRepository.Abstractions.ProviderParameterDefinition.Mandatory">
+            <summary>Whether the parameter is mandatory.</summary>
+        </member>
+        <member name="P:PSDataRepository.Abstractions.ProviderParameterDefinition.Position">
+            <summary>Positional index (null = not positional).</summary>
+        </member>
+        <member name="P:PSDataRepository.Abstractions.ProviderParameterDefinition.HelpMessage">
+            <summary>Help message shown in PowerShell.</summary>
+        </member>
+        <member name="P:PSDataRepository.Abstractions.ProviderParameterDefinition.Aliases">
+            <summary>Optional parameter aliases (e.g. "FilePath" for "Path").</summary>
+        </member>
+        <member name="P:PSDataRepository.Abstractions.ProviderParameterDefinition.DefaultValue">
+            <summary>Default value when not specified by user.</summary>
+        </member>
+        <member name="P:PSDataRepository.Abstractions.ProviderParameterDefinition.MinValue">
+            <summary>Minimum value for ValidateRange (applicable to numeric types).</summary>
+        </member>
+        <member name="P:PSDataRepository.Abstractions.ProviderParameterDefinition.MaxValue">
+            <summary>Maximum value for ValidateRange (applicable to numeric types).</summary>
+        </member>
+        <member name="T:PSDataRepository.Abstractions.QueueMessage">
+            <summary>
+            Provider-agnostic message DTO.
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Abstractions.QueueMessage.Id">
+            <summary>Broker-assigned message identifier.</summary>
+        </member>
+        <member name="P:PSDataRepository.Abstractions.QueueMessage.Content">
+            <summary>Message body as a UTF-8 string.</summary>
+        </member>
+        <member name="P:PSDataRepository.Abstractions.QueueMessage.Receipt">
+            <summary>Opaque receipt/lock token required to acknowledge or delete the message.</summary>
+        </member>
+        <member name="P:PSDataRepository.Abstractions.QueueMessage.DequeueCount">
+            <summary>Number of times this message has been dequeued.</summary>
+        </member>
+        <member name="P:PSDataRepository.Abstractions.QueueMessage.InsertedOn">
+            <summary>Timestamp when the message was enqueued.</summary>
+        </member>
+        <member name="P:PSDataRepository.Abstractions.QueueMessage.ExpiresOn">
+            <summary>Timestamp when the message expires (if the provider supports TTL).</summary>
+        </member>
+        <member name="P:PSDataRepository.Abstractions.QueueMessage.NextVisibleOn">
+            <summary>Timestamp when the message becomes visible again (invisibility window end).</summary>
+        </member>
+        <member name="P:PSDataRepository.Abstractions.QueueMessage.Headers">
+            <summary>Optional message headers/properties.</summary>
+        </member>
+        <member name="P:PSDataRepository.Abstractions.QueueMessage.InternalData">
+            <summary>
+            Provider-specific internal data (e.g., ServiceBusReceivedMessage).
+            Used by providers that need the original message object for operations like Complete/Abandon.
+            </summary>
+        </member>
+        <member name="T:PSDataRepository.Abstractions.RepositoryDiagnostics">
+            <summary>
+            Centralized OpenTelemetry instrumentation for PSDataRepository.
+            Provides <see cref="P:PSDataRepository.Abstractions.RepositoryDiagnostics.ActivitySource"/> for distributed tracing and
+            <see cref="P:PSDataRepository.Abstractions.RepositoryDiagnostics.Meter"/> for metrics (counters, histograms).
+            </summary>
+        </member>
+        <member name="F:PSDataRepository.Abstractions.RepositoryDiagnostics.SourceName">
+            <summary>
+            The name used by all PSDataRepository telemetry sources.
+            Use this to register listeners:
+            <code>builder.AddSource(RepositoryDiagnostics.SourceName);</code>
+            </summary>
+        </member>
+        <member name="F:PSDataRepository.Abstractions.RepositoryDiagnostics.Version">
+            <summary>
+            Assembly version used as the telemetry version.
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Abstractions.RepositoryDiagnostics.ActivitySource">
+            <summary>
+            ActivitySource for distributed tracing of repository operations.
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Abstractions.RepositoryDiagnostics.Meter">
+            <summary>
+            Meter for repository operation metrics (counters, histograms).
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Abstractions.RepositoryDiagnostics.StorageReadCount">
+            <summary>Counts total storage read operations.</summary>
+        </member>
+        <member name="P:PSDataRepository.Abstractions.RepositoryDiagnostics.StorageWriteCount">
+            <summary>Counts total storage write operations.</summary>
+        </member>
+        <member name="P:PSDataRepository.Abstractions.RepositoryDiagnostics.StorageDeleteCount">
+            <summary>Counts total storage delete operations.</summary>
+        </member>
+        <member name="P:PSDataRepository.Abstractions.RepositoryDiagnostics.StorageListCount">
+            <summary>Counts total storage list operations.</summary>
+        </member>
+        <member name="P:PSDataRepository.Abstractions.RepositoryDiagnostics.StorageErrorCount">
+            <summary>Counts storage operation errors.</summary>
+        </member>
+        <member name="P:PSDataRepository.Abstractions.RepositoryDiagnostics.QueueSendCount">
+            <summary>Counts total queue send operations.</summary>
+        </member>
+        <member name="P:PSDataRepository.Abstractions.RepositoryDiagnostics.QueueReceiveCount">
+            <summary>Counts total queue receive operations.</summary>
+        </member>
+        <member name="P:PSDataRepository.Abstractions.RepositoryDiagnostics.StorageOperationDuration">
+            <summary>Measures storage operation duration in milliseconds.</summary>
+        </member>
+        <member name="P:PSDataRepository.Abstractions.RepositoryDiagnostics.StoragePayloadSize">
+            <summary>Measures read/write payload size in bytes.</summary>
+        </member>
+        <member name="M:PSDataRepository.Abstractions.RepositoryDiagnostics.StartStorageActivity(System.String,System.String,System.String)">
+            <summary>
+            Starts a new <see cref="T:System.Diagnostics.Activity"/> for a storage operation.
+            Returns null if no listener is registered (no-op by default).
+            </summary>
+            <param name="operationName">Operation name (e.g., "ReadAsync", "WriteAsync").</param>
+            <param name="provider">Provider name (e.g., "AzureBlob", "Disk").</param>
+            <param name="itemName">Optional item/blob name.</param>
+        </member>
+        <member name="M:PSDataRepository.Abstractions.RepositoryDiagnostics.RecordStorageOperation(System.String,System.String,System.Double,System.Nullable{System.Int64})">
+            <summary>
+            Records a storage operation completion with duration and optional payload size.
+            </summary>
+        </member>
+        <member name="T:PSDataRepository.Abstractions.RepositoryItemInfo">
+            <summary>
+            Represents metadata about an item in a storage repository.
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Abstractions.RepositoryItemInfo.Name">
+            <summary>Item name (last path segment).</summary>
+        </member>
+        <member name="P:PSDataRepository.Abstractions.RepositoryItemInfo.FullPath">
+            <summary>Full path, URI, or key identifying the item within the provider.</summary>
+        </member>
+        <member name="P:PSDataRepository.Abstractions.RepositoryItemInfo.Size">
+            <summary>Size in bytes, when known.</summary>
+        </member>
+        <member name="P:PSDataRepository.Abstractions.RepositoryItemInfo.LastModified">
+            <summary>Last modification timestamp, when known.</summary>
+        </member>
+        <member name="P:PSDataRepository.Abstractions.RepositoryItemInfo.CreatedOn">
+            <summary>Creation timestamp, when known.</summary>
+        </member>
+        <member name="P:PSDataRepository.Abstractions.RepositoryItemInfo.ContentType">
+            <summary>Content type / MIME, when known.</summary>
+        </member>
+        <member name="P:PSDataRepository.Abstractions.RepositoryItemInfo.IsDirectory">
+            <summary>True when this entry is a directory/container rather than a leaf item.</summary>
+        </member>
+        <member name="P:PSDataRepository.Abstractions.RepositoryItemInfo.Provider">
+            <summary>Name of the provider that produced this entry (e.g. <c>AzureBlob</c>, <c>Disk</c>).</summary>
+        </member>
+        <member name="P:PSDataRepository.Abstractions.RepositoryItemInfo.Extension">
+            <summary>File extension (including the leading dot) for leaf items, otherwise <c>null</c>.</summary>
+        </member>
+        <member name="T:PSDataRepository.Abstractions.SecureStringHelper">
+            <summary>
+            Centralized helpers for converting <see cref="T:System.Security.SecureString"/> to plaintext safely.
+            The unmanaged BSTR copy is zeroed after use; note that the returned managed
+            string cannot be deterministically cleared (inherent .NET limitation).
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Abstractions.SecureStringHelper.ToPlainString(System.Security.SecureString)">
+            <summary>
+            Converts a <see cref="T:System.Security.SecureString"/> to a plaintext string.
+            The unmanaged copy is zeroed via <see cref="M:System.Runtime.InteropServices.Marshal.ZeroFreeBSTR(System.IntPtr)"/>.
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Abstractions.SecureStringHelper.ToPlainBytes(System.Security.SecureString,System.Text.Encoding)">
+            <summary>
+            Converts a <see cref="T:System.Security.SecureString"/> directly to a UTF-8 byte array without
+            creating an intermediate managed <see cref="T:System.String"/> that could linger on
+            the heap. The unmanaged BSTR copy is zeroed after use.
+            The caller is responsible for clearing the returned array when no longer needed
+            (for example via <c>CryptographicOperations.ZeroMemory</c>).
+            </summary>
+        </member>
+    </members>
+</doc>

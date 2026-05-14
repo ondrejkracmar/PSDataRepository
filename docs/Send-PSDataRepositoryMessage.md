@@ -1,10 +1,10 @@
 ---
 document type: cmdlet
-external help file: PSDataRepository.dll-Help.xml
+external help file: PSDataRepository.Commands.dll-Help.xml
 HelpUri: ''
 Locale: en-US
 Module Name: PSDataRepository
-ms.date: 04/12/2026
+ms.date: 05/14/2026
 PlatyPS schema version: 2024-05-01
 title: Send-PSDataRepositoryMessage
 ---
@@ -13,14 +13,14 @@ title: Send-PSDataRepositoryMessage
 
 ## SYNOPSIS
 
-Sends objects to the connected queue repository.
+{{ Fill in the Synopsis }}
 
 ## SYNTAX
 
 ### __AllParameterSets
 
 ```
-Send-PSDataRepositoryMessage [-InputObject] <psobject> [-Format <FormatType>] [-BatchSize <int>]
+Send-PSDataRepositoryMessage [-InputObject] <psobject> [-Format <string>] [-BatchSize <int>]
  [-MaxDepth <int>] [-CsvDelimiter <char>] [-XmlRootName <string>] [-Force] [-IncludeMetadata]
  [-IncludeMachineInfo] [-ContinueOnError] [-WhatIf] [-Confirm] [<CommonParameters>]
 ```
@@ -32,29 +32,19 @@ This cmdlet has the following aliases,
 
 ## DESCRIPTION
 
-Serializes and sends objects to the active queue repository (InMemory, Disk, Azure Queue, Service Bus).
-Supports pipeline input for processing large volumes of objects efficiently.
-Objects are serialized to JSON by default, with configurable format (XML, CSV).
-Uses batching for optimal performance (default batch size: 100 messages).
-
-On pipeline interruption (Ctrl+C), any buffered messages are flushed before stopping.
+{{ Fill in the Description }}
 
 ## EXAMPLES
 
-### Send pipeline objects
+### Example 1
 
-
-
-### High-volume with custom batch size
-
-
+{{ Add example description here }}
 
 ## PARAMETERS
 
 ### -BatchSize
 
-Batch size for sending messages.
-Larger batches improve throughput but use more memory.
+Batch size for sending messages (1-1000). Default: 100
 
 ```yaml
 Type: System.Int32
@@ -97,7 +87,7 @@ HelpMessage: ''
 
 ### -ContinueOnError
 
-If specified, continues processing even if individual message serialization fails.
+Continue on serialization errors.
 
 ```yaml
 Type: System.Management.Automation.SwitchParameter
@@ -118,7 +108,7 @@ HelpMessage: ''
 
 ### -CsvDelimiter
 
-CSV delimiter character (only for CSV format).
+CSV delimiter character (only for CSV format). Default: ','
 
 ```yaml
 Type: System.Char
@@ -160,10 +150,10 @@ HelpMessage: ''
 
 ### -Format
 
-Serialization format: Json (default), Xml, or Csv.
+Serialization format (Json, Xml, Csv). Default: Json
 
 ```yaml
-Type: PSDataRepository.Serialization.FormatType
+Type: System.String
 DefaultValue: ''
 SupportsWildcards: false
 Aliases: []
@@ -202,8 +192,7 @@ HelpMessage: ''
 
 ### -IncludeMetadata
 
-If specified, includes metadata envelope with type information, timestamp, machine name, and username.
-The envelope can be unwrapped by `ConvertFrom-PSDataRepositoryMessage -IncludeMetadata`.
+Include metadata envelope (type, timestamp).
 
 ```yaml
 Type: System.Management.Automation.SwitchParameter
@@ -224,8 +213,7 @@ HelpMessage: ''
 
 ### -InputObject
 
-The object(s) to send.
-Accepts pipeline input.
+The object(s) to serialize and send to the queue.
 
 ```yaml
 Type: System.Management.Automation.PSObject
@@ -246,7 +234,7 @@ HelpMessage: ''
 
 ### -MaxDepth
 
-Maximum serialization depth to prevent infinite recursion.
+Maximum object graph depth for serialization. Default: 10
 
 ```yaml
 Type: System.Int32
@@ -267,8 +255,7 @@ HelpMessage: ''
 
 ### -WhatIf
 
-Shows what would happen if the cmdlet runs.
-The cmdlet is not run.
+Runs the command in a mode that only reports what would happen without performing the actions.
 
 ```yaml
 Type: System.Management.Automation.SwitchParameter
@@ -290,8 +277,7 @@ HelpMessage: ''
 
 ### -XmlRootName
 
-XML root element name (only for XML format).
-Leave empty for auto-detection from object type.
+XML root element name (only for XML format). Leave empty for auto-detection.
 
 ```yaml
 Type: System.String
@@ -321,24 +307,19 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ### System.Management.Automation.PSObject
 
-Any PowerShell object.
-Accepts pipeline input.
+{{ Fill in the Description }}
 
 ## OUTPUTS
 
-### System.String
+### System.Object
 
-Summary message with count of messages sent.
+{{ Fill in the Description }}
 
 ## NOTES
 
-Messages are buffered and sent in batches for performance.
-The batch is flushed at the end of pipeline or when buffer reaches `-BatchSize`.
-
+{{ Fill in the Notes }}
 
 ## RELATED LINKS
 
-- [Online Version]()
-- [Receive-PSDataRepositoryMessage]()
-- [Remove-PSDataRepositoryMessage]()
-- [ConvertFrom-PSDataRepositoryMessage]()
+{{ Fill in the related links here }}
+

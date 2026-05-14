@@ -1,10 +1,10 @@
 ---
 document type: cmdlet
-external help file: PSDataRepository.dll-Help.xml
+external help file: PSDataRepository.Commands.dll-Help.xml
 HelpUri: ''
 Locale: en-US
 Module Name: PSDataRepository
-ms.date: 04/12/2026
+ms.date: 05/14/2026
 PlatyPS schema version: 2024-05-01
 title: ConvertFrom-PSDataRepositoryMessage
 ---
@@ -13,15 +13,15 @@ title: ConvertFrom-PSDataRepositoryMessage
 
 ## SYNOPSIS
 
-Deserializes a raw message string into a PowerShell object.
+{{ Fill in the Synopsis }}
 
 ## SYNTAX
 
 ### __AllParameterSets
 
 ```
-ConvertFrom-PSDataRepositoryMessage [-InputObject] <string> [-Format <FormatType>]
- [-IncludeMetadata] [<CommonParameters>]
+ConvertFrom-PSDataRepositoryMessage [-InputObject] <string> [-Format <string>] [-IncludeMetadata]
+ [<CommonParameters>]
 ```
 
 ## ALIASES
@@ -31,36 +31,22 @@ This cmdlet has the following aliases,
 
 ## DESCRIPTION
 
-Converts a raw message string (e.g.
-received from an Azure Function Queue trigger) into a deserialized object using the module's Formatter.
-Does not require an active session or queue connection.
-Automatically detects the serialization format (JSON, XML, CSV) unless `-Format` is specified.
-If the message was sent with `-IncludeMetadata`, the metadata envelope is automatically unwrapped and the inner content is deserialized.
-Use `-IncludeMetadata` to attach the envelope metadata as note properties on the output object.
+{{ Fill in the Description }}
 
 ## EXAMPLES
 
-### Azure Function Queue trigger
+### Example 1
 
-
-
-### Explicit format from pipeline
-
-
-
-### With envelope metadata
-
-
+{{ Add example description here }}
 
 ## PARAMETERS
 
 ### -Format
 
-Deserialization format.
-If not specified, attempts auto-detection based on content.
+Deserialization format (Json, Xml, Csv). If omitted, auto-detected from content.
 
 ```yaml
-Type: System.Nullable`1[PSDataRepository.Serialization.FormatType]
+Type: System.String
 DefaultValue: ''
 SupportsWildcards: false
 Aliases: []
@@ -78,8 +64,7 @@ HelpMessage: ''
 
 ### -IncludeMetadata
 
-If specified, includes metadata properties from the envelope (TypeName, Timestamp, MachineName, UserName, SerializationFormat) as note properties on the deserialized object.
-Only applies when the message contains a metadata envelope (sent with `-IncludeMetadata` on `Send-PSDataRepositoryMessage`).
+Include metadata from envelope as note properties on the output object.
 
 ```yaml
 Type: System.Management.Automation.SwitchParameter
@@ -101,7 +86,6 @@ HelpMessage: ''
 ### -InputObject
 
 The raw message string to deserialize.
-Accepts pipeline input.
 
 ```yaml
 Type: System.String
@@ -131,23 +115,19 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ### System.String
 
-Raw message string (from Azure Function trigger, Service Bus, etc.).
+{{ Fill in the Description }}
 
 ## OUTPUTS
 
 ### System.Management.Automation.PSObject
 
-Deserialized object.
-When `-IncludeMetadata` is used, additional note properties are added: ` _TypeName`, ` SerializationFormat`, ` Timestamp`, ` MachineName`, ` _UserName`.
+{{ Fill in the Description }}
 
 ## NOTES
 
-This cmdlet does not require an active session.
-It is designed for use in Azure Functions, Logic Apps, or any scenario where raw message strings need to be deserialized outside of a PSDataRepository session.
-
+{{ Fill in the Notes }}
 
 ## RELATED LINKS
 
-- [Online Version]()
-- [Send-PSDataRepositoryMessage]()
-- [Receive-PSDataRepositoryMessage]()
+{{ Fill in the related links here }}
+
