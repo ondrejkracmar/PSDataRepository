@@ -298,9 +298,11 @@
         </member>
         <member name="M:PSDataRepository.Core.Extensions.ExtensionLoader.LoadAll(System.String,PSDataRepository.Providers.IProviderRegistry,PSDataRepository.Authentications.IAuthenticationRegistry,PSDataRepository.Formatters.IFormatterRegistry,System.Action{System.String})">
             <summary>
-            Test-friendly overload that scans <paramref name="moduleDirOverride"/> instead of
+            Host-friendly overload that scans <paramref name="moduleDirOverride"/> instead of
             the directory containing <c>PSDataRepository.Core.dll</c>. All trust-check rules
             (S-1 strong-name token, S-2 path-containment) still apply against the override.
+            Used by alternative hosts (tests, MCP server) that load Core from a location which
+            does not contain the <c>Auth/</c>, <c>Providers/</c>, <c>Formatters/</c> subfolders.
             </summary>
         </member>
         <member name="M:PSDataRepository.Core.Extensions.ExtensionLoader.TryReadPublicKeyToken(System.String,System.Byte[]@)">
