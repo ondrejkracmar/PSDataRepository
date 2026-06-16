@@ -111,12 +111,13 @@ PSDataRepository is **fail‑closed**: extensions are loaded only when
 
 Unsigned or untrusted DLLs are silently skipped at `Import-Module` time.
 See [Extensions.md § Trusting 3rd‑party extensions](Extensions.md) and
-[`SECURITY.md`](../SECURITY.md).
+[`Security.md`](Security.md).
 
 ---
 
 ## Related docs
 
 - [Extensions SDK guide](Extensions.md) — author your own provider / auth / formatter
+- [Security model](Security.md) — plugin trust, SNK threat model, encryption formats
 - [MCP server](MCP.md) — LLM agent integration
 - [Providers](Providers.md) · [Cmdlets](Cmdlets.md) · [Observability](Observability.md)

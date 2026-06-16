@@ -6,10 +6,13 @@
     <members>
         <member name="T:PSDataRepository.Commands.Common.CryptoHelper">
             <summary>
-            Provides AES-256 encryption and decryption with PBKDF2 key derivation.
+            Provides AES-256 encryption and decryption with Argon2id (current) or PBKDF2 (legacy) key derivation.
             Shared by Compress-PSDataRepositoryItem and Expand-PSDataRepositoryItem cmdlets.
             <para>
-            V4 format (AES-GCM, PBKDF2-SHA512, 210k iterations, default): <c>[PSDR-ENC-V4 11B][Salt 32B][Nonce 12B][Tag 16B][Ciphertext]</c>
+            V5 format (AES-GCM, Argon2id m=19456 t=2 p=1, default): <c>[PSDR-ENC-V5 11B][Salt 32B][Nonce 12B][Tag 16B][Ciphertext]</c>
+            </para>
+            <para>
+            V4 format (AES-GCM, PBKDF2-SHA512, 210k iterations, legacy read): <c>[PSDR-ENC-V4 11B][Salt 32B][Nonce 12B][Tag 16B][Ciphertext]</c>
             </para>
             <para>
             V3 format (AES-GCM, PBKDF2-SHA256, 600k iterations, legacy read): <c>[PSDR-ENC-V3 11B][Salt 32B][Nonce 12B][Tag 16B][Ciphertext]</c>
@@ -22,14 +25,32 @@
             </para>
             </summary>
         </member>
+        <member name="T:PSDataRepository.Commands.Common.CryptoHelper.KeyDerivation">
+            <summary>
+            Derives an AES key from password bytes and salt. Implementations must return
+            a key of <see cref="F:PSDataRepository.Commands.Common.EncryptionConstants.AesKeySize"/> / 8 bytes; the caller owns
+            (and zeroes) both the password bytes and the returned key.
+            </summary>
+        </member>
         <member name="M:PSDataRepository.Commands.Common.CryptoHelper.HasEncryptionHeader(System.Byte[])">
             <summary>
-            Checks whether the data starts with any known encryption header (V1–V4).
+            Checks whether the data starts with any known encryption header (V1–V5).
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Commands.Common.CryptoHelper.IsLegacyV1(System.Byte[])">
+            <summary>
+            Checks whether the data uses the deprecated V1 (AES-CBC) format.
+            V1 provides no ciphertext integrity protection and is read-only;
+            callers should surface a deprecation warning and recommend re-encryption
+            (decrypt with Expand-PSDataRepositoryItem, re-encrypt with Compress-PSDataRepositoryItem).
+            Scheduled for removal in the next major version.
             </summary>
         </member>
         <member name="M:PSDataRepository.Commands.Common.CryptoHelper.Encrypt(System.Byte[],System.Security.SecureString)">
             <summary>
-            Encrypts data using AES-256-GCM (V4) with a PBKDF2-SHA512-derived key (210k iterations).
+            Encrypts data using AES-256-GCM (V5) with an Argon2id-derived key
+            (m=19456 KiB, t=2, p=1 — OWASP first-choice parameters). Argon2id is memory-hard,
+            resisting GPU/ASIC brute force where PBKDF2 does not.
             Provides authenticated encryption — ciphertext integrity is verified on decryption.
             </summary>
             <param name="data">
@@ -39,21 +60,35 @@
             and cannot decide when it is safe to wipe.
             </param>
             <param name="password">Password used for key derivation.</param>
-            <returns>Encrypted payload including V4 header, salt, nonce, tag, and ciphertext.</returns>
+            <returns>Encrypted payload including V5 header, salt, nonce, tag, and ciphertext.</returns>
         </member>
         <member name="M:PSDataRepository.Commands.Common.CryptoHelper.Decrypt(System.Byte[],System.Security.SecureString)">
             <summary>
             Decrypts data encrypted by <see cref="M:PSDataRepository.Commands.Common.CryptoHelper.Encrypt(System.Byte[],System.Security.SecureString)"/>.
-            Supports V4 (AES-GCM, PBKDF2-SHA512 210k), V3 (AES-GCM, PBKDF2-SHA256 600k),
-            V2 (AES-GCM, PBKDF2-SHA256 100k) and V1 (AES-CBC, legacy) formats.
+            Supports V5 (AES-GCM, Argon2id), V4 (AES-GCM, PBKDF2-SHA512 210k),
+            V3 (AES-GCM, PBKDF2-SHA256 600k), V2 (AES-GCM, PBKDF2-SHA256 100k)
+            and V1 (AES-CBC, legacy) formats.
             </summary>
             <param name="encryptedData">Encrypted payload including header, salt, and ciphertext.</param>
             <param name="password">Password used for key derivation (must match encryption).</param>
             <returns>Decrypted plaintext bytes.</returns>
         </member>
-        <member name="M:PSDataRepository.Commands.Common.CryptoHelper.DecryptGcm(System.Byte[],System.Security.SecureString,System.ReadOnlySpan{System.Byte},System.Int32,System.Security.Cryptography.HashAlgorithmName)">
+        <member name="M:PSDataRepository.Commands.Common.CryptoHelper.DeriveKeyArgon2id(System.Byte[],System.Byte[])">
             <summary>
-            Decrypts AES-GCM payload (V2, V3 or V4).
+            Derives a 256-bit AES key using Argon2id with the V5 parameters
+            (<see cref="F:PSDataRepository.Commands.Common.EncryptionConstants.Argon2MemoryKib"/> KiB memory,
+            <see cref="F:PSDataRepository.Commands.Common.EncryptionConstants.Argon2Iterations"/> passes,
+            <see cref="F:PSDataRepository.Commands.Common.EncryptionConstants.Argon2Parallelism"/> lane).
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Commands.Common.CryptoHelper.DeriveKeyPbkdf2(System.Byte[],System.Byte[],System.Int32,System.Security.Cryptography.HashAlgorithmName)">
+            <summary>
+            Derives a 256-bit AES key using PBKDF2 (legacy V1–V4 formats).
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Commands.Common.CryptoHelper.DecryptGcm(System.Byte[],System.Security.SecureString,System.ReadOnlySpan{System.Byte},PSDataRepository.Commands.Common.CryptoHelper.KeyDerivation)">
+            <summary>
+            Decrypts AES-GCM payload (V2–V5).
             Format: [Header 11B][Salt 32B][Nonce 12B][Tag 16B][Ciphertext]
             </summary>
         </member>
@@ -114,6 +149,22 @@
         <member name="P:PSDataRepository.Commands.Common.EncryptionConstants.EncryptionMagicHeaderV4">
             <summary>Magic header bytes for V4 (AES-GCM, PBKDF2-SHA512, 210k iterations) encrypted files. Immutable via ReadOnlySpan.</summary>
         </member>
+        <member name="P:PSDataRepository.Commands.Common.EncryptionConstants.EncryptionMagicHeaderV5">
+            <summary>Magic header bytes for V5 (AES-GCM, Argon2id) encrypted files. Immutable via ReadOnlySpan.</summary>
+        </member>
+        <member name="F:PSDataRepository.Commands.Common.EncryptionConstants.Argon2MemoryKib">
+            <summary>
+            Argon2id memory cost in KiB (19 MiB). OWASP first-choice recommendation
+            (m=19456, t=2, p=1). Argon2id is memory-hard: unlike PBKDF2, it resists
+            GPU/ASIC attacks because each guess requires this much working memory.
+            </summary>
+        </member>
+        <member name="F:PSDataRepository.Commands.Common.EncryptionConstants.Argon2Iterations">
+            <summary>Argon2id iteration count (time cost). OWASP recommendation paired with 19 MiB memory.</summary>
+        </member>
+        <member name="F:PSDataRepository.Commands.Common.EncryptionConstants.Argon2Parallelism">
+            <summary>Argon2id lane count (parallelism). Single lane per OWASP baseline recommendation.</summary>
+        </member>
         <member name="F:PSDataRepository.Commands.Common.EncryptionConstants.GcmNonceSize">
             <summary>AES-GCM nonce size in bytes (96 bits, NIST recommendation).</summary>
         </member>
@@ -170,7 +221,7 @@
             <para type="synopsis">Compresses and optionally encrypts items in persistent storage.</para>
             <para type="description">
             Compresses stored items using GZip compression to reduce storage size.
-            Optionally encrypts compressed data using AES-256 encryption with PBKDF2 key derivation.
+            Optionally encrypts compressed data using AES-256-GCM encryption with Argon2id key derivation.
             The compressed item is saved with .gz extension (or .gz.enc if encrypted).
             Supports in-place compression or creating a new compressed copy.
             Ideal for archiving large datasets or reducing storage costs with security.

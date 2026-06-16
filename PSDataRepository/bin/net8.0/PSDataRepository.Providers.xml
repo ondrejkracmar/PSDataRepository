@@ -175,37 +175,6 @@
         <member name="F:PSDataRepository.Providers.ProviderCapabilities.Filesystem">
             <summary>Supports stream-based file system operations.</summary>
         </member>
-        <member name="T:PSDataRepository.Providers.ProviderNames">
-            <summary>
-            Canonical provider names used by built-in PSDataRepository plugins.
-            Plugins and consumers should reference these constants instead of string literals
-            to avoid typos and to enable IDE refactoring.
-            </summary>
-        </member>
-        <member name="F:PSDataRepository.Providers.ProviderNames.InMemory">
-            <summary>In-memory queue provider (test/dev).</summary>
-        </member>
-        <member name="F:PSDataRepository.Providers.ProviderNames.Disk">
-            <summary>Local disk provider (filesystem).</summary>
-        </member>
-        <member name="F:PSDataRepository.Providers.ProviderNames.Scp">
-            <summary>SCP/SFTP provider.</summary>
-        </member>
-        <member name="F:PSDataRepository.Providers.ProviderNames.Ftp">
-            <summary>FTP/FTPS provider.</summary>
-        </member>
-        <member name="F:PSDataRepository.Providers.ProviderNames.AzureBlob">
-            <summary>Azure Blob Storage provider.</summary>
-        </member>
-        <member name="F:PSDataRepository.Providers.ProviderNames.AzureQueue">
-            <summary>Azure Storage Queue provider.</summary>
-        </member>
-        <member name="F:PSDataRepository.Providers.ProviderNames.AzureServiceBus">
-            <summary>Azure Service Bus provider.</summary>
-        </member>
-        <member name="F:PSDataRepository.Providers.ProviderNames.AzureKeyVault">
-            <summary>Azure Key Vault provider.</summary>
-        </member>
         <member name="T:PSDataRepository.Providers.ProviderRegistry">
             <summary>
             Default in-memory provider registry. Thread-safe for concurrent reads after initial registration.
