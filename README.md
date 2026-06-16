@@ -41,6 +41,11 @@ Detailed docs live under [`docs/`](docs/).
 | 🤖 **MCP server** (LLM agent integration) | [`docs/MCP.md`](docs/MCP.md) |
 | 📈 **Observability, formats & encryption** | [`docs/Observability.md`](docs/Observability.md) |
 
+> 💡 **Building an extension?** Each release publishes a self‑contained, restorable
+> NuGet package set under [`sdk/`](sdk/) — the `PSDataRepository.Extensions.Sdk`
+> meta‑package plus every dependency it needs. Point NuGet at that folder (see
+> [`sdk/README.md`](sdk/README.md)) and `dotnet add package PSDataRepository.Extensions.Sdk`.
+
 ---
 
 ## 🗺️ Architecture at a glance

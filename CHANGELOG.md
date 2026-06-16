@@ -66,6 +66,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   (PSDR1003), and optionally deploy the built DLL into an installed module via
   `<PSDataRepositoryModuleDir>`. External plugin authors can now build extensions
   without forking the repo.
+- **Extensions SDK shipped in the GitHub release mirror.** Each release now packs a
+  self-contained, restorable NuGet package set (the `PSDataRepository.Extensions.Sdk`
+  meta-package plus its `Abstractions` / `Providers` / `Authentications` / `Formatters`
+  / `AzAuth` + `Isystem.AzAuth.Core` dependencies) into the public repo's `sdk/` folder,
+  versioned in lock-step with the module. A generated `sdk/README.md` documents the
+  `nuget.config` + `dotnet add package` restore flow, so external developers can build
+  extensions straight from a release with no access to the private Azure Artifacts feed.
+  New shared packer `build/vsts-pack-sdk.ps1` is the single source of truth for both CI
+  and the local `samples/pack-sdk-to-local-feed.ps1` inner loop.
 - **Administrator-managed trust list.** New `extensions.trust.json` sidecar
   (next to `PSDataRepository.psd1`) lets an administrator extend the SNK trust
   set beyond Core's own token. `ExtensionLoader.LoadTrustedTokensFromFile` and
