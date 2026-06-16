@@ -284,6 +284,28 @@
             <param name="diagnosticLog">Optional diagnostic sink.</param>
             <returns>Number of tokens added.</returns>
         </member>
+        <member name="M:PSDataRepository.Core.Extensions.ExtensionLoader.LoadTrustListFromAllLocations(System.String,System.Action{System.String})">
+            <summary>
+            Loads trusted public key tokens from every well-known location relative to
+            <paramref name="moduleDir"/> and returns the total number of tokens added.
+            <para>
+            The host installs the module so that the runtime assemblies (and a copy of
+            <see cref="F:PSDataRepository.Core.Extensions.ExtensionLoader.TrustListFileName"/>) live in <c>{ModuleRoot}/bin/{TFM}</c>, while the
+            module manifest and the administrator-facing copy of the trust file live in the
+            module root (<c>{ModuleRoot}</c>). The loader runs from the former but the docs and
+            the SDK deploy step tell administrators to edit the latter; probing both keeps the
+            documented workflow working without weakening the fail-closed model (an empty or
+            missing file contributes nothing).
+            </para>
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Core.Extensions.ExtensionLoader.EnumerateTrustListProbeDirs(System.String)">
+            <summary>
+            Yields additional directories (beyond <paramref name="moduleDir"/> itself) that may
+            contain the administrator-managed trust file. When the loader runs from a
+            <c>bin/{TFM}</c> layout, the module manifest root is two levels up.
+            </summary>
+        </member>
         <member name="M:PSDataRepository.Core.Extensions.ExtensionLoader.IsTokenTrusted(System.Byte[])">
             <summary>
             Returns <c>true</c> if <paramref name="publicKeyToken"/> matches the

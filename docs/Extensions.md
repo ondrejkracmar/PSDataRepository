@@ -189,12 +189,22 @@ Get-PSDataRepositoryProvider
 Connect-PSDataRepository -Provider Contoso -ContosoConnectionString '...'
 ```
 
-If the provider does not appear, run with debug tracing:
+If the provider does not appear, enable loader tracing. Set the
+`PSDATAREPOSITORY_EXTENSION_TRACE` environment variable to `1` before
+importing the module — the loader then mirrors every decision (including the
+reason an extension was skipped) to the error stream:
 
 ```pwsh
-# Capture the loader diagnostics (they go through Debug.WriteLine).
-# Use DebugView (Sysinternals) or attach a debugger to pwsh.
+$env:PSDATAREPOSITORY_EXTENSION_TRACE = '1'
+Import-Module PSDataRepository -Force
+# Loader diagnostics are written to stderr, e.g.:
+#   [PSDataRepository] Found 1 assembly candidates in ...\bin\net8.0\Providers
+#   [PSDataRepository] Skipping assembly 'Contoso...dll' — public key token not trusted...
 ```
+
+The same messages always go to `Debug.WriteLine`, so DebugView (Sysinternals)
+or an attached debugger remain an alternative when a console stream is not
+available.
 
 Common reasons an extension is silently skipped (visible in the diagnostics):
 
@@ -202,7 +212,7 @@ Common reasons an extension is silently skipped (visible in the diagnostics):
 | ------------------------------------------------ | -------------------------------------------------------------------- |
 | `Skipping unsigned assembly '...'`               | Set `<SignAssembly>true</SignAssembly>` and supply an SNK key.       |
 | `Skipping assembly '...' — public key token not trusted` | Add the token to `extensions.trust.json` and restart pwsh.   |
-| `Plugin directory not found: ...`                | Wrong `<ExtensionSubfolder>` or missing local-deploy.                |
+| `Plugin directory not found: ...`                | Wrong `<ExtensionSubfolder>`, or the DLL was not deployed to `{ModuleDir}/bin/{TFM}/{ExtensionSubfolder}/`. |
 | `Failed to load '...': ...FileNotFoundException` | A runtime dependency was filtered out — verify `bin/{TFM}/` content. |
 
 ---

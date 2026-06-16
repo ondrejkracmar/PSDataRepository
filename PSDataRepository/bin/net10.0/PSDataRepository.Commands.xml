@@ -872,6 +872,14 @@
             directly imported assembly, not on transitive dependencies.
             </remarks>
         </member>
+        <member name="F:PSDataRepository.Commands.ModuleInitializer.TraceEnvVar">
+            <summary>
+            Environment variable that, when set to a truthy value (<c>1</c>, <c>true</c>, <c>yes</c>,
+            or <c>on</c>), mirrors the extension-loader diagnostics to the error stream so users can
+            see why a 3rd-party extension was skipped (unsigned, untrusted token, wrong folder, ...)
+            without attaching a debugger. Diagnostics always go to <see cref="T:System.Diagnostics.Debug"/>.
+            </summary>
+        </member>
         <member name="M:PSDataRepository.Commands.ModuleInitializer.OnImport">
             <inheritdoc />
         </member>
