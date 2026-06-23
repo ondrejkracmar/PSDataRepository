@@ -26,6 +26,7 @@ Connect-PSDataRepository [-Provider] <string> [-AccountName <string>] -Container
  [-DefaultAzureCredential] [-SharedTokenCache]
  [-TenantId <string>] [-ClientId <string>] [-ClientSecret <securestring>]
  [-CertificatePath <string>] [-CertificatePassword <securestring>]
+ [-CertificateThumbprint <string>]
  [-TokenFilePath <string>] [-Username <string>]
  [-ProxyUri <string>] [-MaxRetries <int>] [-RetryDelaySeconds <int>]
  [-MaxRetryDelaySeconds <int>] [-TimeoutSeconds <int>]
@@ -41,6 +42,7 @@ Connect-PSDataRepository [-Provider] <string> [-AccountName <string>] -QueueName
  [-DefaultAzureCredential] [-SharedTokenCache]
  [-TenantId <string>] [-ClientId <string>] [-ClientSecret <securestring>]
  [-CertificatePath <string>] [-CertificatePassword <securestring>]
+ [-CertificateThumbprint <string>]
  [-TokenFilePath <string>] [-Username <string>]
  [-ProxyUri <string>] [-MaxRetries <int>] [-RetryDelaySeconds <int>]
  [-MaxRetryDelaySeconds <int>] [-TimeoutSeconds <int>]
@@ -57,6 +59,7 @@ Connect-PSDataRepository [-Provider] <string> [-AccountName <string>]
  [-DefaultAzureCredential] [-SharedTokenCache]
  [-TenantId <string>] [-ClientId <string>] [-ClientSecret <securestring>]
  [-CertificatePath <string>] [-CertificatePassword <securestring>]
+ [-CertificateThumbprint <string>]
  [-TokenFilePath <string>] [-Username <string>]
  [-ProxyUri <string>] [-MaxRetries <int>] [-RetryDelaySeconds <int>]
  [-MaxRetryDelaySeconds <int>] [-TimeoutSeconds <int>]
@@ -71,6 +74,7 @@ Connect-PSDataRepository [-Provider] <string> -VaultName <string>
  [-DefaultAzureCredential] [-SharedTokenCache]
  [-TenantId <string>] [-ClientId <string>] [-ClientSecret <securestring>]
  [-CertificatePath <string>] [-CertificatePassword <securestring>]
+ [-CertificateThumbprint <string>]
  [-TokenFilePath <string>] [-Username <string>]
  [-ProxyUri <string>] [-MaxRetries <int>] [-RetryDelaySeconds <int>]
  [-MaxRetryDelaySeconds <int>] [-TimeoutSeconds <int>]
@@ -202,6 +206,17 @@ Connect-PSDataRepository -Provider AzureBlob -AccountName "mystorageaccount" -Co
 ```
 
 Connects using client certificate authentication through a corporate proxy with custom retry settings, and validates connectivity.
+
+### Example 9b: Azure Blob with client certificate from the Windows certificate store
+
+```powershell
+Connect-PSDataRepository -Provider AzureBlob -AccountName "mystorageaccount" -ContainerName "data" `
+  -TenantId "00000000-0000-0000-0000-000000000000" -ClientId "app-id" `
+  -CertificateThumbprint "A1B2C3D4E5F6A1B2C3D4E5F6A1B2C3D4E5F6A1B2" `
+  -TestConnection
+```
+
+Connects using client certificate authentication, loading the certificate by thumbprint from the CurrentUser or LocalMachine `My` store instead of a `.pfx` file on disk.
 
 ### Example 10: Disk with encryption
 
@@ -1160,6 +1175,45 @@ ParameterSets:
 DontShow: false
 AcceptedValues: []
 HelpMessage: Certificate password.
+```
+
+### -CertificateThumbprint
+
+Certificate thumbprint used to locate the certificate in the CurrentUser or LocalMachine `My` certificate store. Use as an alternative to `-CertificatePath` when the certificate is already installed in the Windows certificate store. Whitespace and non-hex characters (for example, when copied from the Windows certificate dialog) are ignored. Azure providers only.
+
+```yaml
+Type: System.String
+DefaultValue: ''
+SupportsWildcards: false
+Aliases: []
+ParameterSets:
+- Name: AzureBlob
+  Position: Named
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+- Name: AzureQueue
+  Position: Named
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+- Name: AzureServiceBus
+  Position: Named
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+- Name: AzureKeyVault
+  Position: Named
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: Certificate thumbprint to load from the CurrentUser/LocalMachine 'My' store.
 ```
 
 ### -TokenFilePath

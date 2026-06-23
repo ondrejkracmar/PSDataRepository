@@ -48,6 +48,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Certificate authentication by thumbprint.** `Connect-PSDataRepository` now accepts
+  `-CertificateThumbprint` for Azure providers (Blob, Queue, Service Bus, Key Vault) as an
+  alternative to `-CertificatePath`. The certificate is loaded from the CurrentUser or
+  LocalMachine `My` store; whitespace and non-hex characters (for example, a value copied
+  from the Windows certificate dialog) are normalized away. Both stores are searched, with
+  `-CertificatePath` taking precedence when both are supplied.
 - **`Get-PSDataRepositoryExtensionToken` cmdlet.** Reads the strong-name public
   key token from a .NET assembly (without loading it for execution) and emits it
   in the lowercase-hex format used by `extensions.trust.json`. Pipeline-friendly

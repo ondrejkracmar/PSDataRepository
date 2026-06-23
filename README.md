@@ -82,7 +82,7 @@ Full graph + extension loading flow + trust model:
 - **Session‑based model** — `Connect-PSDataRepository` once, all subsequent
   cmdlets operate within that session.
 - **12 authentication methods** — ConnectionString, SAS, Managed Identity,
-  Service Principal (Secret + Certificate), Interactive, DeviceCode,
+  Service Principal (Secret + Certificate by path or store thumbprint), Interactive, DeviceCode,
   DefaultAzureCredential, WorkloadIdentity, SharedTokenCache, plus SSH key
   and FTP credentials.
 - **Automatic serialization** — JSON, XML, CSV, YAML with format
