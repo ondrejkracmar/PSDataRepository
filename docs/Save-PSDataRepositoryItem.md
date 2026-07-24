@@ -4,7 +4,7 @@ external help file: PSDataRepository.Commands.dll-Help.xml
 HelpUri: ''
 Locale: en-US
 Module Name: PSDataRepository
-ms.date: 06/23/2026
+ms.date: 07/24/2026
 PlatyPS schema version: 2024-05-01
 title: Save-PSDataRepositoryItem
 ---
@@ -21,14 +21,14 @@ title: Save-PSDataRepositoryItem
 
 ```
 Save-PSDataRepositoryItem [-Name] <string[]> [[-Destination] <string>] [-Force] [-Flatten]
- [-PassThru] [-ContinueOnError] [-WhatIf] [-Confirm] [<CommonParameters>]
+ [-PassThru] [-ContinueOnError] [-WhatIf] [-Confirm]
 ```
 
 ### ByRepositoryItem
 
 ```
 Save-PSDataRepositoryItem [[-Destination] <string>] -InputObject <RepositoryItemInfo> [-Force]
- [-Flatten] [-PassThru] [-ContinueOnError] [-WhatIf] [-Confirm] [<CommonParameters>]
+ [-Flatten] [-PassThru] [-ContinueOnError] [-WhatIf] [-Confirm]
 ```
 
 ## ALIASES
@@ -249,15 +249,11 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ## INPUTS
 
-### System.String
+### System.String[]
 
 {{ Fill in the Description }}
 
 ### PSDataRepository.Abstractions.RepositoryItemInfo
-
-{{ Fill in the Description }}
-
-### System.String[]
 
 {{ Fill in the Description }}
 

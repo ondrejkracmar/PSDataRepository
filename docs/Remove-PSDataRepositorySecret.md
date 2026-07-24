@@ -1,10 +1,10 @@
 ---
 document type: cmdlet
-external help file: PSDataRepository.Commands.dll-Help.xml
+external help file: PSDataRepository.dll-Help.xml
 HelpUri: ''
 Locale: en-US
 Module Name: PSDataRepository
-ms.date: 06/23/2026
+ms.date: 04.12.2026
 PlatyPS schema version: 2024-05-01
 title: Remove-PSDataRepositorySecret
 ---
@@ -13,7 +13,7 @@ title: Remove-PSDataRepositorySecret
 
 ## SYNOPSIS
 
-{{ Fill in the Synopsis }}
+Deletes a secret from the connected repository.
 
 ## SYNTAX
 
@@ -30,13 +30,14 @@ This cmdlet has the following aliases,
 
 ## DESCRIPTION
 
-{{ Fill in the Description }}
+Removes (deletes) a secret from the connected repository (typically Azure Key Vault or FileSystem).
+Fails if the repository type does not support secrets or is not connected.
 
 ## EXAMPLES
 
-### Example 1
+### Remove a secret
 
-{{ Add example description here }}
+
 
 ## PARAMETERS
 
@@ -141,15 +142,13 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ## OUTPUTS
 
-### System.Object
-
-{{ Fill in the Description }}
-
 ## NOTES
 
-{{ Fill in the Notes }}
+Requires an active session to a secrets provider (e.g., AzureKeyVault).
+
 
 ## RELATED LINKS
 
-{{ Fill in the related links here }}
-
+- [Online Version]()
+- [Get-PSDataRepositorySecret]()
+- [Set-PSDataRepositorySecret]()

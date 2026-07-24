@@ -1,10 +1,10 @@
 ---
 document type: cmdlet
-external help file: PSDataRepository.Commands.dll-Help.xml
+external help file: PSDataRepository.dll-Help.xml
 HelpUri: ''
 Locale: en-US
 Module Name: PSDataRepository
-ms.date: 06/23/2026
+ms.date: 04.12.2026
 PlatyPS schema version: 2024-05-01
 title: Set-PSDataRepositorySecret
 ---
@@ -13,7 +13,7 @@ title: Set-PSDataRepositorySecret
 
 ## SYNOPSIS
 
-{{ Fill in the Synopsis }}
+Creates or updates a secret in the connected repository (Key Vault, FileSystem).
 
 ## SYNTAX
 
@@ -31,13 +31,19 @@ This cmdlet has the following aliases,
 
 ## DESCRIPTION
 
-{{ Fill in the Description }}
+Sets (creates or updates) a secret in the connected repository.
+Supports either plain text or secure string as the secret value.
+Supported repositories: AzureKeyVault, FileSystem.
 
 ## EXAMPLES
 
-### Example 1
+### Set a secret with plain text
 
-{{ Add example description here }}
+
+
+### Set a secret with secure string
+
+
 
 ## PARAMETERS
 
@@ -86,7 +92,7 @@ HelpMessage: ''
 
 ### -Name
 
-The secret name.
+The name of the secret to set.
 
 ```yaml
 Type: System.String
@@ -107,7 +113,8 @@ HelpMessage: ''
 
 ### -SecureValue
 
-The secret value as SecureString.
+The secure string value to store as the secret.
+Preferred over `-Value` for sensitive data.
 
 ```yaml
 Type: System.Security.SecureString
@@ -128,7 +135,8 @@ HelpMessage: ''
 
 ### -Value
 
-The secret value as plain text.
+The plain text value to store as the secret.
+Use `-SecureValue` for sensitive values.
 
 ```yaml
 Type: System.String
@@ -184,15 +192,14 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ## OUTPUTS
 
-### System.Object
-
-{{ Fill in the Description }}
-
 ## NOTES
 
-{{ Fill in the Notes }}
+Either `-Value` or `-SecureValue` must be provided.
+Requires an active session to a secrets provider.
+
 
 ## RELATED LINKS
 
-{{ Fill in the related links here }}
-
+- [Online Version]()
+- [Get-PSDataRepositorySecret]()
+- [Remove-PSDataRepositorySecret]()

@@ -1,10 +1,10 @@
 ---
 document type: cmdlet
-external help file: PSDataRepository.Commands.dll-Help.xml
+external help file: PSDataRepository.dll-Help.xml
 HelpUri: ''
 Locale: en-US
 Module Name: PSDataRepository
-ms.date: 06/23/2026
+ms.date: 04.12.2026
 PlatyPS schema version: 2024-05-01
 title: Expand-PSDataRepositoryItem
 ---
@@ -13,7 +13,7 @@ title: Expand-PSDataRepositoryItem
 
 ## SYNOPSIS
 
-{{ Fill in the Synopsis }}
+Decompresses and optionally decrypts items in persistent storage.
 
 ## SYNTAX
 
@@ -32,13 +32,29 @@ This cmdlet has the following aliases,
 
 ## DESCRIPTION
 
-{{ Fill in the Description }}
+Decompresses GZip-compressed items stored in the repository.
+Automatically decrypts items encrypted with `Compress-PSDataRepositoryItem` if password is provided.
+Automatically detects `.gz` and `.gz.enc` extensions and removes them from decompressed item name.
+Supports in-place decompression or creating a new decompressed copy.
+Ideal for restoring archived datasets or processing compressed/encrypted data.
 
 ## EXAMPLES
 
-### Example 1
+### Simple decompression
 
-{{ Add example description here }}
+
+
+### Decrypt and decompress
+
+
+
+### Keep compressed original
+
+
+
+### Custom destination
+
+
 
 ## PARAMETERS
 
@@ -66,7 +82,8 @@ HelpMessage: ''
 
 ### -DestinationName
 
-Destination name for decompressed item. Default: removes .gz extension
+Destination name for decompressed item.
+If not specified, removes `.gz` or `.gz.enc` extension from original name.
 
 ```yaml
 Type: System.String
@@ -87,7 +104,7 @@ HelpMessage: ''
 
 ### -Force
 
-Overwrite existing decompressed item without confirmation.
+If specified, overwrites existing decompressed item without confirmation.
 
 ```yaml
 Type: System.Management.Automation.SwitchParameter
@@ -108,7 +125,7 @@ HelpMessage: ''
 
 ### -KeepOriginal
 
-Keep compressed item after decompression.
+If specified, keeps the compressed item after decompression.
 
 ```yaml
 Type: System.Management.Automation.SwitchParameter
@@ -129,7 +146,7 @@ HelpMessage: ''
 
 ### -Name
 
-Compressed item name/key to expand.
+The name/key of the compressed item to expand.
 
 ```yaml
 Type: System.String
@@ -150,7 +167,7 @@ HelpMessage: ''
 
 ### -PassThru
 
-Return decompression statistics.
+If specified, returns decompression statistics (SourceName, DestinationName, OriginalSize, CompressedSize, DecompressedSize, ExpansionRatio, WasEncrypted).
 
 ```yaml
 Type: System.Management.Automation.SwitchParameter
@@ -171,7 +188,9 @@ HelpMessage: ''
 
 ### -Password
 
-Password for AES-256 decryption of encrypted data.
+Password for AES-256 decryption.
+Required if item was encrypted with `Compress-PSDataRepositoryItem`.
+Use `Read-Host -AsSecureString` to securely prompt for password.
 
 ```yaml
 Type: System.Security.SecureString
@@ -192,7 +211,8 @@ HelpMessage: ''
 
 ### -WhatIf
 
-Runs the command in a mode that only reports what would happen without performing the actions.
+Shows what would happen if the cmdlet runs.
+The cmdlet is not run.
 
 ```yaml
 Type: System.Management.Automation.SwitchParameter
@@ -223,19 +243,23 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ### System.String
 
-{{ Fill in the Description }}
+Compressed item name to expand.
 
 ## OUTPUTS
 
-### System.Object
+### System.Management.Automation.PSObject
 
-{{ Fill in the Description }}
+When `-PassThru` is specified, returns an object with decompression statistics.
 
 ## NOTES
 
-{{ Fill in the Notes }}
+Automatically detects encryption by checking for the magic header written by `Compress-PSDataRepositoryItem`.
+If the file is encrypted but no `-Password` is provided, the cmdlet writes an error.
+If `-Password` is provided but the file is not encrypted, a warning is shown.
+
 
 ## RELATED LINKS
 
-{{ Fill in the related links here }}
-
+- [Online Version]()
+- [Compress-PSDataRepositoryItem]()
+- [Get-PSDataRepositoryItem]()

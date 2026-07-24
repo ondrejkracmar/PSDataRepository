@@ -4,7 +4,7 @@ external help file: PSDataRepository.Commands.dll-Help.xml
 HelpUri: ''
 Locale: en-US
 Module Name: PSDataRepository
-ms.date: 06/23/2026
+ms.date: 07/24/2026
 PlatyPS schema version: 2024-05-01
 title: Update-PSDataRepositoryMasterPassphrase
 ---
@@ -21,7 +21,7 @@ title: Update-PSDataRepositoryMasterPassphrase
 
 ```
 Update-PSDataRepositoryMasterPassphrase [-NewPassphrase] <securestring> [-Force] [-WhatIf]
- [-Confirm] [<CommonParameters>]
+ [-Confirm]
 ```
 
 ## ALIASES

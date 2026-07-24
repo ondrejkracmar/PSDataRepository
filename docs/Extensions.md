@@ -182,14 +182,20 @@ Restart the PowerShell session — the trust file is read once at
 ```pwsh
 Import-Module PSDataRepository
 
+# Every discovered extension, loaded or rejected, with the reason
+Get-PSDataRepositoryExtension
+
+# Only the ones that were refused
+Get-PSDataRepositoryExtension -Rejected | Format-List Name, ContractVersion, Reason
+
 # Providers — yours should be listed
 Get-PSDataRepositoryProvider
-
-# Connect via your provider
-Connect-PSDataRepository -Provider Contoso -ContosoConnectionString '...'
 ```
 
-If the provider does not appear, enable loader tracing. Set the
+`Get-PSDataRepositoryExtension` is the first thing to reach for: it reports one
+row per candidate assembly the loader saw, so a missing provider is a rejection
+with a stated reason rather than a mystery. Loader tracing below remains useful
+for the surrounding detail. Set the
 `PSDATAREPOSITORY_EXTENSION_TRACE` environment variable to `1` before
 importing the module — the loader then mirrors every decision (including the
 reason an extension was skipped) to the error stream:
@@ -214,10 +220,107 @@ Common reasons an extension is silently skipped (visible in the diagnostics):
 | `Skipping assembly '...' — public key token not trusted` | Add the token to `extensions.trust.json` and restart pwsh.   |
 | `Plugin directory not found: ...`                | Wrong `<ExtensionSubfolder>`, or the DLL was not deployed to `{ModuleDir}/bin/{TFM}/{ExtensionSubfolder}/`. |
 | `Failed to load '...': ...FileNotFoundException` | A runtime dependency was filtered out — verify `bin/{TFM}/` content. |
+| `was built against contract X, but this module provides contract Y` | Rebuild against `PSDataRepository.Extensions.Sdk` `Y.x`. See §6. |
 
 ---
 
-## 6. Distribution checklist
+## 6. The extension contract
+
+The SDK stamps every extension it builds with the contract version it was
+compiled against, and the loader refuses to load an extension whose contract
+**major** does not match the module's. You do not write the attribute — merely
+referencing `PSDataRepository.Extensions.Sdk` applies it.
+
+This exists because the contract assemblies (`PSDataRepository.Abstractions`,
+`.Formatters`, `.Providers`, `.Authentications`) are always loaded from the
+**module root**, never from your output folder. The version you compiled against
+is discarded at runtime, so a breaking contract change does not produce a build
+error or a load error — your types simply fail to materialise and your provider
+is absent. The gate turns that into one message that names both versions.
+
+| Change on the host | Effect on an already-built extension |
+| --- | --- |
+| Patch bump (`1.2.0` → `1.2.1`) | Nothing; no API moved. |
+| Minor bump (`1.2` → `1.3`) | Keeps loading — additions are made non-breaking via default interface members. |
+| Major bump (`1.x` → `2.0`) | **Rejected.** Rebuild against the new SDK. |
+
+An extension carrying no attribute at all — anything built before this existed —
+is treated as contract `1.0` and still loads.
+
+The contract version is deliberately **not** recorded in
+`extensions.trust.json`. That file answers "whose code may run"; the contract
+answers "can this code work". A publisher does not become untrusted because
+their extension needs a rebuild, and pinning versions per token would mean
+editing a security file on every contract bump.
+
+---
+
+## 7. Installing and removing
+
+An administrator installs the `.zip` produced by `publish-extension.ps1`:
+
+```pwsh
+Install-PSDataRepositoryExtension -Path .\Contoso.PSDataRepository.MyProvider-1.2.0.zip
+```
+
+The install applies the same checks the loader applies — strong name, contract
+compatibility — **before** copying anything, so an incompatible extension fails
+at install time instead of silently missing after the next restart.
+
+Trust is never granted implicitly. An extension signed with an untrusted key is
+installed but will not load, and the cmdlet says so; `-Trust` adds the token as
+an explicit decision:
+
+```pwsh
+Install-PSDataRepositoryExtension -Path .\MyProvider.zip -Trust
+
+# From a registered NuGet repository
+Install-PSDataRepositoryExtension -Name Contoso.PSDataRepository.Sftp -Repository Corp
+
+Uninstall-PSDataRepositoryExtension -Name Contoso.PSDataRepository.MyProvider
+```
+
+> A **library-shaped** `.nupkg` (`lib/<tfm>/`) installs only its own assemblies and leaves the
+> NuGet dependencies unresolved. Publish a **payload** package instead — the layout
+> `publish-extension.ps1` produces — which carries the resolved dependency set. The install
+> warns when it detects the library shape.
+
+### Shared or private dependencies
+
+By default an extension's dependencies go into the module's `bin/{TFM}/` root, shared with the
+host and every other extension. One identity per assembly, which is required for anything whose
+types cross the plugin boundary.
+
+An extension can instead keep them to itself:
+
+```xml
+<PSDataRepositoryPrivateDependencies>true</PSDataRepositoryPrivateDependencies>
+```
+
+which deploys to `bin/{TFM}/{Subfolder}/{AssemblyName}/` together with the `.deps.json` the
+loader resolves from. Two extensions can then use different versions of the same library.
+
+**The module root still wins.** A private copy of an assembly the host also ships is never
+used — that is what stops a private copy from breaking the host or another extension. So
+private mode helps only for libraries the host does not have; for everything else it just adds
+files. Reach for it when you actually hit a version conflict in such a library, not before.
+
+### Diagnosing
+
+```powershell
+Get-PSDataRepositoryExtension -Rejected              # refused, with the reason
+Get-PSDataRepositoryExtension -VersionSkew           # built against X, module ships Y
+Get-PSDataRepositoryExtension -MissingAfterUpgrade   # lost when the module was upgraded
+```
+
+The last one matters more than it looks: every module version installs into its **own** folder,
+so upgrading the module leaves every extension behind. Nothing announces that — the module
+works and the in-box providers are all present; only third-party ones are gone. Reinstall them
+and restart PowerShell.
+
+---
+
+## 8. Distribution checklist
 
 Before shipping a 3rd-party extension to production:
 

@@ -182,6 +182,72 @@
             </para>
             </summary>
         </member>
+        <member name="T:PSDataRepository.Commands.Common.ExtensionInstallHelper">
+            <summary>
+            Layout rules shared by the extension install/uninstall cmdlets.
+            <para>
+            The module's on-disk shape is dictated by the loader: it computes the module directory
+            from the location of <c>PSDataRepository.Core.dll</c> — which lives in
+            <c>{ModuleRoot}/bin/{TFM}/</c> — then scans <c>{ModuleRoot}/bin/{TFM}/{Subfolder}/</c>
+            for plugins and resolves their dependencies from <c>{ModuleRoot}/bin/{TFM}/</c>.
+            Anything placed elsewhere is simply never discovered, so every path decision here
+            mirrors that layout rather than inventing one.
+            </para>
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Commands.Common.ExtensionInstallHelper.ResolveModuleRootFromRunningAssembly">
+            <summary>
+            Derives the module root from the running Core assembly: <c>{root}/bin/{tfm}/Core.dll</c>.
+            </summary>
+            <returns>The module root, or <c>null</c> when the layout is not recognised.</returns>
+        </member>
+        <member name="M:PSDataRepository.Commands.Common.ExtensionInstallHelper.GetTargetFrameworkDirs(System.String)">
+            <summary>
+            Returns the per-TFM folders under <c>{moduleRoot}/bin</c> that an extension can be
+            installed into.
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Commands.Common.ExtensionInstallHelper.ExtractToTemp(System.String)">
+            <summary>
+            Extracts a zip or nupkg into a fresh temp directory and returns it.
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Commands.Common.ExtensionInstallHelper.DiscoverPayloads(System.String)">
+            <summary>
+            Finds the candidate extension assemblies in an extracted tree.
+            <para>
+            Two shapes are recognised. A publish-extension.ps1 artifact has per-TFM folders at
+            its root, each containing a plugin subfolder — that shape carries its own dependency
+            set and maps straight onto the module's bin layout. A NuGet package instead has
+            <c>lib/{tfm}/</c>, which contains only the package's own assemblies; its NuGet
+            dependencies are NOT present, which is why the caller warns about that case.
+            </para>
+            </summary>
+        </member>
+        <member name="T:PSDataRepository.Commands.Common.ExtensionInstallHelper.ExtensionPayload">
+            <summary>One extension assembly found in an install source, with its target TFM.</summary>
+        </member>
+        <member name="P:PSDataRepository.Commands.Common.ExtensionInstallHelper.ExtensionPayload.PrivateFolder">
+            <summary>
+            Source folder when the extension ships its dependencies privately; <c>null</c> for
+            the shared shape. When set, the folder is installed as a unit and nothing from it
+            is written to the module root.
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Commands.Common.ExtensionInstallHelper.ExtensionPayload.FromNuGetLib">
+            <summary>
+            <c>true</c> when this came from a package's <c>lib/</c> folder, which carries only
+            the package's own assemblies. That is the shape whose NuGet dependencies are not
+            resolved; a package laid out as a deployment payload (per-TFM folders with a plugin
+            subfolder) ships its dependencies and does not have the problem.
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Commands.Common.ExtensionInstallHelper.ExtensionPayload.Subfolder">
+            <summary>Subfolder implied by the source layout; <c>null</c> when it must come from assembly metadata.</summary>
+        </member>
+        <member name="P:PSDataRepository.Commands.Common.ExtensionInstallHelper.ExtensionPayload.Dependencies">
+            <summary>Sibling assemblies to copy into the module's per-TFM root.</summary>
+        </member>
         <member name="T:PSDataRepository.Commands.Common.FormatterNameCompleter">
             <summary>
             Provides tab-completion for formatter names (Json, Xml, Csv, Yml, etc.)
@@ -681,6 +747,90 @@
             Counts the directory depth of <paramref name="itemName"/> relative to <paramref name="basePath"/>.
             </summary>
         </member>
+        <member name="T:PSDataRepository.Commands.GetPSDataRepositoryExtensionCommand">
+            <summary>
+            <para type="synopsis">Lists the extensions the module discovered at import time, including the ones it refused to load and why.</para>
+            <para type="description">
+            Extensions are plugin assemblies dropped into the module's <c>Auth\</c>,
+            <c>Providers\</c> and <c>Formatters\</c> folders. Loading one can fail for reasons
+            that are invisible from the outside — the assembly is unsigned, its public key token
+            is not trusted, or it was built against an incompatible contract version — and the
+            only symptom is a provider or formatter that does not exist.
+            </para>
+            <para type="description">
+            This cmdlet reports every candidate assembly the loader saw, whether it loaded, and
+            the reason for each rejection. The scan happens once when the module is imported, so
+            results reflect that scan; restart PowerShell after adding or replacing an extension.
+            </para>
+            <example>
+              <code>Get-PSDataRepositoryExtension</code>
+              <para>Lists every discovered extension with its status and contract version.</para>
+            </example>
+            <example>
+              <code>Get-PSDataRepositoryExtension -Rejected | Format-List FileName, Reason</code>
+              <para>Shows only the extensions that were refused, with the full explanation.</para>
+            </example>
+            <example>
+              <code>Get-PSDataRepositoryExtension -Subfolder Formatters</code>
+              <para>Limits the report to formatter extensions.</para>
+            </example>
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Commands.GetPSDataRepositoryExtensionCommand.Rejected">
+            <summary>Return only extensions the loader refused to load.</summary>
+        </member>
+        <member name="P:PSDataRepository.Commands.GetPSDataRepositoryExtensionCommand.Subfolder">
+            <summary>Limit the report to one plugin subfolder.</summary>
+        </member>
+        <member name="P:PSDataRepository.Commands.GetPSDataRepositoryExtensionCommand.VersionSkew">
+            <summary>
+            Compare each extension's referenced assembly versions against what is actually present
+            in the module folder, and report the differences.
+            <para>
+            An extension binds at runtime to whatever version sits in the module root, not the one
+            it was compiled against. A mismatch is invisible until the moment a missing member is
+            touched, which is usually long after the install that caused it — most often a module
+            upgrade or another extension replacing a shared library.
+            </para>
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Commands.GetPSDataRepositoryExtensionCommand.MissingAfterUpgrade">
+            <summary>
+            Also report extensions that an earlier installed version of the module had, but this
+            one does not.
+            <para>
+            Every module version is installed into its own folder, so upgrading the module produces
+            an empty one: every extension silently disappears and has to be reinstalled. Nothing
+            announces that — the module works, the in-box providers and formatters are all there,
+            and only the third-party ones are gone. This compares the dependency manifest left
+            behind in the previous version's folder against what is installed here.
+            </para>
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Commands.GetPSDataRepositoryExtensionCommand.ModuleRoot">
+            <summary>
+            Which module installation to compare for <see cref="P:PSDataRepository.Commands.GetPSDataRepositoryExtensionCommand.MissingAfterUpgrade"/>. Defaults to
+            the running module. Does not affect the rest of the report, which always reflects the
+            scan performed by the running module at import time.
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Commands.GetPSDataRepositoryExtensionCommand.GetVersionSkew(System.String)">
+            <summary>
+            Lists assemblies the extension was compiled against whose version differs from the one
+            actually sitting in the module folder it will bind to.
+            <para>
+            Only assemblies present in the module root are compared. A referenced assembly that is
+            absent there is either part of the shared framework or genuinely missing, and the
+            loader reports the latter as a load failure already.
+            </para>
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Commands.GetPSDataRepositoryExtensionCommand.ReportMissingAfterUpgrade">
+            <summary>
+            Emits one row per extension that a previously installed version of the module recorded
+            but this installation does not have.
+            </summary>
+        </member>
         <member name="T:PSDataRepository.Commands.GetPSDataRepositoryExtensionTokenCommand">
             <summary>
             <para type="synopsis">Reads the strong-name public key token from a .NET assembly in the format used by <c>extensions.trust.json</c>.</para>
@@ -859,6 +1009,110 @@
               <code>Get-PSDataRepositorySession</code>
               <para>Displays current session information.</para>
             </example>
+            </summary>
+        </member>
+        <member name="T:PSDataRepository.Commands.InstallPSDataRepositoryExtensionCommand">
+            <summary>
+            <para type="synopsis">Installs a PSDataRepository extension into the installed module from a local artifact or a registered NuGet repository.</para>
+            <para type="description">
+            Places an extension's assemblies into the module's <c>bin\{TFM}\{Subfolder}\</c> layout —
+            the only location the loader scans — and copies its dependencies alongside the host
+            assemblies where the plugin load context can resolve them.
+            </para>
+            <para type="description">
+            Before anything is written, every candidate assembly is inspected the same way the loader
+            inspects it: it must be strong-named, and its declared contract version must be one this
+            module can satisfy. Catching an incompatible extension here turns what would otherwise be
+            a silently missing provider after the next restart into an error at install time.
+            </para>
+            <para type="description">
+            Trust is deliberately NOT granted automatically. An extension signed with a key the module
+            does not already trust is installed but will not load until its public key token is added
+            to <c>extensions.trust.json</c>; pass <c>-Trust</c> to do that as part of the install, which
+            is an explicit decision to let that publisher's code run.
+            </para>
+            <example>
+              <code>Install-PSDataRepositoryExtension -Path .\PSDataRepository.Formatters.Xlsx-1.0.0.zip</code>
+              <para>Installs from the artifact produced by publish-extension.ps1. No .NET SDK required.</para>
+            </example>
+            <example>
+              <code>Install-PSDataRepositoryExtension -Path .\Contoso.Provider.dll -Trust</code>
+              <para>Installs a single assembly and trusts its signing key.</para>
+            </example>
+            <example>
+              <code>Install-PSDataRepositoryExtension -Name Contoso.PSDataRepository.Sftp -Repository Corp -WhatIf</code>
+              <para>Shows what would be installed from a registered PSResource repository.</para>
+            </example>
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Commands.InstallPSDataRepositoryExtensionCommand.Path">
+            <summary>Local artifact: a .zip from publish-extension.ps1, a .nupkg, a folder, or a single .dll.</summary>
+        </member>
+        <member name="P:PSDataRepository.Commands.InstallPSDataRepositoryExtensionCommand.Name">
+            <summary>Package id to fetch from <see cref="P:PSDataRepository.Commands.InstallPSDataRepositoryExtensionCommand.Repository"/>.</summary>
+        </member>
+        <member name="P:PSDataRepository.Commands.InstallPSDataRepositoryExtensionCommand.Repository">
+            <summary>Registered PSResource repository to fetch from.</summary>
+        </member>
+        <member name="P:PSDataRepository.Commands.InstallPSDataRepositoryExtensionCommand.Version">
+            <summary>Specific version to fetch; latest stable when omitted.</summary>
+        </member>
+        <member name="P:PSDataRepository.Commands.InstallPSDataRepositoryExtensionCommand.FromModule">
+            <summary>
+            Name of an already-installed PowerShell module that carries the extension payload.
+            <para>
+            This is how an extension published to the PowerShell Gallery arrives: the gallery only
+            accepts PowerShell modules, so the extension ships as a thin manifest-only module whose
+            content is the per-framework payload. <c>Install-Module</c> puts it on disk; this
+            parameter takes it from there into the PSDataRepository module.
+            </para>
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Commands.InstallPSDataRepositoryExtensionCommand.ModuleRoot">
+            <summary>Module root to install into. Defaults to the running module.</summary>
+        </member>
+        <member name="P:PSDataRepository.Commands.InstallPSDataRepositoryExtensionCommand.Subfolder">
+            <summary>Plugin subfolder, when the assembly does not declare one.</summary>
+        </member>
+        <member name="P:PSDataRepository.Commands.InstallPSDataRepositoryExtensionCommand.Trust">
+            <summary>Add the extension's public key token to the trust list.</summary>
+        </member>
+        <member name="P:PSDataRepository.Commands.InstallPSDataRepositoryExtensionCommand.Force">
+            <summary>Overwrite files that already exist.</summary>
+        </member>
+        <member name="M:PSDataRepository.Commands.InstallPSDataRepositoryExtensionCommand.ResolveSource(System.String@,System.String@)">
+            <summary>
+            Turns the parameter set into a directory to scan, or a single assembly to install.
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Commands.InstallPSDataRepositoryExtensionCommand.ResolveInstalledModuleBase">
+            <summary>
+            Locates an installed PowerShell module by name and returns its folder, which is
+            scanned exactly like any other payload directory.
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Commands.InstallPSDataRepositoryExtensionCommand.SaveFromRepository">
+            <summary>
+            Delegates the download to PSResourceGet so any repository the administrator already
+            registered works, rather than reimplementing feed access and its authentication.
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Commands.InstallPSDataRepositoryExtensionCommand.FindDependentsOf(System.String,System.String,System.Int32)">
+            <summary>
+            Finds everything already installed in <paramref name="tfmRoot"/> that references
+            <paramref name="dependencyFile"/> at major version <paramref name="major"/> — the host
+            module's own assemblies and every installed extension.
+            <para>
+            These are exactly the things a cross-major replacement changes underneath, because the
+            module root resolves through a single load context. The in-box providers, formatters
+            and auth resolver are in this list too: they are ordinary plugins and break the same
+            way a third-party one does.
+            </para>
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Commands.InstallPSDataRepositoryExtensionCommand.TryGetAssemblyVersion(System.String)">
+            <summary>
+            Assembly version of a file, or <c>null</c> when it is not a managed assembly.
             </summary>
         </member>
         <member name="T:PSDataRepository.Commands.ModuleInitializer">
@@ -1404,6 +1658,51 @@
         <member name="P:PSDataRepository.Commands.TestPSDataRepositoryItemCommand.Name">
             <summary>
             The name/key of the object to test.
+            </summary>
+        </member>
+        <member name="T:PSDataRepository.Commands.UninstallPSDataRepositoryExtensionCommand">
+            <summary>
+            <para type="synopsis">Removes an installed PSDataRepository extension from the module.</para>
+            <para type="description">
+            Deletes the extension assembly from every <c>bin\{TFM}\{Subfolder}\</c> folder it is
+            found in, together with the dependencies it introduced.
+            </para>
+            <para type="description">
+            Dependency cleanup is driven by the manifest <c>Install-PSDataRepositoryExtension</c>
+            wrote (<c>extensions.deps.json</c>). A file is removed only when this extension brought it
+            into a module that did not have it, and no other installed extension lists it. Anything
+            that pre-existed belongs to the module itself, and anything another extension still needs
+            stays — the module root is shared, so deleting the wrong file there breaks something else.
+            An extension installed before that manifest existed has nothing recorded, so only its own
+            assembly is removed.
+            </para>
+            <para type="description">
+            Trust is not revoked unless <c>-RemoveTrust</c> is given, and revoking a token affects
+            every extension signed with that key, not just this one.
+            </para>
+            <example>
+              <code>Uninstall-PSDataRepositoryExtension -Name PSDataRepository.Formatters.Xlsx</code>
+              <para>Removes the formatter from all target-framework folders.</para>
+            </example>
+            <example>
+              <code>Get-PSDataRepositoryExtension -Rejected | Uninstall-PSDataRepositoryExtension</code>
+              <para>Clears out extensions the loader refused to load.</para>
+            </example>
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Commands.UninstallPSDataRepositoryExtensionCommand.Name">
+            <summary>Assembly name, with or without the .dll extension.</summary>
+        </member>
+        <member name="P:PSDataRepository.Commands.UninstallPSDataRepositoryExtensionCommand.ModuleRoot">
+            <summary>Module root to remove from. Defaults to the running module.</summary>
+        </member>
+        <member name="P:PSDataRepository.Commands.UninstallPSDataRepositoryExtensionCommand.RemoveTrust">
+            <summary>Also remove the extension's public key token from the trust list.</summary>
+        </member>
+        <member name="M:PSDataRepository.Commands.UninstallPSDataRepositoryExtensionCommand.RemoveOrphanedDependencies(System.String,System.String,System.Collections.Generic.List{System.String})">
+            <summary>
+            Deletes the dependencies this extension introduced into <paramref name="tfmRoot"/> and
+            that nothing else claims, then drops it from the manifest.
             </summary>
         </member>
         <member name="T:PSDataRepository.Commands.UpdatePSDataRepositoryMasterPassphraseCommand">

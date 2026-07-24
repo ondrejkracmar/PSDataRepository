@@ -4,7 +4,7 @@ external help file: PSDataRepository.Commands.dll-Help.xml
 HelpUri: ''
 Locale: en-US
 Module Name: PSDataRepository
-ms.date: 06/23/2026
+ms.date: 07/24/2026
 PlatyPS schema version: 2024-05-01
 title: Copy-PSDataRepositoryItem
 ---
@@ -21,21 +21,21 @@ title: Copy-PSDataRepositoryItem
 
 ```
 Copy-PSDataRepositoryItem [-Path] <string[]> [[-Destination] <string>] [-Recurse] [-Filter <string>]
- [-Force] [-PassThru] [-Flatten] [-ContinueOnError] [-WhatIf] [-Confirm] [<CommonParameters>]
+ [-Force] [-PassThru] [-Flatten] [-ContinueOnError] [-WhatIf] [-Confirm]
 ```
 
 ### ByLiteralPath
 
 ```
 Copy-PSDataRepositoryItem [[-Destination] <string>] -LiteralPath <string[]> [-Recurse] [-Force]
- [-PassThru] [-Flatten] [-ContinueOnError] [-WhatIf] [-Confirm] [<CommonParameters>]
+ [-PassThru] [-Flatten] [-ContinueOnError] [-WhatIf] [-Confirm]
 ```
 
 ### ByRepositoryItem
 
 ```
 Copy-PSDataRepositoryItem [[-Destination] <string>] -InputObject <RepositoryItemInfo> [-Force]
- [-PassThru] [-Flatten] [-ContinueOnError] [-WhatIf] [-Confirm] [<CommonParameters>]
+ [-PassThru] [-Flatten] [-ContinueOnError] [-WhatIf] [-Confirm]
 ```
 
 ## ALIASES
@@ -327,15 +327,11 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ## INPUTS
 
-### System.String
+### System.String[]
 
 {{ Fill in the Description }}
 
 ### PSDataRepository.Abstractions.RepositoryItemInfo
-
-{{ Fill in the Description }}
-
-### System.String[]
 
 {{ Fill in the Description }}
 

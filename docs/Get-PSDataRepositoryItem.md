@@ -1,10 +1,10 @@
 ---
 document type: cmdlet
-external help file: PSDataRepository.Commands.dll-Help.xml
+external help file: PSDataRepository.dll-Help.xml
 HelpUri: ''
 Locale: en-US
 Module Name: PSDataRepository
-ms.date: 06/23/2026
+ms.date: 04.12.2026
 PlatyPS schema version: 2024-05-01
 title: Get-PSDataRepositoryItem
 ---
@@ -13,22 +13,22 @@ title: Get-PSDataRepositoryItem
 
 ## SYNOPSIS
 
-{{ Fill in the Synopsis }}
+Retrieves items from persistent storage (Blob, Disk).
 
 ## SYNTAX
 
 ### ByName (Default)
 
 ```
-Get-PSDataRepositoryItem [-Name] <string[]> [-Format <string>] [-Encoding <Encoding>] [-Raw]
+Get-PSDataRepositoryItem [-Name] <string[]> [-Format <FormatType>] [-Encoding <Encoding>] [-Raw]
  [-AsByteArray] [-IncludeMetadata] [-ContinueOnError] [<CommonParameters>]
 ```
 
 ### ListAll
 
 ```
-Get-PSDataRepositoryItem -ListAll [-Format <string>] [-Encoding <Encoding>] [-Raw] [-AsByteArray]
- [-IncludeMetadata] [-ContinueOnError] [<CommonParameters>]
+Get-PSDataRepositoryItem -ListAll [-Format <FormatType>] [-Encoding <Encoding>] [-Raw]
+ [-AsByteArray] [-IncludeMetadata] [-ContinueOnError] [<CommonParameters>]
 ```
 
 ## ALIASES
@@ -38,19 +38,34 @@ This cmdlet has the following aliases,
 
 ## DESCRIPTION
 
-{{ Fill in the Description }}
+Loads and deserializes items from the connected repository (Azure Blob Storage, Disk).
+Supports retrieving single items, multiple items by pattern, or listing all items.
+Items are automatically deserialized based on format (JSON, XML, CSV) or content detection.
+Ideal for loading configuration, datasets, or processing results.
 
 ## EXAMPLES
 
-### Example 1
+### Retrieve single item
 
-{{ Add example description here }}
+
+
+### Pattern matching
+
+
+
+### Explicit format
+
+
+
+### Raw content
+
+
 
 ## PARAMETERS
 
 ### -AsByteArray
 
-Return content as byte array.
+If specified, returns content as byte array (binary mode).
 
 ```yaml
 Type: System.Management.Automation.SwitchParameter
@@ -71,7 +86,7 @@ HelpMessage: ''
 
 ### -ContinueOnError
 
-Continue on errors.
+If specified, continues processing even if individual object retrieval fails.
 
 ```yaml
 Type: System.Management.Automation.SwitchParameter
@@ -92,7 +107,8 @@ HelpMessage: ''
 
 ### -Encoding
 
-Text encoding. Default: UTF8
+Text encoding for reading.
+Default: UTF-8.
 
 ```yaml
 Type: System.Text.Encoding
@@ -113,10 +129,11 @@ HelpMessage: ''
 
 ### -Format
 
-Deserialization format (Json, Xml, Csv, Yml). Auto-detects if not specified.
+Expected deserialization format.
+If not specified, auto-detects from content or file extension.
 
 ```yaml
-Type: System.String
+Type: System.Nullable`1[PSDataRepository.Serialization.FormatType]
 DefaultValue: ''
 SupportsWildcards: false
 Aliases: []
@@ -134,7 +151,7 @@ HelpMessage: ''
 
 ### -IncludeMetadata
 
-Include metadata in output.
+If specified, includes metadata (Name, Path, Format) as properties on output objects (` _Name`, ` Path`, ` _Format`).
 
 ```yaml
 Type: System.Management.Automation.SwitchParameter
@@ -155,7 +172,7 @@ HelpMessage: ''
 
 ### -ListAll
 
-List all objects in the repository.
+If specified, lists all available objects in the repository.
 
 ```yaml
 Type: System.Management.Automation.SwitchParameter
@@ -176,7 +193,8 @@ HelpMessage: ''
 
 ### -Name
 
-Object name/key or pattern (supports wildcards).
+The name/key or pattern of the object(s) to retrieve.
+Supports wildcards (* and ?) depending on provider.
 
 ```yaml
 Type: System.String[]
@@ -199,7 +217,7 @@ HelpMessage: ''
 
 ### -Raw
 
-Return raw content without deserialization.
+If specified, returns raw content as string without deserialization.
 
 ```yaml
 Type: System.Management.Automation.SwitchParameter
@@ -229,7 +247,7 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ### System.String
 
-{{ Fill in the Description }}
+Item names can be piped to this cmdlet.
 
 ### System.String[]
 
@@ -239,13 +257,17 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ### System.Management.Automation.PSObject
 
-{{ Fill in the Description }}
+Deserialized object(s).
+The output type depends on the stored content and format.
 
 ## NOTES
 
-{{ Fill in the Notes }}
+Format auto-detection uses file extension first, then content analysis (JSON: `{`/`[`, XML: `<`, CSV: header row).
+
 
 ## RELATED LINKS
 
-{{ Fill in the related links here }}
-
+- [Online Version]()
+- [Set-PSDataRepositoryItem]()
+- [Remove-PSDataRepositoryItem]()
+- [Test-PSDataRepositoryItem]()

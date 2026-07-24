@@ -1,10 +1,10 @@
 ---
 document type: cmdlet
-external help file: PSDataRepository.Commands.dll-Help.xml
+external help file: PSDataRepository.dll-Help.xml
 HelpUri: ''
 Locale: en-US
 Module Name: PSDataRepository
-ms.date: 06/23/2026
+ms.date: 04.12.2026
 PlatyPS schema version: 2024-05-01
 title: Test-PSDataRepositoryConnection
 ---
@@ -13,14 +13,14 @@ title: Test-PSDataRepositoryConnection
 
 ## SYNOPSIS
 
-{{ Fill in the Synopsis }}
+Tests the connectivity to the current PSDataRepository provider.
 
 ## SYNTAX
 
 ### __AllParameterSets
 
 ```
-Test-PSDataRepositoryConnection [-TimeoutSeconds <int>] [<CommonParameters>]
+Test-PSDataRepositoryConnection [<CommonParameters>]
 ```
 
 ## ALIASES
@@ -30,36 +30,34 @@ This cmdlet has the following aliases,
 
 ## DESCRIPTION
 
-{{ Fill in the Description }}
+Validates that the current session's connection to the underlying provider is healthy by performing a lightweight probe operation.
+For storage providers (Azure Blob, Disk), attempts a list operation.
+For queue providers (Azure Queue, Azure Service Bus, InMemory), queries the message count.
+Returns $true if the connection is healthy, $false otherwise.
+
+If no active session exists, returns $false without throwing an error.
+
+This cmdlet is useful for detecting expired tokens, network failures, or stale sessions before executing data operations.
 
 ## EXAMPLES
 
-### Example 1
+### Basic connection test
 
-{{ Add example description here }}
+
+
+### Reconnect if unhealthy
+
+
+
+### Health check in a script loop
+
+
+
+### Verbose diagnostics
+
+
 
 ## PARAMETERS
-
-### -TimeoutSeconds
-
-Timeout in seconds. Default: 30
-
-```yaml
-Type: System.Int32
-DefaultValue: ''
-SupportsWildcards: false
-Aliases: []
-ParameterSets:
-- Name: (All)
-  Position: Named
-  IsRequired: false
-  ValueFromPipeline: false
-  ValueFromPipelineByPropertyName: false
-  ValueFromRemainingArguments: false
-DontShow: false
-AcceptedValues: []
-HelpMessage: ''
-```
 
 ### CommonParameters
 
@@ -74,13 +72,22 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ### System.Boolean
 
-{{ Fill in the Description }}
+$true if the connection is healthy, $false if no session exists or the connectivity test fails.
 
 ## NOTES
 
-{{ Fill in the Notes }}
+Does not throw terminating errors.
+Always returns a boolean value.
+If the connection test fails, a warning message with the error detail is emitted.
+For storage providers, the test performs a lightweight list operation.
+For queue providers, the test queries the approximate message count.
+Use -Verbose to see which provider is being tested and the result.
+
 
 ## RELATED LINKS
 
-{{ Fill in the related links here }}
-
+- [Online Version]()
+- [Connect-PSDataRepository]()
+- [Disconnect-PSDataRepository]()
+- [Get-PSDataRepositorySession]()
+- [Test-PSDataRepositoryItem]()

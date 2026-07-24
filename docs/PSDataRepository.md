@@ -5,7 +5,7 @@ HelpInfoUri:
 Locale: en-US
 Module Guid: d2e7fbb1-9f84-4e12-9cb7-bf604e12b8b4
 Module Name: PSDataRepository
-ms.date: 06/23/2026
+ms.date: 07/24/2026
 PlatyPS schema version: 2024-05-01
 title: PSDataRepository Module
 ---
@@ -46,6 +46,10 @@ A PowerShell module for working with data repositories (FileSystem, AzureBlob, A
 
 {{ Fill in the Synopsis }}
 
+### [Get-PSDataRepositoryExtension](Get-PSDataRepositoryExtension.md)
+
+{{ Fill in the Synopsis }}
+
 ### [Get-PSDataRepositoryExtensionToken](Get-PSDataRepositoryExtensionToken.md)
 
 {{ Fill in the Synopsis }}
@@ -63,6 +67,10 @@ A PowerShell module for working with data repositories (FileSystem, AzureBlob, A
 {{ Fill in the Synopsis }}
 
 ### [Get-PSDataRepositorySession](Get-PSDataRepositorySession.md)
+
+{{ Fill in the Synopsis }}
+
+### [Install-PSDataRepositoryExtension](Install-PSDataRepositoryExtension.md)
 
 {{ Fill in the Synopsis }}
 
@@ -107,6 +115,10 @@ A PowerShell module for working with data repositories (FileSystem, AzureBlob, A
 {{ Fill in the Synopsis }}
 
 ### [Test-PSDataRepositoryItem](Test-PSDataRepositoryItem.md)
+
+{{ Fill in the Synopsis }}
+
+### [Uninstall-PSDataRepositoryExtension](Uninstall-PSDataRepositoryExtension.md)
 
 {{ Fill in the Synopsis }}
 

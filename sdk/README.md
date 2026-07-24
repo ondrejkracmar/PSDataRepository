@@ -1,4 +1,9 @@
-# PSDataRepository Extensions SDK (0.5.3)
+# PSDataRepository Extensions SDK (0.6.0)
+
+> This package set is versioned with the module build it came from (module `0.6.0`).
+> Whether an extension you already built still loads is NOT decided by this version — the
+> SDK stamps a separate contract version into your assembly and the module's loader checks
+> that. See the extension authoring guide in `docs/`.
 
 This folder contains a **self-contained, restorable NuGet package set** for building
 your own PSDataRepository extensions (providers, authentication resolvers, formatters).
@@ -8,12 +13,12 @@ restore offline from this single folder — no extra feed required.
 ## Packages
 
 - `Isystem.AzAuth.Core.1.0.0-localfeed.nupkg`
-- `PSDataRepository.Abstractions.0.5.3.nupkg`
-- `PSDataRepository.Authentications.0.5.3.nupkg`
-- `PSDataRepository.Authentications.AzAuth.0.5.3.nupkg`
-- `PSDataRepository.Extensions.Sdk.0.5.3.nupkg`
-- `PSDataRepository.Formatters.0.5.3.nupkg`
-- `PSDataRepository.Providers.0.5.3.nupkg`
+- `PSDataRepository.Abstractions.0.6.0.nupkg`
+- `PSDataRepository.Authentications.0.6.0.nupkg`
+- `PSDataRepository.Authentications.AzAuth.0.6.0.nupkg`
+- `PSDataRepository.Extensions.Sdk.0.6.0.nupkg`
+- `PSDataRepository.Formatters.0.6.0.nupkg`
+- `PSDataRepository.Providers.0.6.0.nupkg`
 
 ## Use it in your extension project
 
@@ -34,7 +39,7 @@ restore offline from this single folder — no extra feed required.
 3. Reference the SDK from your extension project:
 
    ```sh
-   dotnet add package PSDataRepository.Extensions.Sdk --version 0.5.3
+   dotnet add package PSDataRepository.Extensions.Sdk --version 0.6.0
    ```
 
 The SDK brings in the contract assemblies and the MSBuild targets that validate and

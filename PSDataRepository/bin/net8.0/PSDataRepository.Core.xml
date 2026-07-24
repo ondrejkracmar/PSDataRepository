@@ -225,6 +225,95 @@
             Builds a <see cref="T:System.Management.Automation.RuntimeDefinedParameterDictionary"/> from provider parameter definitions.
             </summary>
         </member>
+        <member name="T:PSDataRepository.Core.Extensions.ExtensionDependencyFile">
+            <summary>One dependency an extension brought into the module's per-framework root.</summary>
+        </member>
+        <member name="M:PSDataRepository.Core.Extensions.ExtensionDependencyFile.#ctor(System.String,System.String,System.Boolean)">
+            <summary>Creates a dependency record entry.</summary>
+        </member>
+        <member name="P:PSDataRepository.Core.Extensions.ExtensionDependencyFile.Name">
+            <summary>File name, e.g. <c>Microsoft.Graph.dll</c>.</summary>
+        </member>
+        <member name="P:PSDataRepository.Core.Extensions.ExtensionDependencyFile.Version">
+            <summary>Assembly version the extension supplied, or <c>null</c> for native/unreadable files.</summary>
+        </member>
+        <member name="P:PSDataRepository.Core.Extensions.ExtensionDependencyFile.Introduced">
+            <summary>
+            <c>true</c> when this file did not exist in the module before the extension was
+            installed. Only such files are ever candidates for deletion on uninstall — anything
+            that pre-existed belongs to the module (or to an earlier extension) and removing it
+            would break whatever put it there.
+            </summary>
+        </member>
+        <member name="T:PSDataRepository.Core.Extensions.ExtensionDependencyRecord">
+            <summary>What one installed extension contributed to the module.</summary>
+        </member>
+        <member name="M:PSDataRepository.Core.Extensions.ExtensionDependencyRecord.#ctor(System.String,System.String,System.String,System.DateTimeOffset,System.Collections.Generic.IReadOnlyList{PSDataRepository.Core.Extensions.ExtensionDependencyFile})">
+            <summary>Creates a record.</summary>
+        </member>
+        <member name="P:PSDataRepository.Core.Extensions.ExtensionDependencyRecord.ExtensionFile">
+            <summary>File name of the extension assembly, e.g. <c>Contoso.Provider.dll</c>.</summary>
+        </member>
+        <member name="P:PSDataRepository.Core.Extensions.ExtensionDependencyRecord.Subfolder">
+            <summary>Plugin subfolder it was installed into.</summary>
+        </member>
+        <member name="P:PSDataRepository.Core.Extensions.ExtensionDependencyRecord.Version">
+            <summary>Assembly version of the extension itself.</summary>
+        </member>
+        <member name="P:PSDataRepository.Core.Extensions.ExtensionDependencyRecord.InstalledUtc">
+            <summary>When it was installed.</summary>
+        </member>
+        <member name="P:PSDataRepository.Core.Extensions.ExtensionDependencyRecord.Files">
+            <summary>Every dependency the extension brought, whether or not it had to be written.</summary>
+        </member>
+        <member name="T:PSDataRepository.Core.Extensions.ExtensionDependencyStore">
+            <summary>
+            Records which extension contributed which files to a module's <c>bin/{TFM}/</c> root.
+            <para>
+            That folder is otherwise a flat pile with no provenance: the module's own dependencies and
+            every extension's dependencies sit side by side, indistinguishable. Without a record an
+            uninstall cannot clean up (deleting a shared assembly would break whatever else needs it),
+            nothing can tell which files are orphans, and a module upgrade — which lands in a brand new
+            version folder — silently loses every extension with no way to report what went missing.
+            </para>
+            <para>
+            The file lives next to <c>extensions.trust.json</c> and is edited through a JSON node tree
+            so hand-written content survives a round trip. It is bookkeeping, not a trust boundary:
+            a missing or unreadable file only costs provenance, never correctness of loading.
+            </para>
+            </summary>
+        </member>
+        <member name="F:PSDataRepository.Core.Extensions.ExtensionDependencyStore.FileName">
+            <summary>Name of the sidecar file, kept beside the trust list in <c>bin/{TFM}/</c>.</summary>
+        </member>
+        <member name="M:PSDataRepository.Core.Extensions.ExtensionDependencyStore.Read(System.String)">
+            <summary>
+            Reads every recorded extension. A missing file yields an empty set; a malformed one
+            yields an empty set too, because losing provenance must never block an install or an
+            uninstall the administrator asked for.
+            </summary>
+            <param name="storePath">Full path to <c>extensions.deps.json</c>.</param>
+        </member>
+        <member name="M:PSDataRepository.Core.Extensions.ExtensionDependencyStore.Record(System.String,PSDataRepository.Core.Extensions.ExtensionDependencyRecord)">
+            <summary>
+            Records (or replaces) what one extension contributed.
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Core.Extensions.ExtensionDependencyStore.Remove(System.String,System.String)">
+            <summary>
+            Removes an extension from the record and reports which of its files are now safe to
+            delete.
+            <para>
+            A file qualifies only when the extension being removed INTRODUCED it — it did not exist
+            in the module beforehand — and no other recorded extension lists it at all. Both halves
+            matter: the first keeps the module's own assemblies untouched, the second keeps a
+            dependency shared with another extension in place.
+            </para>
+            </summary>
+            <param name="storePath">Full path to <c>extensions.deps.json</c>.</param>
+            <param name="extensionFile">Extension assembly file name.</param>
+            <returns>File names that no longer belong to anything.</returns>
+        </member>
         <member name="T:PSDataRepository.Core.Extensions.ExtensionLoader">
             <summary>
             Discovers and loads plugin assemblies from subdirectories next to the module DLL.
@@ -265,6 +354,35 @@
             Name of the optional sidecar JSON file located next to the module
             manifest that lists additional trusted public key tokens.
             </summary>
+        </member>
+        <member name="F:PSDataRepository.Core.Extensions.ExtensionLoader._loadReport">
+            <summary>
+            One entry per candidate assembly seen during the last scan, loaded or rejected.
+            Surfaced by <c>Get-PSDataRepositoryExtension</c> so a rejection is diagnosable
+            instead of presenting as a silently missing provider or formatter.
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Core.Extensions.ExtensionLoader.GetLoadReport">
+            <summary>
+            Returns the result of the last scan: every candidate assembly under the plugin
+            subfolders, with the reason any of them was rejected.
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Core.Extensions.ExtensionLoader.Inspect(System.String)">
+            <summary>
+            Reads an assembly's strong-name token and declared contract version and evaluates
+            them against this host — without loading the assembly for execution.
+            <para>
+            This is the same inspection the loader performs during a scan, exposed so tooling
+            (notably <c>Install-PSDataRepositoryExtension</c>) can apply the gates BEFORE a file
+            is placed into the module, instead of discovering the problem at the next import.
+            </para>
+            </summary>
+            <param name="assemblyPath">Path to the candidate assembly.</param>
+            <returns>
+            The inspection result, or <c>null</c> when the file could not be read as a managed
+            assembly.
+            </returns>
         </member>
         <member name="M:PSDataRepository.Core.Extensions.ExtensionLoader.AddTrustedToken(System.String)">
             <summary>
@@ -327,11 +445,59 @@
             does not contain the <c>Auth/</c>, <c>Providers/</c>, <c>Formatters/</c> subfolders.
             </summary>
         </member>
-        <member name="M:PSDataRepository.Core.Extensions.ExtensionLoader.TryReadPublicKeyToken(System.String,System.Byte[]@)">
+        <member name="M:PSDataRepository.Core.Extensions.ExtensionLoader.TryReadAssemblyFacts(System.String,System.Byte[]@,System.String@)">
             <summary>
-            Reads the public key token from a .NET assembly without loading it for execution.
-            Uses <see cref="T:System.Reflection.PortableExecutable.PEReader"/> + <see cref="T:System.Reflection.Metadata.MetadataReader"/> so no static constructors
-            or module initializers in the candidate file are triggered.
+            Reads the strong-name public key token AND the declared extension contract version
+            from a .NET assembly without loading it for execution. Uses <see cref="T:System.Reflection.PortableExecutable.PEReader"/> +
+            <see cref="T:System.Reflection.Metadata.MetadataReader"/> so no static constructors or module initializers in the
+            candidate file are triggered — both trust and compatibility are decided before any
+            of its code can run.
+            </summary>
+            <param name="assemblyPath">Candidate assembly.</param>
+            <param name="token">Public key token, empty when the assembly is unsigned.</param>
+            <param name="contractVersion">
+            Value of <c>PSDataRepositoryContractAttribute</c>, or <c>null</c> when absent.
+            </param>
+            <returns><c>false</c> when the file could not be read as a managed assembly.</returns>
+        </member>
+        <member name="M:PSDataRepository.Core.Extensions.ExtensionLoader.TryReadAssemblyFacts(System.String,System.Byte[]@,System.String@,System.String@)">
+            <summary>
+            As <see cref="M:PSDataRepository.Core.Extensions.ExtensionLoader.TryReadAssemblyFacts(System.String,System.Byte[]@,System.String@)"/>, additionally
+            yielding the plugin subfolder the SDK stamped onto the extension.
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Core.Extensions.ExtensionLoader.GetReferencedAssemblies(System.String)">
+            <summary>
+            Reads the assemblies an extension was compiled against, with the versions recorded in
+            its metadata — again without loading it.
+            <para>
+            Comparing these against what actually sits in the module root is how version skew
+            becomes visible. An extension binds to whatever version is present at runtime, not the
+            one it was built with, so a mismatch surfaces as a MissingMethodException on first use
+            rather than as anything the install or the load reported.
+            </para>
+            </summary>
+            <param name="assemblyPath">Path to the extension assembly.</param>
+            <returns>Assembly simple name to referenced version; empty when the file is unreadable.</returns>
+        </member>
+        <member name="M:PSDataRepository.Core.Extensions.ExtensionLoader.ReadExtensionMetadata(System.Reflection.Metadata.MetadataReader,System.Reflection.Metadata.AssemblyDefinition,System.String@,System.String@)">
+            <summary>
+            Decodes the two assembly-level facts the SDK stamps onto an extension:
+            <c>[assembly: PSDataRepositoryContract("...")]</c> and the
+            <c>PSDataRepositoryExtensionSubfolder</c> assembly metadata entry.
+            <para>
+            Both are read straight from the attribute blobs. A CustomAttribute value blob is a
+            2-byte prolog (0x0001) followed by the serialized fixed arguments, so a one-string
+            attribute is prolog + SerString and a two-string one is prolog + SerString + SerString.
+            </para>
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Core.Extensions.ExtensionLoader.TryGetAttributeTypeName(System.Reflection.Metadata.MetadataReader,System.Reflection.Metadata.CustomAttribute,System.String@,System.String@)">
+            <summary>
+            Resolves a custom attribute's declaring type name and namespace.
+            The comparison is nominal rather than by resolved type because nothing is loaded at
+            this point — the extension's reference to PSDataRepository.Abstractions is only a
+            TypeReference row in its metadata.
             </summary>
         </member>
         <member name="M:PSDataRepository.Core.Extensions.ExtensionLoader.Reload">
@@ -364,6 +530,153 @@
             (<see cref="F:PSDataRepository.Core.Extensions.ExtensionLoader.SharedAssemblyPrefixes"/>) are delegated to the Default context so type
             identity is preserved across boundaries.
             </summary>
+        </member>
+        <member name="P:PSDataRepository.Core.Extensions.ExtensionLoader.ExtensionLoadContext.PluginDirectory">
+            <summary>Folder this extension was loaded from; used for sibling probing.</summary>
+        </member>
+        <member name="T:PSDataRepository.Core.Extensions.ExtensionLoadStatus">
+            <summary>Outcome of a single extension assembly's load attempt.</summary>
+        </member>
+        <member name="F:PSDataRepository.Core.Extensions.ExtensionLoadStatus.Loaded">
+            <summary>The assembly passed every check and its definitions were registered.</summary>
+        </member>
+        <member name="F:PSDataRepository.Core.Extensions.ExtensionLoadStatus.Rejected">
+            <summary>The assembly was skipped; <see cref="P:PSDataRepository.Core.Extensions.ExtensionLoadReportEntry.Reason"/> says why.</summary>
+        </member>
+        <member name="T:PSDataRepository.Core.Extensions.ExtensionLoadReportEntry">
+            <summary>
+            One row of the extension load report.
+            <para>
+            Every candidate DLL found under <c>Auth/</c>, <c>Providers/</c> and <c>Formatters/</c>
+            produces exactly one entry, whether it loaded or not. Before this existed, a rejected
+            extension left no trace beyond an optional diagnostic callback nobody was listening
+            to, so the symptom an administrator actually saw was a provider or formatter that
+            silently did not exist. Surfaced by <c>Get-PSDataRepositoryExtension</c>.
+            </para>
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Core.Extensions.ExtensionLoadReportEntry.#ctor(System.String,System.String,System.String,PSDataRepository.Core.Extensions.ExtensionLoadStatus,System.String,System.String,System.String,System.Collections.Generic.IReadOnlyList{System.String})">
+            <summary>Creates a report entry.</summary>
+        </member>
+        <member name="P:PSDataRepository.Core.Extensions.ExtensionLoadReportEntry.FileName">
+            <summary>File name of the candidate assembly.</summary>
+        </member>
+        <member name="P:PSDataRepository.Core.Extensions.ExtensionLoadReportEntry.Path">
+            <summary>Full path of the candidate assembly.</summary>
+        </member>
+        <member name="P:PSDataRepository.Core.Extensions.ExtensionLoadReportEntry.Subfolder">
+            <summary>Plugin subfolder it was found in: Auth, Providers or Formatters.</summary>
+        </member>
+        <member name="P:PSDataRepository.Core.Extensions.ExtensionLoadReportEntry.Status">
+            <summary>Whether the assembly was loaded or rejected.</summary>
+        </member>
+        <member name="P:PSDataRepository.Core.Extensions.ExtensionLoadReportEntry.Reason">
+            <summary>Operator-facing explanation when <see cref="P:PSDataRepository.Core.Extensions.ExtensionLoadReportEntry.Status"/> is Rejected; otherwise <c>null</c>.</summary>
+        </member>
+        <member name="P:PSDataRepository.Core.Extensions.ExtensionLoadReportEntry.ContractVersion">
+            <summary>
+            Contract version declared by the assembly, or <c>null</c> when it carries no
+            contract attribute (treated as legacy).
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Core.Extensions.ExtensionLoadReportEntry.PublicKeyToken">
+            <summary>Strong-name public key token as lowercase hex, or <c>null</c> when unsigned/unreadable.</summary>
+        </member>
+        <member name="P:PSDataRepository.Core.Extensions.ExtensionLoadReportEntry.Registered">
+            <summary>Names of the providers, auth providers and formatters registered from this assembly.</summary>
+        </member>
+        <member name="T:PSDataRepository.Core.Extensions.ExtensionAssemblyInfo">
+            <summary>
+            What can be learned about a candidate extension assembly WITHOUT loading it: its
+            strong-name token and the contract version it was built against.
+            <para>
+            Produced by <c>ExtensionLoader.Inspect</c> so the install cmdlets can apply the same
+            gates the loader applies, before a file is copied into the module rather than after
+            the next PowerShell start.
+            </para>
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Core.Extensions.ExtensionAssemblyInfo.#ctor(System.String,System.String,System.String,System.String,System.Boolean,System.Boolean,System.String)">
+            <summary>Creates an inspection result.</summary>
+        </member>
+        <member name="P:PSDataRepository.Core.Extensions.ExtensionAssemblyInfo.Subfolder">
+            <summary>
+            Plugin subfolder the SDK stamped onto the extension (Auth, Providers or Formatters),
+            or <c>null</c> when the assembly carries no such metadata — for instance because it
+            predates the stamp or was not built with the SDK targets.
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Core.Extensions.ExtensionAssemblyInfo.Path">
+            <summary>Full path of the inspected assembly.</summary>
+        </member>
+        <member name="P:PSDataRepository.Core.Extensions.ExtensionAssemblyInfo.PublicKeyToken">
+            <summary>Lowercase hex public key token, or <c>null</c> when the assembly is not strong-named.</summary>
+        </member>
+        <member name="P:PSDataRepository.Core.Extensions.ExtensionAssemblyInfo.ContractVersion">
+            <summary>Declared contract version, or <c>null</c> when the assembly carries no contract attribute.</summary>
+        </member>
+        <member name="P:PSDataRepository.Core.Extensions.ExtensionAssemblyInfo.IsTrusted">
+            <summary><c>true</c> when <see cref="P:PSDataRepository.Core.Extensions.ExtensionAssemblyInfo.PublicKeyToken"/> is already trusted by the running host.</summary>
+        </member>
+        <member name="P:PSDataRepository.Core.Extensions.ExtensionAssemblyInfo.IsContractCompatible">
+            <summary><c>true</c> when the declared contract can be satisfied by this host.</summary>
+        </member>
+        <member name="P:PSDataRepository.Core.Extensions.ExtensionAssemblyInfo.IncompatibilityReason">
+            <summary>Why the contract is not satisfied; <c>null</c> when it is.</summary>
+        </member>
+        <member name="P:PSDataRepository.Core.Extensions.ExtensionAssemblyInfo.IsStrongNamed">
+            <summary><c>true</c> when the assembly is strong-named at all.</summary>
+        </member>
+        <member name="T:PSDataRepository.Core.Extensions.ExtensionTrustStore">
+            <summary>
+            Read/modify/write access to <c>extensions.trust.json</c>, the administrator-managed
+            list of strong-name public key tokens allowed to author plugins.
+            <para>
+            The file is edited through a JSON node tree rather than being serialised from a POCO
+            so that the explanatory <c>_comment</c> — and anything else an administrator added —
+            survives a round trip. A trust file that silently loses its own documentation the
+            first time a cmdlet touches it would be worse than no cmdlet at all.
+            </para>
+            <para>
+            This file grants CODE EXECUTION. It records who may author an extension; it says
+            nothing about which contract version an extension targets. Those are orthogonal —
+            a publisher does not become untrusted because their extension needs a rebuild — and
+            the contract version travels with the binary instead, where it cannot drift from the
+            code it describes.
+            </para>
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Core.Extensions.ExtensionTrustStore.ReadTokens(System.String)">
+            <summary>
+            Reads the trusted tokens from the given trust file. A missing file yields an empty
+            list; a malformed one throws, because silently treating corruption as "no trust"
+            would turn a typo into a fleet-wide extension outage with no explanation.
+            </summary>
+            <param name="trustFilePath">Path to <c>extensions.trust.json</c>.</param>
+        </member>
+        <member name="M:PSDataRepository.Core.Extensions.ExtensionTrustStore.AddToken(System.String,System.String)">
+            <summary>
+            Adds a token to the trust file, creating the file if it does not exist.
+            </summary>
+            <param name="trustFilePath">Path to <c>extensions.trust.json</c>.</param>
+            <param name="publicKeyToken">Lowercase 16-character hex token.</param>
+            <returns><c>true</c> when the token was added, <c>false</c> when already present.</returns>
+            <exception cref="T:System.ArgumentException">The token is not 16 hex characters.</exception>
+        </member>
+        <member name="M:PSDataRepository.Core.Extensions.ExtensionTrustStore.RemoveToken(System.String,System.String)">
+            <summary>
+            Removes a token from the trust file.
+            </summary>
+            <param name="trustFilePath">Path to <c>extensions.trust.json</c>.</param>
+            <param name="publicKeyToken">Token to remove.</param>
+            <returns><c>true</c> when a token was removed.</returns>
+        </member>
+        <member name="M:PSDataRepository.Core.Extensions.ExtensionTrustStore.NormalizeToken(System.String)">
+            <summary>
+            Validates and normalises a public key token to lowercase hex.
+            </summary>
+            <param name="publicKeyToken">Candidate token.</param>
+            <exception cref="T:System.ArgumentException">The token is not 16 hex characters.</exception>
         </member>
         <member name="T:PSDataRepository.Core.Resources.Strings">
             <summary>

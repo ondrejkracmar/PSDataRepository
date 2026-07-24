@@ -1,10 +1,10 @@
 ---
 document type: cmdlet
-external help file: PSDataRepository.Commands.dll-Help.xml
+external help file: PSDataRepository.dll-Help.xml
 HelpUri: ''
 Locale: en-US
 Module Name: PSDataRepository
-ms.date: 06/23/2026
+ms.date: 04.12.2026
 PlatyPS schema version: 2024-05-01
 title: Receive-PSDataRepositoryMessage
 ---
@@ -13,7 +13,7 @@ title: Receive-PSDataRepositoryMessage
 
 ## SYNOPSIS
 
-{{ Fill in the Synopsis }}
+Receives and deserializes messages from the connected queue repository.
 
 ## SYNTAX
 
@@ -21,7 +21,7 @@ title: Receive-PSDataRepositoryMessage
 
 ```
 Receive-PSDataRepositoryMessage [-MaxMessages <int>] [-VisibilityTimeoutSeconds <int>]
- [-Format <string>] [-Raw] [-NoAutoDelete] [-ContinueOnError] [-IncludeMetadata]
+ [-Format <FormatType>] [-Raw] [-NoAutoDelete] [-ContinueOnError] [-IncludeMetadata]
  [<CommonParameters>]
 ```
 
@@ -29,7 +29,7 @@ Receive-PSDataRepositoryMessage [-MaxMessages <int>] [-VisibilityTimeoutSeconds 
 
 ```
 Receive-PSDataRepositoryMessage [-MaxMessages <int>] [-VisibilityTimeoutSeconds <int>]
- [-Format <string>] [-Peek] [-Raw] [-NoAutoDelete] [-ContinueOnError] [-IncludeMetadata]
+ [-Format <FormatType>] [-Peek] [-Raw] [-NoAutoDelete] [-ContinueOnError] [-IncludeMetadata]
  [<CommonParameters>]
 ```
 
@@ -37,7 +37,7 @@ Receive-PSDataRepositoryMessage [-MaxMessages <int>] [-VisibilityTimeoutSeconds 
 
 ```
 Receive-PSDataRepositoryMessage [-MaxMessages <int>] [-VisibilityTimeoutSeconds <int>]
- [-Format <string>] [-Raw] [-NoAutoDelete] [-Continuous] [-DelaySeconds <int>]
+ [-Format <FormatType>] [-Raw] [-NoAutoDelete] [-Continuous] [-DelaySeconds <int>]
  [-MaxIterations <int>] [-ContinueOnError] [-IncludeMetadata] [<CommonParameters>]
 ```
 
@@ -45,7 +45,7 @@ Receive-PSDataRepositoryMessage [-MaxMessages <int>] [-VisibilityTimeoutSeconds 
 
 ```
 Receive-PSDataRepositoryMessage -MessageId <string> [-MaxMessages <int>]
- [-VisibilityTimeoutSeconds <int>] [-Format <string>] [-Raw] [-NoAutoDelete] [-ContinueOnError]
+ [-VisibilityTimeoutSeconds <int>] [-Format <FormatType>] [-Raw] [-NoAutoDelete] [-ContinueOnError]
  [-IncludeMetadata] [<CommonParameters>]
 ```
 
@@ -56,19 +56,30 @@ This cmdlet has the following aliases,
 
 ## DESCRIPTION
 
-{{ Fill in the Description }}
+Retrieves messages from the active queue repository and deserializes them back to objects.
+Supports batching for efficient retrieval of large message volumes.
+Can operate in single-message mode, batch mode, continuous polling mode, or by-ID peek mode.
+Messages are automatically acknowledged/deleted after successful deserialization by default.
 
 ## EXAMPLES
 
-### Example 1
+### Receive batch
 
-{{ Add example description here }}
+
+
+### Continuous polling
+
+
+
+### Peek without removing
+
+
 
 ## PARAMETERS
 
 ### -ContinueOnError
 
-Continue on deserialization errors.
+If specified, continues processing even if individual message deserialization fails.
 
 ```yaml
 Type: System.Management.Automation.SwitchParameter
@@ -89,7 +100,7 @@ HelpMessage: ''
 
 ### -Continuous
 
-Continuously poll for messages.
+If specified, continues polling continuously until interrupted (Ctrl+C) or `-MaxIterations` is reached.
 
 ```yaml
 Type: System.Management.Automation.SwitchParameter
@@ -110,7 +121,8 @@ HelpMessage: ''
 
 ### -DelaySeconds
 
-Delay between polling attempts in seconds. Default: 5
+Delay in seconds between continuous polling attempts.
+Only used with `-Continuous`.
 
 ```yaml
 Type: System.Int32
@@ -131,10 +143,11 @@ HelpMessage: ''
 
 ### -Format
 
-Expected message format (Json, Xml, Csv). If not specified, auto-detects.
+Deserialization format.
+If not specified, attempts auto-detection based on content.
 
 ```yaml
-Type: System.String
+Type: System.Nullable`1[PSDataRepository.Serialization.FormatType]
 DefaultValue: ''
 SupportsWildcards: false
 Aliases: []
@@ -152,7 +165,7 @@ HelpMessage: ''
 
 ### -IncludeMetadata
 
-Include message metadata in output.
+If specified, includes message metadata (Id, Receipt, DequeueCount, timestamps) as note properties on output objects: ` _MessageId`, ` MessageReceipt`, ` DequeueCount`, ` InsertedOn`, ` ExpiresOn`, ` _NextVisibleOn`.
 
 ```yaml
 Type: System.Management.Automation.SwitchParameter
@@ -173,7 +186,8 @@ HelpMessage: ''
 
 ### -MaxIterations
 
-Maximum polling iterations. Default: unlimited
+Maximum number of continuous polling iterations.
+Only used with `-Continuous`.
 
 ```yaml
 Type: System.Int32
@@ -194,7 +208,7 @@ HelpMessage: ''
 
 ### -MaxMessages
 
-Maximum number of messages to receive (1-1000). Default: 1
+Maximum number of messages to receive in one call.
 
 ```yaml
 Type: System.Int32
@@ -215,7 +229,8 @@ HelpMessage: ''
 
 ### -MessageId
 
-Retrieve a specific message by its ID.
+The ID of a specific message to retrieve.
+When specified, only the message with the matching ID is returned (using peek, without removing from queue).
 
 ```yaml
 Type: System.String
@@ -236,7 +251,8 @@ HelpMessage: ''
 
 ### -NoAutoDelete
 
-Do not auto-delete messages after retrieval.
+If specified, does not automatically delete/acknowledge messages after processing.
+Useful for manual acknowledgement scenarios or debugging.
 
 ```yaml
 Type: System.Management.Automation.SwitchParameter
@@ -257,7 +273,7 @@ HelpMessage: ''
 
 ### -Peek
 
-Peek messages without removing them.
+If specified, peeks messages without removing them from the queue (read-only).
 
 ```yaml
 Type: System.Management.Automation.SwitchParameter
@@ -278,7 +294,7 @@ HelpMessage: ''
 
 ### -Raw
 
-Return raw message strings without deserialization.
+If specified, returns raw message content without deserialization.
 
 ```yaml
 Type: System.Management.Automation.SwitchParameter
@@ -299,7 +315,7 @@ HelpMessage: ''
 
 ### -VisibilityTimeoutSeconds
 
-Visibility timeout in seconds. Default: 30
+Visibility timeout for received messages (how long they remain invisible to other consumers).
 
 ```yaml
 Type: System.Int32
@@ -331,13 +347,18 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ### System.Management.Automation.PSObject
 
-{{ Fill in the Description }}
+Deserialized message objects.
+When `-IncludeMetadata` is used, additional note properties are added.
 
 ## NOTES
 
-{{ Fill in the Notes }}
+In the default (non-Peek) mode, messages are automatically deleted after successful processing.
+Use `-NoAutoDelete` to disable this behavior and manually delete with `Remove-PSDataRepositoryMessage`.
+
 
 ## RELATED LINKS
 
-{{ Fill in the related links here }}
-
+- [Online Version]()
+- [Send-PSDataRepositoryMessage]()
+- [Remove-PSDataRepositoryMessage]()
+- [ConvertFrom-PSDataRepositoryMessage]()

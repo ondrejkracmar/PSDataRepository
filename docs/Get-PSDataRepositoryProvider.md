@@ -1,10 +1,10 @@
 ---
 document type: cmdlet
-external help file: PSDataRepository.Commands.dll-Help.xml
+external help file: PSDataRepository.dll-Help.xml
 HelpUri: ''
 Locale: en-US
 Module Name: PSDataRepository
-ms.date: 06/23/2026
+ms.date: 04.12.2026
 PlatyPS schema version: 2024-05-01
 title: Get-PSDataRepositoryProvider
 ---
@@ -13,7 +13,7 @@ title: Get-PSDataRepositoryProvider
 
 ## SYNOPSIS
 
-{{ Fill in the Synopsis }}
+Lists all supported PSDataRepository providers and their capabilities.
 
 ## SYNTAX
 
@@ -30,19 +30,28 @@ This cmdlet has the following aliases,
 
 ## DESCRIPTION
 
-{{ Fill in the Description }}
+Displays information about each data repository provider the module can work with, including provider type, supported capabilities (Storage, Queue, Secrets), authentication methods, and connection examples.
+Does not require an active session.
 
 ## EXAMPLES
 
-### Example 1
+### List all providers
 
-{{ Add example description here }}
+
+
+### Filter by name
+
+
+
+### Filter by capability
+
+
 
 ## PARAMETERS
 
 ### -Capability
 
-Filter providers by capability (Storage, Queue, Secrets).
+Filter providers by capability.
 
 ```yaml
 Type: System.String
@@ -63,7 +72,8 @@ HelpMessage: ''
 
 ### -Name
 
-Filter by provider name (e.g. AzureBlob, AzureQueue, Disk).
+Filter by provider name.
+If not specified, all providers are listed.
 
 ```yaml
 Type: System.String
@@ -95,13 +105,17 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ### System.Management.Automation.PSObject
 
-{{ Fill in the Description }}
+One object per provider with properties:
+
+| Property | Type | Description | |---|---|---| | Name | String | Provider name | | Description | String | Human-readable description | | Capabilities | String[] | Storage, Queue, and/or Secrets | | AuthMethods | String[] | Supported authentication methods | | RequiresAzure | Boolean | Whether Azure subscription is needed | | Example | String | Example connection command |
 
 ## NOTES
 
-{{ Fill in the Notes }}
+This cmdlet does not require an active session.
+
 
 ## RELATED LINKS
 
-{{ Fill in the related links here }}
-
+- [Online Version]()
+- [Connect-PSDataRepository]()
+- [Get-PSDataRepositorySession]()

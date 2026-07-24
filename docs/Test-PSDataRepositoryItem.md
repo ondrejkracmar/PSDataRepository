@@ -1,10 +1,10 @@
 ---
 document type: cmdlet
-external help file: PSDataRepository.Commands.dll-Help.xml
+external help file: PSDataRepository.dll-Help.xml
 HelpUri: ''
 Locale: en-US
 Module Name: PSDataRepository
-ms.date: 06/23/2026
+ms.date: 04.12.2026
 PlatyPS schema version: 2024-05-01
 title: Test-PSDataRepositoryItem
 ---
@@ -13,7 +13,7 @@ title: Test-PSDataRepositoryItem
 
 ## SYNOPSIS
 
-{{ Fill in the Synopsis }}
+Tests if an object exists in the repository.
 
 ## SYNTAX
 
@@ -30,19 +30,25 @@ This cmdlet has the following aliases,
 
 ## DESCRIPTION
 
-{{ Fill in the Description }}
+Checks whether one or more objects exist in the connected repository (Azure Blob Storage, Disk).
+Returns `$true` if the item exists, `$false` otherwise.
+Requires an active session established by `Connect-PSDataRepository`.
 
 ## EXAMPLES
 
-### Example 1
+### Test single item
 
-{{ Add example description here }}
+
+
+### Conditional execution
+
+
 
 ## PARAMETERS
 
 ### -Name
 
-Object name/key to test.
+The name/key of the object(s) to test for existence.
 
 ```yaml
 Type: System.String[]
@@ -72,7 +78,7 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ### System.String
 
-{{ Fill in the Description }}
+Item names can be piped to this cmdlet.
 
 ### System.String[]
 
@@ -82,13 +88,18 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ### System.Boolean
 
-{{ Fill in the Description }}
+`$true` if the item exists, `$false` otherwise.
+One boolean per input name.
 
 ## NOTES
 
-{{ Fill in the Notes }}
+Requires an active session.
+Use `Connect-PSDataRepository` first.
+
 
 ## RELATED LINKS
 
-{{ Fill in the related links here }}
-
+- [Online Version]()
+- [Get-PSDataRepositoryItem]()
+- [Set-PSDataRepositoryItem]()
+- [Remove-PSDataRepositoryItem]()

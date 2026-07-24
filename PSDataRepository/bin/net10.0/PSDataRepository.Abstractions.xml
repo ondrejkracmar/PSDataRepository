@@ -14,6 +14,92 @@
         <member name="F:PSDataRepository.Abstractions.AuthModes.None">
             <summary>No authentication required (e.g. local Disk, InMemory).</summary>
         </member>
+        <member name="T:PSDataRepository.Abstractions.PSDataRepositoryContractAttribute">
+            <summary>
+            Declares which version of the PSDataRepository extension contract an extension
+            assembly was built against.
+            <para>
+            Applied automatically by the SDK's build targets — extension authors do not write
+            it by hand. <c>ExtensionLoader</c> reads it straight from assembly metadata, without
+            loading the assembly for execution, and refuses to load an extension whose contract
+            major does not match the host's.
+            </para>
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Abstractions.PSDataRepositoryContractAttribute.#ctor(System.String)">
+            <summary>Creates the attribute for the given contract version (e.g. "1.0.0").</summary>
+            <param name="version">The contract version the assembly was compiled against.</param>
+        </member>
+        <member name="P:PSDataRepository.Abstractions.PSDataRepositoryContractAttribute.Version">
+            <summary>The contract version the assembly was compiled against.</summary>
+        </member>
+        <member name="T:PSDataRepository.Abstractions.ExtensionContract">
+            <summary>
+            The host side of the extension contract: which contract version this build of
+            PSDataRepository provides, and whether a given extension's declared version can
+            run against it.
+            </summary>
+            <remarks>
+            <para>
+            The contract version is deliberately NOT the module version. It changes only when
+            the public API of the four contract assemblies changes; see
+            <c>PSDataRepositoryContractVersion</c> in <c>src/Directory.Build.props</c> for the
+            bump rules and <c>src/ContractApi.props</c> for how that surface is guarded.
+            </para>
+            <para>
+            Compatibility is decided on the MAJOR component alone. A minor bump is additive
+            (a new type, or an interface member added as a default interface member), so an
+            extension built against 1.0 keeps working on a 1.3 host. A major bump means an
+            already-built extension can no longer satisfy the contract and must be rebuilt.
+            </para>
+            </remarks>
+        </member>
+        <member name="F:PSDataRepository.Abstractions.ExtensionContract.LegacyVersion">
+            <summary>
+            Contract version assumed for an extension that carries no
+            <see cref="T:PSDataRepository.Abstractions.PSDataRepositoryContractAttribute"/>.
+            <para>
+            Extensions built before the attribute existed (and any built against an SDK
+            older than the one that stamps it) are treated as contract 1.0 rather than
+            rejected outright, so introducing the gate does not retroactively disable
+            extensions that were working.
+            </para>
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Abstractions.ExtensionContract.Current">
+            <summary>
+            The contract version this build provides, read from the assembly metadata that
+            <c>ContractApi.props</c> stamps from the single MSBuild property. Falls back to
+            <see cref="F:PSDataRepository.Abstractions.ExtensionContract.LegacyVersion"/> when the metadata is absent (e.g. an ad-hoc build
+            that did not import the props).
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Abstractions.ExtensionContract.CurrentMajor">
+            <summary>The major component of <see cref="P:PSDataRepository.Abstractions.ExtensionContract.Current"/>.</summary>
+        </member>
+        <member name="M:PSDataRepository.Abstractions.ExtensionContract.TryParseMajor(System.String,System.Int32@)">
+            <summary>
+            Extracts the major component of a contract version string.
+            </summary>
+            <param name="version">Version text such as "1", "1.2" or "1.2.3".</param>
+            <param name="major">The parsed major component.</param>
+            <returns><c>true</c> when a major component could be parsed.</returns>
+        </member>
+        <member name="M:PSDataRepository.Abstractions.ExtensionContract.IsCompatible(System.String,System.String@)">
+            <summary>
+            Decides whether an extension declaring <paramref name="declaredVersion"/> may be
+            loaded by this host.
+            </summary>
+            <param name="declaredVersion">
+            The value of the extension's <see cref="T:PSDataRepository.Abstractions.PSDataRepositoryContractAttribute"/>, or
+            <c>null</c> when it carries none (treated as <see cref="F:PSDataRepository.Abstractions.ExtensionContract.LegacyVersion"/>).
+            </param>
+            <param name="reason">
+            When the result is <c>false</c>, an operator-facing explanation naming both
+            versions and the required action.
+            </param>
+            <returns><c>true</c> when the extension is compatible with this host.</returns>
+        </member>
         <member name="T:PSDataRepository.Abstractions.IAuthenticationInfo">
             <summary>
             Generic, cloud-agnostic bag of authentication information passed to providers.
