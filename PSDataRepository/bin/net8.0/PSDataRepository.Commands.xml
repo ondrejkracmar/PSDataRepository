@@ -1583,10 +1583,23 @@
             Determines the storage name based on parameter set.
             </summary>
         </member>
-        <member name="M:PSDataRepository.Commands.SetPSDataRepositoryItemCommand.SerializeObject(System.Object)">
+        <member name="M:PSDataRepository.Commands.SetPSDataRepositoryItemCommand.ResolveFormatter(System.String)">
             <summary>
-            Serializes an object using the configured format.
-            Supports both single objects and arrays.
+            Resolves the formatter to use for a given storage name. An explicit <c>-Format</c> always
+            wins; otherwise the format is inferred from the name's extension, so
+            <c>Set -Name x.xlsx</c> writes with the same formatter that <c>Get -Name x.xlsx</c> will
+            pick to read it back. Falls back to the <c>-Format</c> default (Json) when the extension
+            is unknown.
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Commands.SetPSDataRepositoryItemCommand.WriteItem(System.String,System.Object,System.Threading.CancellationToken)">
+            <summary>
+            Serializes <paramref name="payload"/> and writes it under <paramref name="storageName"/>,
+            choosing a binary or text channel by the formatter. A binary formatter (e.g. Xlsx) stores
+            its raw bytes so the file on disk is the real artifact — an <c>.xlsx</c> Excel can open,
+            not a text-encoded stand-in only this module can read. Returns the number of bytes/chars
+            written and the name of the formatter actually used (which may differ from <c>-Format</c>
+            when it was inferred from the extension).
             </summary>
         </member>
         <member name="T:PSDataRepository.Commands.SetPSDataRepositorySecretCommand">

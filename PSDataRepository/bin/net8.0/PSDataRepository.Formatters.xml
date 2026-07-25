@@ -161,6 +161,43 @@
             <param name="options">Deserialization options.</param>
             <returns>The deserialized object.</returns>
         </member>
+        <member name="P:PSDataRepository.Formatters.IFormatterDefinition.IsBinary">
+            <summary>
+            Whether this formatter's serialized form is binary rather than text.
+            <para>
+            A binary format (e.g., an <c>.xlsx</c> workbook, which is a ZIP package) cannot survive a
+            text channel: writing its bytes through <see cref="M:PSDataRepository.Formatters.IFormatterDefinition.Serialize(System.Object,PSDataRepository.Formatters.FormatterOptions)"/> as a string would corrupt
+            them, or force a lossy text encoding such as Base64 that no external tool can open. When
+            this is <c>true</c>, the host stores the raw bytes from <see cref="M:PSDataRepository.Formatters.IFormatterDefinition.SerializeToBytes(System.Object,PSDataRepository.Formatters.FormatterOptions)"/> and
+            reads them back through <see cref="M:PSDataRepository.Formatters.IFormatterDefinition.DeserializeFromBytes(System.Byte[],PSDataRepository.Formatters.FormatterOptions)"/>, so the file on disk is the real
+            artifact — an <c>.xlsx</c> that Excel opens, not an encoded stand-in.
+            </para>
+            <para>
+            Defaults to <c>false</c>. Text formatters (JSON, XML, CSV, YAML) leave it untouched and the
+            byte members below round-trip through <see cref="M:PSDataRepository.Formatters.IFormatterDefinition.Serialize(System.Object,PSDataRepository.Formatters.FormatterOptions)"/>/<see cref="M:PSDataRepository.Formatters.IFormatterDefinition.Deserialize(System.String,PSDataRepository.Formatters.FormatterOptions)"/> as
+            UTF-8, so behaviour is unchanged. A formatter opts into binary by overriding all three.
+            </para>
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Formatters.IFormatterDefinition.SerializeToBytes(System.Object,PSDataRepository.Formatters.FormatterOptions)">
+            <summary>
+            Serializes an object to the raw bytes stored on disk. For a binary formatter this returns
+            the artifact itself (the workbook, the archive); the default routes through
+            <see cref="M:PSDataRepository.Formatters.IFormatterDefinition.Serialize(System.Object,PSDataRepository.Formatters.FormatterOptions)"/> as UTF-8 so text formatters need not implement it.
+            </summary>
+            <param name="input">The object to serialize.</param>
+            <param name="options">Serialization options.</param>
+            <returns>The serialized bytes.</returns>
+        </member>
+        <member name="M:PSDataRepository.Formatters.IFormatterDefinition.DeserializeFromBytes(System.Byte[],PSDataRepository.Formatters.FormatterOptions)">
+            <summary>
+            Deserializes raw bytes read from disk back into an object. The default decodes them as
+            UTF-8 and defers to <see cref="M:PSDataRepository.Formatters.IFormatterDefinition.Deserialize(System.String,PSDataRepository.Formatters.FormatterOptions)"/>, so text formatters need not implement it.
+            </summary>
+            <param name="input">The serialized bytes.</param>
+            <param name="options">Deserialization options.</param>
+            <returns>The deserialized object.</returns>
+        </member>
         <member name="T:PSDataRepository.Formatters.IFormatterRegistry">
             <summary>
             Registry for formatter plugins. Provides lookup by name and by file extension/content.
