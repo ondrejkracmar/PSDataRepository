@@ -4,7 +4,7 @@ external help file: PSDataRepository.Commands.dll-Help.xml
 HelpUri: ''
 Locale: en-US
 Module Name: PSDataRepository
-ms.date: 07/25/2026
+ms.date: 08/15/2026
 PlatyPS schema version: 2024-05-01
 title: Copy-PSDataRepositoryItem
 ---
