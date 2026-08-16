@@ -6,14 +6,14 @@
   "compilationOptions": {},
   "targets": {
     ".NETCoreApp,Version=v10.0": {
-      "PSDataRepository/0.0.0": {
+      "PSDataRepository/0.7.3": {
         "dependencies": {
-          "PSDataRepository.Abstractions": "0.0.0",
-          "PSDataRepository.Authentications": "0.0.0",
-          "PSDataRepository.Commands": "0.0.0",
-          "PSDataRepository.Core": "0.0.0",
-          "PSDataRepository.Formatters": "0.0.0",
-          "PSDataRepository.Providers": "0.0.0",
+          "PSDataRepository.Abstractions": "0.7.3",
+          "PSDataRepository.Authentications": "0.7.3",
+          "PSDataRepository.Commands": "0.7.3",
+          "PSDataRepository.Core": "0.7.3",
+          "PSDataRepository.Formatters": "0.7.3",
+          "PSDataRepository.Providers": "0.7.3",
           "PowerShellStandard.Library": "5.1.1"
         },
         "runtime": {
@@ -66,82 +66,82 @@
           }
         }
       },
-      "PSDataRepository.Abstractions/0.0.0": {
+      "PSDataRepository.Abstractions/0.7.3": {
         "runtime": {
           "PSDataRepository.Abstractions.dll": {
-            "assemblyVersion": "0.0.0.0",
-            "fileVersion": "0.0.0.0"
+            "assemblyVersion": "0.7.3.0",
+            "fileVersion": "0.7.3.0"
           }
         }
       },
-      "PSDataRepository.Authentications/0.0.0": {
+      "PSDataRepository.Authentications/0.7.3": {
         "dependencies": {
-          "PSDataRepository.Abstractions": "0.0.0"
+          "PSDataRepository.Abstractions": "0.7.3"
         },
         "runtime": {
           "PSDataRepository.Authentications.dll": {
-            "assemblyVersion": "0.0.0.0",
-            "fileVersion": "0.0.0.0"
+            "assemblyVersion": "0.7.3.0",
+            "fileVersion": "0.7.3.0"
           }
         }
       },
-      "PSDataRepository.Commands/0.0.0": {
+      "PSDataRepository.Commands/0.7.3": {
         "dependencies": {
           "Konscious.Security.Cryptography.Argon2": "1.3.1",
-          "PSDataRepository.Abstractions": "0.0.0",
-          "PSDataRepository.Authentications": "0.0.0",
-          "PSDataRepository.Core": "0.0.0",
-          "PSDataRepository.Formatters": "0.0.0",
-          "PSDataRepository.Providers": "0.0.0"
+          "PSDataRepository.Abstractions": "0.7.3",
+          "PSDataRepository.Authentications": "0.7.3",
+          "PSDataRepository.Core": "0.7.3",
+          "PSDataRepository.Formatters": "0.7.3",
+          "PSDataRepository.Providers": "0.7.3"
         },
         "runtime": {
           "PSDataRepository.Commands.dll": {
-            "assemblyVersion": "0.0.0.0",
-            "fileVersion": "0.0.0.0"
+            "assemblyVersion": "0.7.3.0",
+            "fileVersion": "0.7.3.0"
           }
         }
       },
-      "PSDataRepository.Core/0.0.0": {
+      "PSDataRepository.Core/0.7.3": {
         "dependencies": {
           "Microsoft.Extensions.Logging.Abstractions": "10.0.6",
-          "PSDataRepository.Abstractions": "0.0.0",
-          "PSDataRepository.Authentications": "0.0.0",
-          "PSDataRepository.Formatters": "0.0.0",
-          "PSDataRepository.Providers": "0.0.0"
+          "PSDataRepository.Abstractions": "0.7.3",
+          "PSDataRepository.Authentications": "0.7.3",
+          "PSDataRepository.Formatters": "0.7.3",
+          "PSDataRepository.Providers": "0.7.3"
         },
         "runtime": {
           "PSDataRepository.Core.dll": {
-            "assemblyVersion": "0.0.0.0",
-            "fileVersion": "0.0.0.0"
+            "assemblyVersion": "0.7.3.0",
+            "fileVersion": "0.7.3.0"
           }
         }
       },
-      "PSDataRepository.Formatters/0.0.0": {
+      "PSDataRepository.Formatters/0.7.3": {
         "dependencies": {
-          "PSDataRepository.Abstractions": "0.0.0"
+          "PSDataRepository.Abstractions": "0.7.3"
         },
         "runtime": {
           "PSDataRepository.Formatters.dll": {
-            "assemblyVersion": "0.0.0.0",
-            "fileVersion": "0.0.0.0"
+            "assemblyVersion": "0.7.3.0",
+            "fileVersion": "0.7.3.0"
           }
         }
       },
-      "PSDataRepository.Providers/0.0.0": {
+      "PSDataRepository.Providers/0.7.3": {
         "dependencies": {
-          "PSDataRepository.Abstractions": "0.0.0"
+          "PSDataRepository.Abstractions": "0.7.3"
         },
         "runtime": {
           "PSDataRepository.Providers.dll": {
-            "assemblyVersion": "0.0.0.0",
-            "fileVersion": "0.0.0.0"
+            "assemblyVersion": "0.7.3.0",
+            "fileVersion": "0.7.3.0"
           }
         }
       }
     }
   },
   "libraries": {
-    "PSDataRepository/0.0.0": {
+    "PSDataRepository/0.7.3": {
       "type": "project",
       "serviceable": false,
       "sha512": ""
@@ -181,32 +181,32 @@
       "path": "powershellstandard.library/5.1.1",
       "hashPath": "powershellstandard.library.5.1.1.nupkg.sha512"
     },
-    "PSDataRepository.Abstractions/0.0.0": {
+    "PSDataRepository.Abstractions/0.7.3": {
       "type": "project",
       "serviceable": false,
       "sha512": ""
     },
-    "PSDataRepository.Authentications/0.0.0": {
+    "PSDataRepository.Authentications/0.7.3": {
       "type": "project",
       "serviceable": false,
       "sha512": ""
     },
-    "PSDataRepository.Commands/0.0.0": {
+    "PSDataRepository.Commands/0.7.3": {
       "type": "project",
       "serviceable": false,
       "sha512": ""
     },
-    "PSDataRepository.Core/0.0.0": {
+    "PSDataRepository.Core/0.7.3": {
       "type": "project",
       "serviceable": false,
       "sha512": ""
     },
-    "PSDataRepository.Formatters/0.0.0": {
+    "PSDataRepository.Formatters/0.7.3": {
       "type": "project",
       "serviceable": false,
       "sha512": ""
     },
-    "PSDataRepository.Providers/0.0.0": {
+    "PSDataRepository.Providers/0.7.3": {
       "type": "project",
       "serviceable": false,
       "sha512": ""

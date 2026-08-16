@@ -195,6 +195,23 @@
             </para>
             </summary>
         </member>
+        <member name="F:PSDataRepository.Commands.Common.ExtensionInstallHelper.HostAssemblyPrefixes">
+            <summary>
+            Assemblies that belong to the host and must never be replaced by a copy travelling in an
+            extension payload. Both families define types the host and every extension must agree on —
+            <c>PSDataRepository.*</c> carries the extension contract, and <c>Isystem.AzAuth.*</c>
+            carries the authentication surface the AzAuth extension is expressed in. Replacing either
+            breaks type identity.
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Commands.Common.ExtensionInstallHelper.IsRepositoryModuleRoot(System.String)">
+            <summary>
+            <c>true</c> when <paramref name="dir"/> is an installed PSDataRepository module root — i.e.
+            it has the <c>bin/{TFM}/</c> layout with the Core assembly inside. Distinguishes "migrate
+            the extensions out of another installed module version" from the thin payload-module shape
+            that <c>-FromModule</c> historically meant.
+            </summary>
+        </member>
         <member name="M:PSDataRepository.Commands.Common.ExtensionInstallHelper.ResolveModuleRootFromRunningAssembly">
             <summary>
             Derives the module root from the running Core assembly: <c>{root}/bin/{tfm}/Core.dll</c>.
@@ -221,6 +238,62 @@
             set and maps straight onto the module's bin layout. A NuGet package instead has
             <c>lib/{tfm}/</c>, which contains only the package's own assemblies; its NuGet
             dependencies are NOT present, which is why the caller warns about that case.
+            </para>
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Commands.Common.ExtensionInstallHelper.DiscoverInstalledExtensions(System.String,System.String)">
+            <summary>
+            Discovers the third-party extensions installed in another PSDataRepository module root,
+            so they can be migrated into this one when the module is upgraded.
+            <para>
+            Third-party is decided by strong name: anything signed with <paramref name="hostToken"/>
+            is an in-box plugin that ships with every module version and must not be carried across,
+            and anything unsigned could not have been loaded in the first place.
+            </para>
+            <para>
+            Dependency resolution prefers the source's <c>extensions.deps.json</c> record (written at
+            install time, exact by construction). An extension without a record — deployed by hand, or
+            installed before the store existed — falls back to a transitive referenced-assembly closure
+            over the files actually present in the source framework root, which reconstructs the same
+            set for any extension whose libraries follow assembly naming (file = simple name + .dll).
+            </para>
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Commands.Common.ExtensionInstallHelper.ResolveDependencyClosure(System.String,System.String)">
+            <summary>
+            Transitive closure of an extension's dependencies over the files present in
+            <paramref name="tfmRoot"/>: start from the extension's referenced assemblies, keep every
+            reference whose <c>{SimpleName}.dll</c> exists there and is not a host assembly, and walk
+            those files' references the same way. Host assemblies terminate the walk — they are shared
+            contract surface, never payload.
+            </summary>
+        </member>
+        <member name="T:PSDataRepository.Commands.Common.ExtensionInstallHelper.DirectoryMergeResult">
+            <summary>Outcome of one <see cref="M:PSDataRepository.Commands.Common.ExtensionInstallHelper.MergeDirectory(System.String,System.String,System.Boolean)"/> pass, per file category.</summary>
+        </member>
+        <member name="P:PSDataRepository.Commands.Common.ExtensionInstallHelper.DirectoryMergeResult.Copied">
+            <summary>Files written into the destination.</summary>
+        </member>
+        <member name="P:PSDataRepository.Commands.Common.ExtensionInstallHelper.DirectoryMergeResult.SkippedIdentical">
+            <summary>Files skipped because source and destination content is identical.</summary>
+        </member>
+        <member name="P:PSDataRepository.Commands.Common.ExtensionInstallHelper.DirectoryMergeResult.KeptExisting">
+            <summary>Files that differ but were preserved because the policy forbids overwriting.</summary>
+        </member>
+        <member name="P:PSDataRepository.Commands.Common.ExtensionInstallHelper.DirectoryMergeResult.Failed">
+            <summary>"file: reason" entries for copies that failed (locked target, access denied).</summary>
+        </member>
+        <member name="M:PSDataRepository.Commands.Common.ExtensionInstallHelper.MergeDirectory(System.String,System.String,System.Boolean)">
+            <summary>
+            Merges a directory tree into <paramref name="destRoot"/> file by file, without ever letting a
+            single locked file abort the whole operation — the failure mode that used to crash an install
+            half-way when a native library was loaded by the running session.
+            <para>
+            Per file: missing in the destination → copy. Identical content → skip. Different content →
+            overwrite only when <paramref name="overwriteChanged"/> allows it. Overwriting matters for a
+            publish artifact, whose runtimes tree belongs to the extension being upgraded; it must NOT
+            happen when the source is another module version's shared tree, where the differing file is
+            most likely the target module's own newer native.
             </para>
             </summary>
         </member>
@@ -1055,16 +1128,22 @@
             <summary>Registered PSResource repository to fetch from.</summary>
         </member>
         <member name="P:PSDataRepository.Commands.InstallPSDataRepositoryExtensionCommand.Version">
-            <summary>Specific version to fetch; latest stable when omitted.</summary>
+            <summary>Specific version to fetch (feed) or to migrate from (installed module); latest when omitted.</summary>
         </member>
         <member name="P:PSDataRepository.Commands.InstallPSDataRepositoryExtensionCommand.FromModule">
             <summary>
-            Name of an already-installed PowerShell module that carries the extension payload.
+            Name of an already-installed PowerShell module. Two shapes are recognised.
             <para>
-            This is how an extension published to the PowerShell Gallery arrives: the gallery only
-            accepts PowerShell modules, so the extension ships as a thin manifest-only module whose
-            content is the per-framework payload. <c>Install-Module</c> puts it on disk; this
-            parameter takes it from there into the PSDataRepository module.
+            A thin payload module — how an extension published to the PowerShell Gallery arrives, since
+            the gallery only accepts modules, so the extension ships as a manifest-only module whose
+            content is the per-framework payload — is scanned like any other payload directory.
+            </para>
+            <para>
+            An installed <b>PSDataRepository module itself</b> (typically an older version, selected
+            with <c>-Version</c>) is treated as a MIGRATION source instead: its third-party extensions
+            are discovered by strong-name token, their dependencies resolved from the source's
+            dependency record (or, failing that, a referenced-assembly closure), and everything is
+            installed into this module — which is how extensions move when the module is upgraded.
             </para>
             </summary>
         </member>
@@ -1091,11 +1170,31 @@
             scanned exactly like any other payload directory.
             </summary>
         </member>
+        <member name="M:PSDataRepository.Commands.InstallPSDataRepositoryExtensionCommand.ResolveHostToken">
+            <summary>
+            Strong-name token of the running host, read from the Core assembly the same way the loader
+            reads candidate tokens. Extensions signed with this key are in-box plugins.
+            </summary>
+        </member>
         <member name="M:PSDataRepository.Commands.InstallPSDataRepositoryExtensionCommand.SaveFromRepository">
             <summary>
             Delegates the download to PSResourceGet so any repository the administrator already
             registered works, rather than reimplementing feed access and its authentication.
             </summary>
+        </member>
+        <member name="M:PSDataRepository.Commands.InstallPSDataRepositoryExtensionCommand.TryCopyDependency(System.String,System.String,System.String,System.Collections.Generic.List{System.String})">
+            <summary>
+            Copies one dependency, degrading a locked or unwritable target into a warning that names
+            the cause instead of a bare <see cref="T:System.IO.IOException"/>.
+            <para>
+            A dependency the current session has already loaded cannot be overwritten on Windows, and
+            this cmdlet always runs from a session that imported the module. Letting the raw exception
+            escape would also abort mid-install, leaving the extension DLL copied and its dependency
+            record unwritten; reporting and continuing keeps the rest of the payload consistent and
+            tells the operator what to do.
+            </para>
+            </summary>
+            <returns><c>true</c> when the file was copied.</returns>
         </member>
         <member name="M:PSDataRepository.Commands.InstallPSDataRepositoryExtensionCommand.FindDependentsOf(System.String,System.String,System.Int32)">
             <summary>

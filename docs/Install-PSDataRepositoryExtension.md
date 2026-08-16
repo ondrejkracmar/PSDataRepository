@@ -34,8 +34,8 @@ Install-PSDataRepositoryExtension -Name <string> -Repository <string> [-Version 
 ### InstalledModule
 
 ```
-Install-PSDataRepositoryExtension -FromModule <string> [-ModuleRoot <string>] [-Subfolder <string>]
- [-Trust] [-Force] [-WhatIf] [-Confirm]
+Install-PSDataRepositoryExtension -FromModule <string> [-Version <string>] [-ModuleRoot <string>]
+ [-Subfolder <string>] [-Trust] [-Force] [-WhatIf] [-Confirm]
 ```
 
 ## ALIASES
@@ -105,6 +105,23 @@ The gallery package is a wrapper: it carries the payload and declares the depend
 `PSDataRepository`, but the files still have to be placed into the module. This is the step
 that does it.
 
+### Example 5: Carry extensions over to a newly installed module version
+
+```powershell
+Update-Module PSDataRepository
+Install-PSDataRepositoryExtension -FromModule PSDataRepository -Version 0.7.1 -Trust
+```
+
+Extensions live inside the module folder, so a new module version starts with none of them.
+This moves every third-party extension out of the named older version — assemblies, their
+dependencies and their trust entries — in one command. In-box providers, formatters and auth
+extensions are skipped: they ship with each version already.
+
+Omit `-Trust` to install the files without trusting their signing keys; the extensions are
+then visible to `Get-PSDataRepositoryExtension` but refused at load until their tokens are
+added to `extensions.trust.json`. Restart PowerShell afterwards for the migrated extensions
+to be loaded.
+
 ## PARAMETERS
 
 ### -Confirm
@@ -152,7 +169,17 @@ HelpMessage: ''
 
 ### -FromModule
 
-Name of an installed PowerShell module carrying the extension payload.
+Name of an installed PowerShell module. Two shapes are recognised.
+
+A thin payload module — how an extension published to the PowerShell Gallery arrives, since
+the gallery only accepts modules — is scanned like any other payload directory.
+
+An installed **PSDataRepository module itself** (typically an older version, selected with
+`-Version`) is treated as a migration source instead: its third-party extensions are
+discovered by strong-name token, their dependencies resolved from the source's dependency
+record (or, failing that, a referenced-assembly closure), and everything is installed into
+this module. In-box providers, formatters and auth extensions ship with every module version
+and are never migrated.
 
 ```yaml
 Type: System.String
@@ -299,7 +326,8 @@ HelpMessage: ''
 
 ### -Version
 
-Version to install; latest when omitted.
+Version to fetch from the repository, or — with `-FromModule` — the installed module version
+to use. Latest (feed) or highest installed (module) when omitted.
 
 ```yaml
 Type: System.String
@@ -308,6 +336,12 @@ SupportsWildcards: false
 Aliases: []
 ParameterSets:
 - Name: Feed
+  Position: Named
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+- Name: InstalledModule
   Position: Named
   IsRequired: false
   ValueFromPipeline: false

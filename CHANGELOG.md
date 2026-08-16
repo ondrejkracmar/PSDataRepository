@@ -48,6 +48,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Extension migration between module versions.**
+  `Install-PSDataRepositoryExtension -FromModule PSDataRepository -Version <old> -Trust`
+  moves every third-party extension out of an older installed PSDataRepository into the
+  current one in a single command — assemblies, their dependencies and their trust entries.
+  `-FromModule` now recognises two shapes: a thin payload module (how a Gallery-published
+  extension arrives, unchanged behaviour) and an installed PSDataRepository module root,
+  which is treated as a migration source. Third-party is decided by strong-name token, so
+  the in-box providers, formatters and auth extensions — which ship with every version —
+  are never carried across. Dependencies come from the source's `extensions.deps.json`
+  record, falling back to a transitive referenced-assembly closure for extensions installed
+  before that store existed. `-Version` now applies to `-FromModule`, not just `-Repository`.
+
 - **Certificate authentication by thumbprint.** `Connect-PSDataRepository` now accepts
   `-CertificateThumbprint` for Azure providers (Blob, Queue, Service Bus, Key Vault) as an
   alternative to `-CertificatePath`. The certificate is loaded from the CurrentUser or
@@ -168,6 +180,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `Directory.Build.targets / CopyPluginToModuleOutput`. `bin/{TFM}/` layout is unchanged.
 
 ### Fixed
+
+- **`Install-PSDataRepositoryExtension` aborted mid-install on a locked file.** The cmdlet
+  always runs from a session that has the module imported, so an already-installed extension
+  or one of its dependencies can be loaded and therefore unwritable on Windows. Both
+  unguarded copies now degrade to a per-file message naming the cause and the remedy instead
+  of throwing: the extension copy reports `ExtensionFileLocked` and moves to the next
+  payload, and a locked dependency becomes a warning while the rest of the payload still
+  installs consistently. Previously the raw `IOException` escaped, leaving the extension DLL
+  copied and its dependency record unwritten.
+- **Native `runtimes/` assets were not staged, and a shared tree could be overwritten.**
+  Extensions carrying `runtimes/<rid>/native/` payloads are now mirrored into the module's
+  per-TFM `runtimes/` folder, where the loader's native resolver probes. The merge is
+  per file, with two policies: a publish artifact's tree belongs to the extension being
+  installed and overwrites, while a source that is another module version's framework root
+  shares its tree with that module and every extension — there a differing file is kept,
+  since it is most likely the target module's own newer native. A native locked by a running
+  session is reported per file rather than aborting the install.
 
 - **PSObject-wrapped primitives serialized as `{}`.** `FormatterHelper.CleanObjectForJson`
   now unwraps `PSObject`-wrapped primitive values (e.g. integers produced by

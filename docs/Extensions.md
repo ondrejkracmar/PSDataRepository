@@ -315,8 +315,17 @@ Get-PSDataRepositoryExtension -MissingAfterUpgrade   # lost when the module was 
 
 The last one matters more than it looks: every module version installs into its **own** folder,
 so upgrading the module leaves every extension behind. Nothing announces that — the module
-works and the in-box providers are all present; only third-party ones are gone. Reinstall them
-and restart PowerShell.
+works and the in-box providers are all present; only third-party ones are gone.
+
+Rather than reinstalling each one, carry them over from the previous version in a single step:
+
+```powershell
+Install-PSDataRepositoryExtension -FromModule PSDataRepository -Version 0.7.1 -Trust
+```
+
+That takes the third-party extensions, their dependencies and their trust entries out of the
+named older version and installs them here. Extensions signed with the module's own key are
+in-box and skipped — they ship with every version. Restart PowerShell afterwards.
 
 ---
 
