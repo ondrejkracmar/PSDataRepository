@@ -7,6 +7,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- **Trust is now an immutable policy built once per scan.** It used to be a mutable static list
+  that `AddTrustedToken` could extend at any moment, including midway through a scan, so two
+  candidates in the same load could be judged against different rules; the deny reason was also
+  phrased separately at each call site. `ExtensionTrustPolicy` is built from the module's own
+  token plus `extensions.trust.json` and passed down, and `Evaluate()` returns the verdict and
+  the reason together. Fail-closed is now an explicit check rather than something that falls out
+  of a token comparison that can never match.
+
+  `ExtensionLoader.AddTrustedToken` and `ExtensionLoader.LoadTrustedTokensFromFile` are removed.
+  Both were public but had no caller outside this module's own tests, and injecting a token at
+  runtime is precisely the mutability being removed — trust is a question about a file on disk.
+  Token validation still lives in `ExtensionTrustStore.NormalizeToken`.
+
+- **The loader prefers a runtime-specific assembly over the flat copy.** A package can ship a
+  platform-neutral facade in `lib/` — every member throwing `PlatformNotSupportedException` —
+  with the real implementation under `runtimes/{win|unix}/lib/<tfm>/`. PowerShell module loading
+  does no deps.json probing, so without this the facade is what loads and the failure surfaces at
+  the first call rather than at load.
+
+  Nothing the module itself ships needs this: 0.7.3's published output has no `runtimes/` folder
+  at all. It matters for extensions, because `Install-PSDataRepositoryExtension` stages an
+  extension's `runtimes/` tree into the module — without it the installer would place a
+  RID-specific assembly the loader then ignores.
+
+  Neither change is contract surface; the extension contract version stays at 1.1.0 and published
+  extensions keep loading unchanged.
+
 ### Security
 
 - **V5 encryption format — Argon2id key derivation.** `Compress-PSDataRepositoryItem` now

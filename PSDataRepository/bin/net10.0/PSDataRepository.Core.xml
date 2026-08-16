@@ -340,15 +340,6 @@
             </para>
             </summary>
         </member>
-        <member name="F:PSDataRepository.Core.Extensions.ExtensionLoader._trustedTokens">
-            <summary>
-            Additional public key tokens trusted by the host administrator.
-            Populated from the sidecar <c>extensions.trust.json</c> file (see
-            <see cref="M:PSDataRepository.Core.Extensions.ExtensionLoader.LoadTrustedTokensFromFile(System.String,System.Action{System.String})"/>) before <see cref="M:PSDataRepository.Core.Extensions.ExtensionLoader.LoadAll(PSDataRepository.Providers.IProviderRegistry,PSDataRepository.Authentications.IAuthenticationRegistry,PSDataRepository.Formatters.IFormatterRegistry,System.Action{System.String})"/>
-            runs. The Core SNK token is always implicitly trusted; this list
-            extends trust to 3rd-party plugins signed with their own SNK.
-            </summary>
-        </member>
         <member name="F:PSDataRepository.Core.Extensions.ExtensionLoader.TrustListFileName">
             <summary>
             Name of the optional sidecar JSON file located next to the module
@@ -384,39 +375,6 @@
             assembly.
             </returns>
         </member>
-        <member name="M:PSDataRepository.Core.Extensions.ExtensionLoader.AddTrustedToken(System.String)">
-            <summary>
-            Adds a public key token to the runtime trust list. Token must be a
-            16-character lowercase hex string (8 bytes). Duplicates are ignored.
-            </summary>
-            <param name="hexToken">Hex-encoded 8-byte public key token.</param>
-            <returns><c>true</c> when the token was added, <c>false</c> when invalid or duplicate.</returns>
-        </member>
-        <member name="M:PSDataRepository.Core.Extensions.ExtensionLoader.LoadTrustedTokensFromFile(System.String,System.Action{System.String})">
-            <summary>
-            Loads additional trusted public key tokens from
-            <c>{moduleDir}/extensions.trust.json</c> if it exists. Missing or
-            malformed file is treated as "no extra trust" — fail-closed.
-            </summary>
-            <param name="moduleDir">Directory containing the module manifest.</param>
-            <param name="diagnosticLog">Optional diagnostic sink.</param>
-            <returns>Number of tokens added.</returns>
-        </member>
-        <member name="M:PSDataRepository.Core.Extensions.ExtensionLoader.LoadTrustListFromAllLocations(System.String,System.Action{System.String})">
-            <summary>
-            Loads trusted public key tokens from every well-known location relative to
-            <paramref name="moduleDir"/> and returns the total number of tokens added.
-            <para>
-            The host installs the module so that the runtime assemblies (and a copy of
-            <see cref="F:PSDataRepository.Core.Extensions.ExtensionLoader.TrustListFileName"/>) live in <c>{ModuleRoot}/bin/{TFM}</c>, while the
-            module manifest and the administrator-facing copy of the trust file live in the
-            module root (<c>{ModuleRoot}</c>). The loader runs from the former but the docs and
-            the SDK deploy step tell administrators to edit the latter; probing both keeps the
-            documented workflow working without weakening the fail-closed model (an empty or
-            missing file contributes nothing).
-            </para>
-            </summary>
-        </member>
         <member name="M:PSDataRepository.Core.Extensions.ExtensionLoader.EnumerateTrustListProbeDirs(System.String)">
             <summary>
             Yields additional directories (beyond <paramref name="moduleDir"/> itself) that may
@@ -424,10 +382,18 @@
             <c>bin/{TFM}</c> layout, the module manifest root is two levels up.
             </summary>
         </member>
-        <member name="M:PSDataRepository.Core.Extensions.ExtensionLoader.IsTokenTrusted(System.Byte[])">
+        <member name="M:PSDataRepository.Core.Extensions.ExtensionLoader.EnumerateTrustListPaths(System.String)">
             <summary>
-            Returns <c>true</c> if <paramref name="publicKeyToken"/> matches the
-            Core SNK token or any administrator-trusted token.
+            Every <c>extensions.trust.json</c> path worth probing, in order: the directory the
+            loader runs from, then the module manifest root.
+            <para>
+            The host installs the runtime assemblies (and a copy of the trust file) into
+            <c>{ModuleRoot}/bin/{TFM}</c>, while the manifest and the administrator-facing copy of
+            the trust file live in <c>{ModuleRoot}</c>. The loader runs from the former, but the
+            docs and the SDK deploy step tell administrators to edit the latter; probing both keeps
+            the documented workflow working without weakening the fail-closed model, because a
+            missing or empty file contributes nothing.
+            </para>
             </summary>
         </member>
         <member name="M:PSDataRepository.Core.Extensions.ExtensionLoader.LoadAll(PSDataRepository.Providers.IProviderRegistry,PSDataRepository.Authentications.IAuthenticationRegistry,PSDataRepository.Formatters.IFormatterRegistry,System.Action{System.String})">
@@ -521,6 +487,26 @@
             Required because shared third-party libs (Azure.Core, Azure.Identity, ...) are
             delegated to the Default ALC, but their transitive dependencies in the module
             root (e.g. <c>System.ClientModel.dll</c>) are not on PowerShell's default probe path.
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Core.Extensions.ExtensionLoader.ResolveAssemblyPath(System.String,System.String)">
+            <summary>
+            Resolves the on-disk path for an assembly the way host deps.json probing would:
+            a runtime-specific implementation under <c>runtimes/{win|unix}/lib/&lt;tfm&gt;/</c>
+            wins over the flat module-root copy.
+            <para>
+            Some NuGet packages ship a platform-neutral facade in <c>lib/</c> whose members throw
+            <see cref="T:System.PlatformNotSupportedException"/>, with the real implementation under
+            <c>runtimes/</c>. PowerShell module loading performs no RID-aware probing, so without
+            this preference the facade is what gets loaded — and the failure surfaces only when a
+            member is called, far from the install that caused it.
+            </para>
+            <para>
+            Nothing the module itself ships needs this today. It matters for extensions:
+            <c>Install-PSDataRepositoryExtension</c> stages an extension's <c>runtimes/</c> tree
+            into the module, so an extension carrying a RID-specific managed assembly would
+            otherwise have it staged and then ignored.
+            </para>
             </summary>
         </member>
         <member name="T:PSDataRepository.Core.Extensions.ExtensionLoader.ExtensionLoadContext">
@@ -626,6 +612,79 @@
         </member>
         <member name="P:PSDataRepository.Core.Extensions.ExtensionAssemblyInfo.IsStrongNamed">
             <summary><c>true</c> when the assembly is strong-named at all.</summary>
+        </member>
+        <member name="T:PSDataRepository.Core.Extensions.ExtensionTrustPolicy">
+            <summary>
+            Strong-name trust boundary applied by <see cref="T:PSDataRepository.Core.Extensions.ExtensionLoader"/> before an extension
+            assembly is loaded and instantiated. PSDataRepository only loads <b>strong-named</b> plugins
+            whose public key token is trusted. Two sources of trust are combined:
+            <list type="bullet">
+              <item><description>The module's own public key token is <b>implicitly</b> trusted — the
+              in-box providers, formatters and auth extensions are signed with it, and it is the anchor
+              the whole model hangs from.</description></item>
+              <item><description>Additional 3rd-party tokens are added by an administrator to
+              <c>extensions.trust.json</c> (see <see cref="T:PSDataRepository.Core.Extensions.ExtensionTrustStore"/>).</description></item>
+            </list>
+            <para>
+            The policy <b>fails closed</b>: if Core is itself not strong-named there is no trust anchor,
+            so <see cref="P:PSDataRepository.Core.Extensions.ExtensionTrustPolicy.TrustAnchorPresent"/> is false and every candidate is denied. An unsigned or
+            untrusted candidate is denied, and the candidate's token is read straight from PE metadata
+            so no code in the candidate runs before the decision is made.
+            </para>
+            <para>
+            The value is immutable and built once per scan. Trust used to live in a mutable static list
+            that <c>AddTrustedToken</c> could extend at any moment, including midway through a scan, so
+            two candidates in the same load could be judged against different rules. Building it up
+            front also puts the deny reason in one place instead of leaving each call site to phrase
+            its own.
+            </para>
+            </summary>
+        </member>
+        <member name="F:PSDataRepository.Core.Extensions.ExtensionTrustPolicy.TrustListFileName">
+            <summary>Conventional file name of the administrator-managed trust list.</summary>
+        </member>
+        <member name="P:PSDataRepository.Core.Extensions.ExtensionTrustPolicy.ExpectedToken">
+            <summary>
+            The module's own public key token (lowercase hex), or empty when Core is not
+            strong-named. This token is always implicitly trusted.
+            </summary>
+        </member>
+        <member name="P:PSDataRepository.Core.Extensions.ExtensionTrustPolicy.TrustedTokens">
+            <summary>The extra 3rd-party tokens loaded from <c>extensions.trust.json</c> (lowercase hex).</summary>
+        </member>
+        <member name="P:PSDataRepository.Core.Extensions.ExtensionTrustPolicy.TrustAnchorPresent">
+            <summary>
+            True when a trust anchor exists (the module is strong-named). When false the policy
+            denies every candidate — there is no known-good token to compare against, so loading
+            anything would be a blind trust decision. Fail-closed.
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Core.Extensions.ExtensionTrustPolicy.Build(System.Byte[],System.Collections.Generic.IEnumerable{System.String},System.Action{System.String})">
+            <summary>
+            Builds a policy from the module's own token and the tokens listed in the
+            <c>extensions.trust.json</c> files found at the supplied paths, in probe order.
+            A missing file contributes nothing; a malformed one is reported and contributes
+            nothing, rather than silently widening or narrowing trust.
+            </summary>
+            <param name="expectedTokenBytes">The Core assembly's public key token bytes.</param>
+            <param name="trustFilePaths">Candidate <c>extensions.trust.json</c> paths, in probe order.</param>
+            <param name="diagnosticLog">Optional sink for per-file diagnostics.</param>
+        </member>
+        <member name="M:PSDataRepository.Core.Extensions.ExtensionTrustPolicy.Evaluate(System.Byte[])">
+            <summary>
+            Pure trust decision for a candidate's public key token, as read from PE metadata.
+            Denies unsigned candidates, every candidate when no trust anchor is present
+            (fail-closed), and candidates whose token is neither the module's nor in the trust list.
+            </summary>
+        </member>
+        <member name="M:PSDataRepository.Core.Extensions.ExtensionTrustPolicy.IsTrusted(System.String)">
+            <summary>True when <paramref name="tokenHex"/> is the module token or an admin-trusted token.</summary>
+        </member>
+        <member name="T:PSDataRepository.Core.Extensions.ExtensionTrustResult">
+            <summary>Outcome of an <see cref="M:PSDataRepository.Core.Extensions.ExtensionTrustPolicy.Evaluate(System.Byte[])"/> decision.</summary>
+        </member>
+        <member name="P:PSDataRepository.Core.Extensions.ExtensionTrustResult.DenyReason">
+            <summary>Human-readable reason a candidate was denied; <c>null</c> when trusted.</summary>
         </member>
         <member name="T:PSDataRepository.Core.Extensions.ExtensionTrustStore">
             <summary>
